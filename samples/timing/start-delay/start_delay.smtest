@@ -1,0 +1,27 @@
+test "motor stays off before delay"
+
+Given:
+    EmergencyStop = false
+    StartButton = true
+
+When:
+    execute 1 cycle
+    advance 1 second
+    execute 1 cycle
+
+Then:
+    Motor == false
+
+test "motor starts after delay"
+
+Given:
+    EmergencyStop = false
+    StartButton = true
+
+When:
+    execute 1 cycle
+    advance 2 seconds
+    execute 1 cycle
+
+Then:
+    Motor == true

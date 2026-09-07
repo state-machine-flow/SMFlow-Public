@@ -1,0 +1,42 @@
+name: Bug report
+description: Something in SMFlow behaves incorrectly.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: SMFlow version
+      description: Help → About, or the header of `smflow --help`.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows, macOS, Linux]
+    validations:
+      required: true
+  - type: input
+    id: target
+    attributes:
+      label: Target
+      description: e.g. simulator, rp2040-pico, opta, linux-x64
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Attach the `project.smflow` that reproduces it if you can share it.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      render: text

@@ -1,0 +1,19 @@
+{
+  "formatVersion": 1,
+  "project": "lora-press-counter",
+  "bindings": {
+    "esp32-s3": {
+      "radioReset": "GPIO5"
+    }
+  },
+  "devices": {
+    "esp32-s3": {
+      "Radio": {
+        "bus": "fspi",
+        "pins": {
+          "reset": "GPIO5"
+        }
+      }
+    }
+  }
+}

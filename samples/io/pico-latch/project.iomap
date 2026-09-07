@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "project": "pico-latch",
+  "bindings": {
+    "rp2040-pico": {
+      "RunLamp": "GP25",
+      "StartButton": {
+        "pin": "GP16",
+        "resistor": "pullDown"
+      },
+      "StopButton": {
+        "pin": "GP15",
+        "resistor": "pullDown"
+      }
+    }
+  }
+}

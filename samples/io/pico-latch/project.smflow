@@ -1,0 +1,105 @@
+{
+  "formatVersion": 4,
+  "name": "pico-latch",
+  "target": "rp2040-pico",
+  "targets": [
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "digital-input",
+      "name": "StartButton"
+    },
+    {
+      "id": "n2",
+      "type": "digital-input",
+      "name": "StopButton"
+    },
+    {
+      "id": "n3",
+      "type": "set-reset"
+    },
+    {
+      "id": "n4",
+      "type": "digital-output",
+      "name": "RunLamp"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n3",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "n2",
+        "port": "value"
+      },
+      "to": {
+        "node": "n3",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "n3",
+        "port": "Q"
+      },
+      "to": {
+        "node": "n4",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "StopButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "RunLamp",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "n1": {
+        "x": 60,
+        "y": 60
+      },
+      "n2": {
+        "x": 60,
+        "y": 200
+      },
+      "n3": {
+        "x": 300,
+        "y": 120
+      },
+      "n4": {
+        "x": 540,
+        "y": 120
+      }
+    }
+  }
+}

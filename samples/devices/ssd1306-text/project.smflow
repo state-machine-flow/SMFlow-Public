@@ -1,0 +1,170 @@
+{
+  "formatVersion": 4,
+  "name": "ssd1306-text",
+  "target": "esp32-s3",
+  "targets": [
+    "esp32-s3",
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 50
+    },
+    {
+      "name": "init",
+      "periodMs": 0,
+      "kind": "init"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "btn_count",
+      "type": "digital-input",
+      "name": "CountButton"
+    },
+    {
+      "id": "btn_reset",
+      "type": "digital-input",
+      "name": "ResetButton"
+    },
+    {
+      "id": "cnt",
+      "type": "counter",
+      "properties": {
+        "presetCount": "1000"
+      }
+    },
+    {
+      "id": "count_text",
+      "type": "to-text",
+      "properties": {
+        "type": "int32"
+      }
+    },
+    {
+      "id": "oled_count",
+      "type": "ssd1306-text",
+      "name": "Oled",
+      "properties": {
+        "col": "0",
+        "line": "2"
+      }
+    },
+    {
+      "id": "n1",
+      "type": "ssd1306-text",
+      "name": "Oled",
+      "task": "init",
+      "properties": {
+        "col": "0",
+        "line": "0",
+        "text": "Hello SMFlow!"
+      }
+    },
+    {
+      "id": "n2",
+      "type": "ssd1306-text",
+      "name": "Oled",
+      "task": "init",
+      "properties": {
+        "col": "0",
+        "line": "4",
+        "text": "Status: OK"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "btn_count",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "CU"
+      }
+    },
+    {
+      "from": {
+        "node": "btn_reset",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "cnt",
+        "port": "CV"
+      },
+      "to": {
+        "node": "count_text",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "count_text",
+        "port": "text"
+      },
+      "to": {
+        "node": "oled_count",
+        "port": "text"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "CountButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ResetButton",
+      "direction": "input",
+      "type": "bool"
+    }
+  ],
+  "devices": [
+    {
+      "name": "Oled",
+      "type": "solomon:ssd1306"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "btn_count": {
+        "x": 40,
+        "y": 160
+      },
+      "btn_reset": {
+        "x": 40,
+        "y": 280
+      },
+      "cnt": {
+        "x": 260,
+        "y": 200
+      },
+      "count_text": {
+        "x": 460,
+        "y": 200
+      },
+      "n1": {
+        "x": 64,
+        "y": 64
+      },
+      "n2": {
+        "x": 64.80000000000001,
+        "y": 191.19999999999993
+      },
+      "oled_count": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+test "not gate inverts true to false"
+
+Given:
+    StartButton = true
+
+When:
+    execute 1 cycle
+
+Then:
+    Motor == false
+
+test "not gate inverts false to true"
+
+Given:
+    StartButton = false
+
+When:
+    execute 1 cycle
+
+Then:
+    Motor == true

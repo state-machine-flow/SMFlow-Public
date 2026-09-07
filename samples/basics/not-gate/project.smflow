@@ -1,0 +1,76 @@
+{
+  "formatVersion": 4,
+  "name": "not-gate",
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "digital-input",
+      "name": "StartButton"
+    },
+    {
+      "id": "not1",
+      "type": "not"
+    },
+    {
+      "id": "motor",
+      "type": "digital-output",
+      "name": "Motor"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "start",
+        "port": "value"
+      },
+      "to": {
+        "node": "not1",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "not1",
+        "port": "out"
+      },
+      "to": {
+        "node": "motor",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Motor",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "motor": {
+        "x": 500,
+        "y": 100
+      },
+      "not1": {
+        "x": 300,
+        "y": 100
+      },
+      "start": {
+        "x": 100,
+        "y": 100
+      }
+    }
+  }
+}

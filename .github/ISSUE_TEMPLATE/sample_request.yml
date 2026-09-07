@@ -1,0 +1,15 @@
+name: Sample request
+description: Ask for an example flow covering a scenario.
+labels: [sample]
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: What scenario should the sample cover?
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware involved
+      description: Board, sensors, actuators, or "none — simulator is fine".

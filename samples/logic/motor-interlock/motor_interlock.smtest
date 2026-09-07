@@ -1,0 +1,42 @@
+test "motor starts"
+
+Given:
+    EmergencyStop = false
+    StartButton = true
+
+When:
+    execute 1 cycle
+
+Then:
+    Motor == true
+
+test "emergency stop prevents start"
+
+Given:
+    EmergencyStop = true
+    StartButton = true
+
+When:
+    execute 1 cycle
+
+Then:
+    Motor == false
+
+test "emergency stop overrides running motor"
+
+Given:
+    EmergencyStop = false
+    StartButton = true
+
+When:
+    execute 1 cycle
+
+Then:
+    Motor == true
+
+When:
+    EmergencyStop = true
+    execute 1 cycle
+
+Then:
+    Motor == false

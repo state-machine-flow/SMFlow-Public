@@ -1,0 +1,139 @@
+{
+  "formatVersion": 4,
+  "name": "start-delay",
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "digital-input",
+      "name": "StartButton"
+    },
+    {
+      "id": "estop",
+      "type": "digital-input",
+      "name": "EmergencyStop"
+    },
+    {
+      "id": "delay",
+      "type": "ton",
+      "properties": {
+        "presetTime": "2000"
+      }
+    },
+    {
+      "id": "not",
+      "type": "not"
+    },
+    {
+      "id": "and",
+      "type": "and"
+    },
+    {
+      "id": "motor",
+      "type": "digital-output",
+      "name": "Motor"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "start",
+        "port": "value"
+      },
+      "to": {
+        "node": "delay",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "estop",
+        "port": "value"
+      },
+      "to": {
+        "node": "not",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "delay",
+        "port": "Q"
+      },
+      "to": {
+        "node": "and",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not",
+        "port": "out"
+      },
+      "to": {
+        "node": "and",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "and",
+        "port": "out"
+      },
+      "to": {
+        "node": "motor",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "EmergencyStop",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Motor",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "and": {
+        "x": 440,
+        "y": 100
+      },
+      "delay": {
+        "x": 240,
+        "y": 40
+      },
+      "estop": {
+        "x": 40,
+        "y": 180
+      },
+      "motor": {
+        "x": 640,
+        "y": 100
+      },
+      "not": {
+        "x": 240,
+        "y": 180
+      },
+      "start": {
+        "x": 40,
+        "y": 40
+      }
+    }
+  }
+}

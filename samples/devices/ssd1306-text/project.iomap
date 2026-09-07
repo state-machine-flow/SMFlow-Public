@@ -1,0 +1,39 @@
+{
+  "formatVersion": 1,
+  "project": "ssd1306-text",
+  "bindings": {
+    "esp32-s3": {
+      "CountButton": "GPIO7",
+      "ResetButton": "GPIO19"
+    },
+    "rp2040-pico": {
+      "CountButton": {
+        "pin": "GP16",
+        "resistor": "pullDown"
+      },
+      "ResetButton": {
+        "pin": "GP17",
+        "resistor": "pullDown"
+      }
+    }
+  },
+  "devices": {
+    "esp32-s3": {
+      "Oled": {
+        "bus": "i2c1",
+        "pins": {
+          "reset": "GPIO21",
+          "power": "GPIO36"
+        },
+        "config": {
+          "powerActiveLow": "true"
+        }
+      }
+    },
+    "rp2040-pico": {
+      "Oled": {
+        "bus": "i2c0"
+      }
+    }
+  }
+}

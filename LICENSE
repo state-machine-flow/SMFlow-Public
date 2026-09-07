@@ -1,0 +1,10 @@
+Documentation in this repository (everything under docs/, releases/, and the Markdown files at the
+repository root) is licensed under the Creative Commons Attribution 4.0 International License
+(CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+
+Sample flows under samples/ are licensed separately under the MIT license; see samples/LICENSE.
+
+SMFlow itself — the editor, compiler, CLI, and related software — is commercial closed-source
+software and is NOT covered by this license. See https://smflow.co/pricing.
+
+Copyright (c) 2026 Chris Tacke

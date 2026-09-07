@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "project": "opta-interlock",
+  "bindings": {
+    "linux-x64": {
+      "EmergencyStop": "gpio18",
+      "Motor": "gpio27",
+      "StartButton": "gpio17",
+      "Temperature": "analog0"
+    },
+    "opta": {
+      "EmergencyStop": "I2",
+      "Motor": "RELAY1",
+      "StartButton": "I1",
+      "Temperature": "I5"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+# SMFlow build output — everything here is reproducible from the flow
+generated/
+build/
+out/
+*.build-manifest.json
+
+# Editor and OS noise
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Installers are attached to GitHub releases, never committed
+*.msi
+*.exe
+*.dmg
+*.pkg
+*.deb
+*.rpm
+*.AppImage

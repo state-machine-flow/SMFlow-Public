@@ -1,0 +1,280 @@
+{
+  "formatVersion": 4,
+  "name": "lora-press-counter",
+  "target": "esp32-s3",
+  "targets": [
+    "esp32-s3"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "btn",
+      "type": "digital-input",
+      "name": "Button"
+    },
+    {
+      "id": "cnt",
+      "type": "counter",
+      "properties": {
+        "presetCount": "1000"
+      }
+    },
+    {
+      "id": "builder",
+      "type": "create-payload",
+      "properties": {
+        "schema": "pressCount:int32:be"
+      }
+    },
+    {
+      "id": "tx",
+      "type": "sx1262-tx",
+      "name": "Radio"
+    },
+    {
+      "id": "led",
+      "type": "digital-output",
+      "name": "Busy"
+    },
+    {
+      "id": "n1",
+      "type": "digital-input",
+      "name": "Input1"
+    },
+    {
+      "id": "n2",
+      "type": "digital-output",
+      "name": "Done"
+    },
+    {
+      "id": "n3",
+      "type": "digital-output",
+      "name": "Error"
+    },
+    {
+      "id": "n5",
+      "type": "counter",
+      "properties": {
+        "presetCount": "10"
+      }
+    },
+    {
+      "id": "n6",
+      "type": "digital-input",
+      "name": "Input2"
+    },
+    {
+      "id": "n7",
+      "type": "digital-output",
+      "name": "radioReset"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "btn",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "CU"
+      }
+    },
+    {
+      "from": {
+        "node": "btn",
+        "port": "value"
+      },
+      "to": {
+        "node": "tx",
+        "port": "trigger"
+      }
+    },
+    {
+      "from": {
+        "node": "cnt",
+        "port": "CV"
+      },
+      "to": {
+        "node": "builder",
+        "port": "in_pressCount"
+      }
+    },
+    {
+      "from": {
+        "node": "builder",
+        "port": "payload"
+      },
+      "to": {
+        "node": "tx",
+        "port": "payload"
+      }
+    },
+    {
+      "from": {
+        "node": "tx",
+        "port": "busy"
+      },
+      "to": {
+        "node": "led",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "tx",
+        "port": "done"
+      },
+      "to": {
+        "node": "n2",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "tx",
+        "port": "error"
+      },
+      "to": {
+        "node": "n3",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "tx",
+        "port": "done"
+      },
+      "to": {
+        "node": "n5",
+        "port": "CU"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n5",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "n6",
+        "port": "value"
+      },
+      "to": {
+        "node": "n7",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Button",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Busy",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Input1",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Done",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Error",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Input2",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "radioReset",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "devices": [
+    {
+      "name": "Radio",
+      "type": "semtech:sx1262"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "btn": {
+        "x": 40,
+        "y": 80
+      },
+      "builder": {
+        "x": 491.19999999999993,
+        "y": 221.6000000000001
+      },
+      "cnt": {
+        "x": 257.6,
+        "y": 253.59999999999997
+      },
+      "led": {
+        "x": 1028.7999999999997,
+        "y": 15.200000000000003
+      },
+      "n1": {
+        "x": 26.799999999999983,
+        "y": 384.8
+      },
+      "n2": {
+        "x": 1026.8,
+        "y": 120.80000000000004
+      },
+      "n3": {
+        "x": 1024.3159999999998,
+        "y": 360.04479999999995
+      },
+      "n5": {
+        "x": 1034.2368000000001,
+        "y": 227.228
+      },
+      "n6": {
+        "x": 25.233599999999917,
+        "y": 479.9976
+      },
+      "n7": {
+        "x": 1026.1456000000003,
+        "y": 467.2200000000001
+      },
+      "tx": {
+        "x": 751.1999999999998,
+        "y": 135.2
+      }
+    }
+  }
+}

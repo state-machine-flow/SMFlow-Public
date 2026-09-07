@@ -1,0 +1,123 @@
+{
+  "formatVersion": 4,
+  "name": "pico-interlock",
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "digital-input",
+      "name": "StartButton"
+    },
+    {
+      "id": "n2",
+      "type": "digital-input",
+      "name": "EmergencyStop"
+    },
+    {
+      "id": "n3",
+      "type": "not"
+    },
+    {
+      "id": "n4",
+      "type": "and"
+    },
+    {
+      "id": "n5",
+      "type": "digital-output",
+      "name": "Motor"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "n2",
+        "port": "value"
+      },
+      "to": {
+        "node": "n3",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n4",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "n3",
+        "port": "out"
+      },
+      "to": {
+        "node": "n4",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "n4",
+        "port": "out"
+      },
+      "to": {
+        "node": "n5",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "EmergencyStop",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Temperature",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "Motor",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "n1": {
+        "x": 40,
+        "y": 40
+      },
+      "n2": {
+        "x": 40,
+        "y": 160
+      },
+      "n3": {
+        "x": 240,
+        "y": 160
+      },
+      "n4": {
+        "x": 430,
+        "y": 100
+      },
+      "n5": {
+        "x": 620,
+        "y": 100
+      }
+    }
+  }
+}

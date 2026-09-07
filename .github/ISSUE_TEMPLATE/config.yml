@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and help
+    url: https://github.com/state-machine-flow/SMFlow-Public/discussions
+    about: Ask how to do something, or show what you built.
+  - name: Security vulnerability
+    url: https://github.com/state-machine-flow/SMFlow-Public/blob/main/SECURITY.md
+    about: Report privately to security@smflow.co — please do not open an issue.
+  - name: Purchasing and licensing
+    url: https://smflow.co/pricing
+    about: Plans, activation, and billing questions.
