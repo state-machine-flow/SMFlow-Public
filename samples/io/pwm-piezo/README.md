@@ -111,10 +111,10 @@ The Mega build compiles with `arduino-cli` to roughly 6.3 KB of flash and 120 by
 
 ## Caveats
 
-- **The buzzer sounds continuously.** Gating it on a fault would need a node that chooses between two
-  floats on a condition, and SMFlow has no select node yet — the only `float32` sources are an analog
-  input, a shared variable and a device read, none of them conditional. Unplug the piezo before
-  leaving this running on your desk.
+- **The buzzer sounds continuously here.** Gating it needs a `select` node to choose between two
+  frequencies — see the `piezo-double-beep` sample, which does exactly that. This sample keeps the
+  tone unconditional so the two output kinds stand alone. Unplug the piezo before leaving it running
+  on your desk.
 - **Frequency is not configurable on a PWM output.** The duty runs at the board's `analogWrite`
   default, about 490 Hz on D6. Setting it is an exclusive claim on Timer4 and costs D7 and D8 their
   duty, so it is a decision about pins rather than only a port.

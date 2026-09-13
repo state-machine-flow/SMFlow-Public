@@ -1,0 +1,265 @@
+{
+  "formatVersion": 5,
+  "name": "piezo-double-beep",
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "always",
+      "type": "variable-read",
+      "name": "Always"
+    },
+    {
+      "id": "window",
+      "type": "ton",
+      "properties": {
+        "presetTime": "300"
+      }
+    },
+    {
+      "id": "notDone",
+      "type": "not"
+    },
+    {
+      "id": "pulses",
+      "type": "blink",
+      "properties": {
+        "timeHigh": "100",
+        "timeLow": "100"
+      }
+    },
+    {
+      "id": "gate",
+      "type": "and"
+    },
+    {
+      "id": "hzOn",
+      "type": "variable-read",
+      "name": "AlarmHz"
+    },
+    {
+      "id": "hzOff",
+      "type": "variable-read",
+      "name": "Silent"
+    },
+    {
+      "id": "pick",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      }
+    },
+    {
+      "id": "buzzer",
+      "type": "tone-output",
+      "name": "Buzzer"
+    },
+    {
+      "id": "heartbeat",
+      "type": "blink",
+      "properties": {
+        "timeHigh": "500",
+        "timeLow": "500"
+      }
+    },
+    {
+      "id": "led",
+      "type": "digital-output",
+      "name": "Heartbeat"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "always",
+        "port": "value"
+      },
+      "to": {
+        "node": "window",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "always",
+        "port": "value"
+      },
+      "to": {
+        "node": "pulses",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "always",
+        "port": "value"
+      },
+      "to": {
+        "node": "heartbeat",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "window",
+        "port": "Q"
+      },
+      "to": {
+        "node": "notDone",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "notDone",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "pulses",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate",
+        "port": "out"
+      },
+      "to": {
+        "node": "pick",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "hzOn",
+        "port": "value"
+      },
+      "to": {
+        "node": "pick",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "hzOff",
+        "port": "value"
+      },
+      "to": {
+        "node": "pick",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "pick",
+        "port": "out"
+      },
+      "to": {
+        "node": "buzzer",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "heartbeat",
+        "port": "Q"
+      },
+      "to": {
+        "node": "led",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "Always",
+      "type": "bool",
+      "initial": "true"
+    },
+    {
+      "name": "AlarmHz",
+      "type": "float32",
+      "initial": "2700"
+    },
+    {
+      "name": "Silent",
+      "type": "float32",
+      "initial": "0"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Buzzer",
+      "direction": "output",
+      "type": "float32",
+      "channel": "tone"
+    },
+    {
+      "logical": "Heartbeat",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "always": {
+        "x": 40,
+        "y": 120
+      },
+      "buzzer": {
+        "x": 1000,
+        "y": 200
+      },
+      "gate": {
+        "x": 620,
+        "y": 120
+      },
+      "heartbeat": {
+        "x": 240,
+        "y": 460
+      },
+      "hzOff": {
+        "x": 620,
+        "y": 340
+      },
+      "hzOn": {
+        "x": 620,
+        "y": 260
+      },
+      "led": {
+        "x": 460,
+        "y": 460
+      },
+      "notDone": {
+        "x": 440,
+        "y": 40
+      },
+      "pick": {
+        "x": 820,
+        "y": 200
+      },
+      "pulses": {
+        "x": 240,
+        "y": 200
+      },
+      "window": {
+        "x": 240,
+        "y": 40
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "formatVersion": 1,
+  "project": "piezo-double-beep",
+  "bindings": {
+    "atmega2560-mega": {
+      "Buzzer": "D6",
+      "Heartbeat": "D13"
+    }
+  }
+}
