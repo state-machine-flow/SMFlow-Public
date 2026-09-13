@@ -1,0 +1,100 @@
+{
+  "formatVersion": 5,
+  "name": "pwm-piezo",
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "speed",
+      "type": "analog-input",
+      "name": "Speed"
+    },
+    {
+      "id": "drive",
+      "type": "pwm-output",
+      "name": "Drive"
+    },
+    {
+      "id": "pitch",
+      "type": "variable-read",
+      "name": "AlarmHz"
+    },
+    {
+      "id": "buzzer",
+      "type": "tone-output",
+      "name": "Buzzer"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "speed",
+        "port": "value"
+      },
+      "to": {
+        "node": "drive",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "pitch",
+        "port": "value"
+      },
+      "to": {
+        "node": "buzzer",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "AlarmHz",
+      "type": "float32",
+      "initial": "2700"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Speed",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "Drive",
+      "direction": "output",
+      "type": "float32",
+      "channel": "pwm"
+    },
+    {
+      "logical": "Buzzer",
+      "direction": "output",
+      "type": "float32",
+      "channel": "tone"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "buzzer": {
+        "x": 320,
+        "y": 200
+      },
+      "drive": {
+        "x": 320,
+        "y": 60
+      },
+      "pitch": {
+        "x": 60,
+        "y": 200
+      },
+      "speed": {
+        "x": 60,
+        "y": 60
+      }
+    }
+  }
+}

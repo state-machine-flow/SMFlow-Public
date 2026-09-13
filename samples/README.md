@@ -36,6 +36,7 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 | `pico-latch` | rp2040-pico | A two-state latch, `.iomap` pin binding |
 | `pico-interlock` | rp2040-pico | The interlock running on hardware |
 | `opta-interlock` | opta | The interlock on an Arduino Opta |
+| `pwm-piezo` | atmega2560-mega, simulator | A PWM duty cycle and a piezo tone, and the timers they claim |
 
 ### devices/ — peripherals over I²C and SPI
 | Sample | Targets | Shows |

@@ -1,0 +1,11 @@
+{
+  "formatVersion": 1,
+  "project": "pwm-piezo",
+  "bindings": {
+    "atmega2560-mega": {
+      "Buzzer": "D8",
+      "Drive": "D6",
+      "Speed": "A0"
+    }
+  }
+}
