@@ -1,0 +1,214 @@
+{
+  "formatVersion": 5,
+  "name": "untitled",
+  "targets": [
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "variable-read",
+      "name": "in1"
+    },
+    {
+      "id": "n2",
+      "type": "variable-read",
+      "name": "in2"
+    },
+    {
+      "id": "n3",
+      "type": "compare"
+    },
+    {
+      "id": "n4",
+      "type": "compare",
+      "properties": {
+        "operator": "=="
+      }
+    },
+    {
+      "id": "n5",
+      "type": "compare",
+      "properties": {
+        "operator": "\u003E"
+      }
+    },
+    {
+      "id": "n6",
+      "type": "variable-write",
+      "name": "comp1"
+    },
+    {
+      "id": "n7",
+      "type": "variable-write",
+      "name": "comp2"
+    },
+    {
+      "id": "n8",
+      "type": "variable-write",
+      "name": "comp3"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n3",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n4",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n5",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "n2",
+        "port": "value"
+      },
+      "to": {
+        "node": "n3",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "n2",
+        "port": "value"
+      },
+      "to": {
+        "node": "n4",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "n2",
+        "port": "value"
+      },
+      "to": {
+        "node": "n5",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "n5",
+        "port": "out"
+      },
+      "to": {
+        "node": "n8",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "n4",
+        "port": "out"
+      },
+      "to": {
+        "node": "n7",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "n3",
+        "port": "out"
+      },
+      "to": {
+        "node": "n6",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "in1",
+      "type": "float32",
+      "initial": "0"
+    },
+    {
+      "name": "in2",
+      "type": "float32",
+      "initial": "0"
+    },
+    {
+      "name": "comp1",
+      "type": "bool",
+      "initial": "false"
+    },
+    {
+      "name": "comp2",
+      "type": "bool",
+      "initial": "false"
+    },
+    {
+      "name": "comp3",
+      "type": "bool",
+      "initial": "false"
+    }
+  ],
+  "hardware": [],
+  "ui": {
+    "nodes": {
+      "n1": {
+        "x": 70.00000000000003,
+        "y": 76.00000000000001
+      },
+      "n2": {
+        "x": 71.6,
+        "y": 234.40000000000003
+      },
+      "n3": {
+        "x": 373.20000000000005,
+        "y": 66.39999999999998
+      },
+      "n4": {
+        "x": 371.6,
+        "y": 192.8
+      },
+      "n5": {
+        "x": 372.4000000000001,
+        "y": 330.40000000000003
+      },
+      "n6": {
+        "x": 683.6,
+        "y": 64.00000000000001
+      },
+      "n7": {
+        "x": 675.6,
+        "y": 192
+      },
+      "n8": {
+        "x": 677.9999999999999,
+        "y": 356.80000000000007
+      }
+    }
+  }
+}
