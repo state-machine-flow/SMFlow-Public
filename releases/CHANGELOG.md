@@ -26,3 +26,80 @@ All notable changes to SMFlow are recorded here. The format follows
 - Dropping a new variable node onto the canvas reuses an existing shared variable that nothing
   references yet, instead of always creating another one.
 
+## [0.9.4-beta1] - 2026-09-13
+
+### Added
+
+- Terms of Sale, License Agreement, Privacy Policy, and Refund Policy pages on smflow.co, plus a
+  contact page.
+- An `/examples` screenshot tour on the site, linked from the header and footer.
+
+### Changed
+
+- SMFlow Pro is priced at $300.
+- Pro checkout is not open yet. `/purchase` shows a "coming soon" state, because key delivery and
+  activation are not live end to end.
+
+### Fixed
+
+- Settings tells you a pin is already spoken for while you are picking it, instead of letting the
+  build refuse the project later. A pin held by another signal or by a device reads
+  "GP15 — used by Radio (reset)" in the list, the row holding it is outlined, and the tab says how
+  many pins are contested. The I/O Mapping and Devices tabs check against each other, so a graph
+  output and a device's reset line can no longer quietly land on the same pin.
+- A device left without one of the pins its part requires — an SX1262's busy, dio1, or reset, say —
+  now says so on its card in Settings. Previously it looked configured and failed at build time.
+- Dragging the window between monitors of different scaling no longer leaves the Settings
+  selectors' click targets away from the controls they belong to.
+- The generic Windows icon is replaced with the actual SMFlow app icon across the executable
+  resources, window titlebar and taskbar, and the installer.
+- Settings: the pin option selectors line up in one column instead of stepping in and out row by
+  row, and the Close button sits at the lower right of the dialog.
+
+## [0.9.3-beta1] - 2026-09-08
+
+A maintenance release. The application itself is unchanged in how it compiles and runs your
+programs; what moved is licensing, the website, and one new hardware plug-in.
+
+### Added
+
+- MaxBotix ultrasonic rangefinder plug-in, so distance sensors can be dropped into a graph.
+
+### Changed
+
+- Purchases and license activation now run through the new licensing service.
+- The product now lives at **smflow.co**. Download and update links point there.
+
+### Fixed
+
+- Corrected the download links on the website, which pointed at the wrong release assets.
+
+## [0.9.1-beta1] - 2026-09-07
+
+The first public build of SMFlow. Windows x64, self-contained — there is no .NET runtime to install
+first — and it updates itself in place from this release channel.
+
+### Added
+
+- Draw a control program as a node graph, and compile it ahead of time to ordinary C++17. The
+  target runs no interpreter, no scripting engine, and nothing from SMFlow.
+- Targets in this build: simulator, Linux x64, Arduino Opta, ESP32, RP2040, and AVR.
+- Step the program in the simulator and watch values move, without any hardware attached.
+- Read the generated source. It is meant to survive a firmware review, and the same project always
+  generates byte-identical output.
+- The About box offers a support link and a "copy version info" button. The copied text carries the
+  version, edition, and OS, and deliberately carries nothing that identifies you or your machine.
+
+### Fixed
+
+- Generated simulator source no longer emits string helpers the program never calls. A graph whose
+  inputs were all numeric left `ParseBool` defined and unused, which failed the build under
+  `-Werror=unused-function`.
+
+### Known limits
+
+- **Every install is capped at 12 nodes per flow.** The licensing server is not stood up yet, so no
+  Pro license can be issued or validated, and the editor falls back to Free.
+- Windows only. The compiler targets Linux, but the editor is packaged for Windows x64 in this
+  build.
+- Beta: the project file format may still change between beta builds.
