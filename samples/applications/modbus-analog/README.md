@@ -1,4 +1,4 @@
-# Four analog channels, read over Modbus TCP
+﻿# Four analog channels, read over Modbus TCP
 
 Four 0–5 V inputs on an Arduino Mega 2560, exported as four IEEE-754 floats that any off-the-shelf
 Modbus client can read, plus a fault lamp that lights when the client goes away.
@@ -71,9 +71,22 @@ An **Elegoo Mega 2560 R3** (or a genuine Arduino Mega 2560) with a **W5100 Ether
 | SD card chip select | **D4** | Deselected at startup. An SD card nobody deselects corrupts the shared bus |
 | SPI master | **D53** | Driven as an output, or the AVR drops out of master mode |
 
-The shield's controller is named in `project.iomap`, not detected at run time. **A W5100 and a W5500
-are not register-compatible** — read the silkscreen on the largest chip and set the device type to
-match, or the board will build cleanly and never answer.
+The shield's controller is named in `project.iomap`, because a driver has to be chosen before
+anything can be probed. **A W5100 and a W5500 are not register-compatible** — read the silkscreen on
+the largest chip and set the device type to match. Once running, the driver reports which part it
+actually found: declare one and fit the other and `EthernetControllerOk` goes false, rather than the
+board building cleanly and never answering.
+
+**Addressing** on that same page chooses between a static address and DHCP. This sample is static,
+because a sample whose address you cannot predict is a sample you cannot poll. Under `dhcp` the
+address is leased by SMFlow's own client — stepped once per scan, never the Arduino library's
+blocking one — the board starts immediately and runs unaddressed until the lease lands, and
+`EthernetIpAddress` is how you find out what it got. Put it on a display and you have the address
+without a serial cable.
+
+The controller also declares `EthernetControllerOk` and `EthernetAddressed`. The first is what tells
+you the shield is seated and is the part you said it was; the second is what a flow gates on. Neither
+is the same as `ModbusConnected`, which measures whether a client is talking to you.
 
 The MAC and the IP are yours to choose, on the controller in **Settings → Devices**. Neither is
 defaulted. A MAC has to be unique on the segment, and a generated one would differ
