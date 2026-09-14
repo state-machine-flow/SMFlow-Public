@@ -10,6 +10,57 @@ All notable changes to SMFlow are recorded here. The format follows
 ### Changed
 ### Fixed
 
+## [0.9.7-beta1] - 2026-09-14
+
+### Added
+
+- **Modbus TCP server.** A project declares a register map that binds shared variables to addresses,
+  and the graph reaches those variables through the variable nodes it already has — there are no
+  Modbus nodes on the canvas. Holding and input registers, function codes 3, 4, 6 and 16, over an
+  Ethernet shield on an Arduino Mega 2560. Encodings (`float32`, `int32`, `int16`, scaled `int16`)
+  and word order (`ABCD`/`CDAB`) are always declared, never inferred. Sample:
+  `samples/applications/modbus-analog`.
+- **Ethernet controllers as devices.** `wiznet:w5100` and `wiznet:w5500` are device types a project
+  selects and binds to a SPI bus. Addressing is `static` or `dhcp`; the DHCP client is a state
+  machine stepped once per scan, so nothing in the scan ever waits on the network.
+- **Status as read-only shared variables.** `ModbusConnected`, `ModbusMsSinceRequest`,
+  `ModbusLastException`, `ModbusRequestCount`, `ModbusErrorCount`, `EthernetControllerOk`,
+  `EthernetAddressed` and `EthernetIpAddress` — so "the client went away, fall back to a safe state"
+  is something a flow can express. Counters saturate rather than wrap.
+- **Modbus map editor.** Settings → Modbus Map (Ctrl+Shift+M) edits the register map in place,
+  assigns addresses automatically, flags overlaps, and exports the register sheet as CSV or Markdown.
+- **Device properties page.** Settings → Devices renders a field for each setting a device type
+  declares — address, MAC, IP — validated as you type instead of at build time.
+- **Arduino Uno R3 target** (`atmega328-uno`), with the pins the Uno's headers actually bring out.
+
+### Notes
+
+- The free tier serves Modbus, capped at four entries bound to a variable of your own; status
+  exports are exempt.
+- Building a Modbus project needs the Arduino `Ethernet` library. Settings → Tools now lists and
+  installs it.
+- Modbus RTU, coils and discrete inputs, multiple unit ids, and the client/master role are not in
+  this release; a project asking for one is refused at validation.
+
+## [0.9.6-beta1] - 2026-09-13
+
+### Added
+
+- **Arduino Mega 2560 target** (`atmega2560-mega`), with its full pin set, timers, ADC channels,
+  external interrupts, and four hardware UARTs.
+- **PWM output.** A `pwm-output` node drives a hardware PWM pin directly. A pin's channel is a
+  property of the I/O resource rather than inferred from the data type.
+- **Tone output.** A `tone-output` node drives a piezo or speaker from a frequency and an enable,
+  claiming the pin's timer for the duration.
+- **A `select` node** — chooses between two values of the same type on a boolean input.
+- **HD44780 character displays** over I²C through a PCF8574 backpack, with the per-character I²C
+  cost accounted for in the bus budget.
+
+### Changed
+
+- A device node's caption shows the settings a wire has not taken over, so several display nodes in
+  one task are distinguishable on the canvas.
+
 ## [0.9.5-beta1] - 2026-09-13
 
 ### Added

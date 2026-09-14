@@ -53,6 +53,8 @@ Full walkthrough: [docs/getting-started/first-flow.md](docs/getting-started/firs
 | Arduino Nano RP2040 Connect | `rp2040-nano-connect` | RP2040 |
 | ESP32-S3 | `esp32-s3` | Wi-Fi / BLE class MCU |
 | Arduino Nano (ATmega328) | `atmega328-nano` | 8-bit AVR |
+| Arduino Uno R3 (ATmega328P) | `atmega328-uno` | 8-bit AVR, 5 V logic |
+| Arduino Mega 2560 | `atmega2560-mega` | 8-bit AVR, 5 V logic; Modbus TCP over an Ethernet shield |
 | Portable C++ | `portable` | Vendor-neutral C++17 you integrate yourself |
 
 Run `smflow targets` to see what your installed build supports.
@@ -70,6 +72,7 @@ Each sample is a complete project folder you can open directly in the editor.
 | [`io/pico-latch`](samples/io/pico-latch) | A two-state latch on a Raspberry Pi Pico |
 | [`devices/ssd1306-text`](samples/devices/ssd1306-text) | Text and telemetry on an I²C OLED |
 | [`applications/lora-press-counter`](samples/applications/lora-press-counter) | Binary LoRa packets from a button counter |
+| [`applications/modbus-analog`](samples/applications/modbus-analog) | Analog channels served to a SCADA system as Modbus TCP registers |
 
 See [samples/README.md](samples/README.md) for the full catalog and contribution rules.
 
