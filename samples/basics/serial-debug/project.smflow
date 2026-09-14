@@ -1,0 +1,128 @@
+{
+  "formatVersion": 4,
+  "name": "serial-debug",
+  "target": "atmega328-uno",
+  "targets": [
+    "atmega328-uno",
+    "linux-x64",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 100
+    }
+  ],
+  "nodes": [
+    {
+      "id": "run",
+      "type": "digital-input",
+      "name": "Run"
+    },
+    {
+      "id": "beat",
+      "type": "blink",
+      "properties": {
+        "timeHigh": "500",
+        "timeLow": "500"
+      }
+    },
+    {
+      "id": "sensor",
+      "type": "analog-input",
+      "name": "Sensor"
+    },
+    {
+      "id": "text",
+      "type": "to-text",
+      "properties": {
+        "decimals": "2",
+        "format": "sensor: {0.00} V\n",
+        "type": "float32"
+      }
+    },
+    {
+      "id": "console",
+      "type": "serial-tx",
+      "name": "Console"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "run",
+        "port": "value"
+      },
+      "to": {
+        "node": "beat",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "sensor",
+        "port": "value"
+      },
+      "to": {
+        "node": "text",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "text",
+        "port": "text"
+      },
+      "to": {
+        "node": "console",
+        "port": "data"
+      }
+    },
+    {
+      "from": {
+        "node": "beat",
+        "port": "Q"
+      },
+      "to": {
+        "node": "console",
+        "port": "send"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Run",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Sensor",
+      "direction": "input",
+      "type": "float32"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "beat": {
+        "x": 320,
+        "y": 80
+      },
+      "console": {
+        "x": 600,
+        "y": 160
+      },
+      "run": {
+        "x": 100,
+        "y": 80
+      },
+      "sensor": {
+        "x": 100,
+        "y": 260
+      },
+      "text": {
+        "x": 320,
+        "y": 260
+      }
+    }
+  }
+}

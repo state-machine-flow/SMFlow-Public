@@ -19,6 +19,7 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 | Sample | Targets | Shows |
 |---|---|---|
 | `not-gate` | simulator, any | The minimal complete program |
+| `serial-debug` | atmega328-uno, linux-x64, simulator | Printing a labelled, formatted value to a serial console |
 
 ### logic/ — combinational and latching behavior
 | Sample | Targets | Shows |

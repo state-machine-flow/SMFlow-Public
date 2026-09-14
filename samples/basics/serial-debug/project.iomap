@@ -1,0 +1,44 @@
+{
+  "formatVersion": 1,
+  "project": "serial-debug",
+  "bindings": {
+    "atmega328-uno": {
+      "Run": "D2",
+      "Sensor": "A0"
+    },
+    "linux-x64": {
+      "Run": "gpio0",
+      "Sensor": "ain0"
+    },
+    "simulator": {
+      "Run": "virtual.Run",
+      "Sensor": "virtual.Sensor"
+    }
+  },
+  "serial": {
+    "atmega328-uno": {
+      "Console": {
+        "bus": "uart0",
+        "baud": 9600,
+        "txCapacity": 64,
+        "txBufferOctets": 64
+      }
+    },
+    "linux-x64": {
+      "Console": {
+        "bus": "console",
+        "baud": 115200,
+        "txCapacity": 64,
+        "txBufferOctets": 64
+      }
+    },
+    "simulator": {
+      "Console": {
+        "bus": "virtual.uart0",
+        "baud": 9600,
+        "txCapacity": 64,
+        "txBufferOctets": 64
+      }
+    }
+  }
+}
