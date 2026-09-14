@@ -1,0 +1,73 @@
+test "idle stopwatch does not count"
+
+Given:
+    StartStop = false
+    Clear = false
+
+When:
+    execute 1 cycle
+    advance 1 second
+    execute 10 cycles
+
+Then:
+    Running == false
+    ElapsedTenths == 0
+
+test "a press starts it counting in tenths"
+
+Given:
+    StartStop = false
+    Clear = false
+
+When:
+    execute 1 cycle
+    StartStop = true
+    execute 1 cycle
+    StartStop = false
+    execute 10 cycles
+
+Then:
+    Running == true
+    ElapsedTenths == 11
+
+test "a second press stops it, and it holds its value"
+
+Given:
+    StartStop = false
+    Clear = false
+
+When:
+    execute 1 cycle
+    StartStop = true
+    execute 1 cycle
+    StartStop = false
+    execute 101 cycles
+    StartStop = true
+    execute 1 cycle
+    StartStop = false
+    execute 20 cycles
+
+Then:
+    Running == false
+    ElapsedTenths == 102
+
+test "clear zeroes the elapsed time and stops the count"
+
+Given:
+    StartStop = false
+    Clear = false
+
+When:
+    execute 1 cycle
+    StartStop = true
+    execute 1 cycle
+    StartStop = false
+    execute 20 cycles
+    Clear = true
+    execute 1 cycle
+    Clear = false
+    execute 5 cycles
+
+Then:
+    Running == false
+    ElapsedTenths == 0

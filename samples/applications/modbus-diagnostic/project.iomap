@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "project": "modbus-diagnostic",
+  "bindings": {
+    "atmega2560-mega": {
+      "Channel1In": "A0"
+    }
+  },
+  "devices": {
+    "atmega2560-mega": {
+      "Eth": {
+        "bus": "spi0",
+        "cs": "D10",
+        "pins": {
+          "sd_cs": "D4"
+        },
+        "config": {
+          "addressing": "static",
+          "mac": "DE:AD:BE:EF:FE:01",
+          "ip": "192.168.4.242"
+        }
+      },
+      "Lcd": {
+        "bus": "i2c0",
+        "address": "0x27",
+        "config": {
+          "columns": "20",
+          "rows": "4"
+        }
+      }
+    }
+  },
+  "modbus": {
+    "atmega2560-mega": {
+      "transport": "tcp",
+      "controller": "Eth",
+      "port": 502,
+      "unitId": 1,
+      "livenessWindowMs": 5000,
+      "octetsPerTick": 64
+    }
+  }
+}

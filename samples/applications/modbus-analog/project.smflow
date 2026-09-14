@@ -1,0 +1,307 @@
+{
+  "formatVersion": 5,
+  "name": "modbus-analog",
+  "target": "atmega2560-mega",
+  "targets": [
+    "atmega2560-mega"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "ch1",
+      "type": "analog-input",
+      "name": "Channel1In"
+    },
+    {
+      "id": "ch2",
+      "type": "analog-input",
+      "name": "Channel2In"
+    },
+    {
+      "id": "ch3",
+      "type": "analog-input",
+      "name": "Channel3In"
+    },
+    {
+      "id": "ch4",
+      "type": "analog-input",
+      "name": "Channel4In"
+    },
+    {
+      "id": "pub1",
+      "type": "variable-write",
+      "name": "Channel1"
+    },
+    {
+      "id": "pub2",
+      "type": "variable-write",
+      "name": "Channel2"
+    },
+    {
+      "id": "pub3",
+      "type": "variable-write",
+      "name": "Channel3"
+    },
+    {
+      "id": "pub4",
+      "type": "variable-write",
+      "name": "Channel4"
+    },
+    {
+      "id": "link",
+      "type": "variable-read",
+      "name": "ModbusConnected"
+    },
+    {
+      "id": "lost",
+      "type": "not"
+    },
+    {
+      "id": "fault",
+      "type": "digital-output",
+      "name": "FaultLamp"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "ch1",
+        "port": "value"
+      },
+      "to": {
+        "node": "pub1",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "ch2",
+        "port": "value"
+      },
+      "to": {
+        "node": "pub2",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "ch3",
+        "port": "value"
+      },
+      "to": {
+        "node": "pub3",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "ch4",
+        "port": "value"
+      },
+      "to": {
+        "node": "pub4",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "link",
+        "port": "value"
+      },
+      "to": {
+        "node": "lost",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "lost",
+        "port": "out"
+      },
+      "to": {
+        "node": "fault",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "Channel1",
+      "type": "float32",
+      "initial": "0"
+    },
+    {
+      "name": "Channel2",
+      "type": "float32",
+      "initial": "0"
+    },
+    {
+      "name": "Channel3",
+      "type": "float32",
+      "initial": "0"
+    },
+    {
+      "name": "Channel4",
+      "type": "float32",
+      "initial": "0"
+    },
+    {
+      "name": "ModbusConnected",
+      "type": "bool",
+      "initial": "false"
+    },
+    {
+      "name": "ModbusMsSinceRequest",
+      "type": "int32",
+      "initial": "2147483647"
+    },
+    {
+      "name": "ModbusLastException",
+      "type": "int32",
+      "initial": "0"
+    },
+    {
+      "name": "ModbusRequestCount",
+      "type": "int32",
+      "initial": "0"
+    },
+    {
+      "name": "ModbusErrorCount",
+      "type": "int32",
+      "initial": "0"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Channel1In",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "Channel2In",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "Channel3In",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "Channel4In",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "FaultLamp",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "devices": [
+    {
+      "name": "Eth",
+      "type": "wiznet:w5100"
+    }
+  ],
+  "modbus": {
+    "wordOrder": "abcd",
+    "entries": [
+      {
+        "variable": "Channel1",
+        "space": "inputRegister",
+        "address": 0,
+        "encoding": "float32",
+        "group": "Channels"
+      },
+      {
+        "variable": "Channel2",
+        "space": "inputRegister",
+        "address": 2,
+        "encoding": "float32",
+        "group": "Channels"
+      },
+      {
+        "variable": "Channel3",
+        "space": "inputRegister",
+        "address": 4,
+        "encoding": "float32",
+        "group": "Channels"
+      },
+      {
+        "variable": "Channel4",
+        "space": "inputRegister",
+        "address": 6,
+        "encoding": "float32",
+        "group": "Channels"
+      },
+      {
+        "variable": "ModbusMsSinceRequest",
+        "space": "inputRegister",
+        "address": 8,
+        "encoding": "int32",
+        "group": "Status"
+      },
+      {
+        "variable": "ModbusErrorCount",
+        "space": "inputRegister",
+        "address": 10,
+        "encoding": "int32",
+        "group": "Status"
+      }
+    ]
+  },
+  "ui": {
+    "nodes": {
+      "ch1": {
+        "x": 40,
+        "y": 40
+      },
+      "ch2": {
+        "x": 40,
+        "y": 140
+      },
+      "ch3": {
+        "x": 40,
+        "y": 240
+      },
+      "ch4": {
+        "x": 40,
+        "y": 340
+      },
+      "fault": {
+        "x": 420,
+        "y": 460
+      },
+      "link": {
+        "x": 40,
+        "y": 460
+      },
+      "lost": {
+        "x": 240,
+        "y": 460
+      },
+      "pub1": {
+        "x": 240,
+        "y": 40
+      },
+      "pub2": {
+        "x": 240,
+        "y": 140
+      },
+      "pub3": {
+        "x": 240,
+        "y": 240
+      },
+      "pub4": {
+        "x": 240,
+        "y": 340
+      }
+    }
+  }
+}

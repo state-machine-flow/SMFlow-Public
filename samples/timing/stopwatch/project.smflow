@@ -1,0 +1,273 @@
+{
+  "formatVersion": 5,
+  "name": "stopwatch",
+  "targets": [
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "main",
+      "periodMs": 100
+    }
+  ],
+  "nodes": [
+    {
+      "id": "startStop",
+      "type": "digital-input",
+      "name": "StartStop"
+    },
+    {
+      "id": "clear",
+      "type": "digital-input",
+      "name": "Clear"
+    },
+    {
+      "id": "runLatch",
+      "type": "toggle"
+    },
+    {
+      "id": "writeRunning",
+      "type": "variable-write",
+      "name": "Running"
+    },
+    {
+      "id": "tick",
+      "type": "variable-read",
+      "name": "OneTenth"
+    },
+    {
+      "id": "zero",
+      "type": "variable-read",
+      "name": "Zero"
+    },
+    {
+      "id": "elapsedRead",
+      "type": "variable-read",
+      "name": "ElapsedTenths"
+    },
+    {
+      "id": "increment",
+      "type": "select",
+      "properties": {
+        "type": "int32"
+      }
+    },
+    {
+      "id": "accumulate",
+      "type": "variable-update",
+      "name": "ElapsedTenths",
+      "properties": {
+        "operation": "add"
+      }
+    },
+    {
+      "id": "clearAmount",
+      "type": "select",
+      "properties": {
+        "type": "int32"
+      }
+    },
+    {
+      "id": "zeroOut",
+      "type": "variable-update",
+      "name": "ElapsedTenths",
+      "properties": {
+        "operation": "subtract"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "startStop",
+        "port": "value"
+      },
+      "to": {
+        "node": "runLatch",
+        "port": "CLK"
+      }
+    },
+    {
+      "from": {
+        "node": "clear",
+        "port": "value"
+      },
+      "to": {
+        "node": "runLatch",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "runLatch",
+        "port": "Q"
+      },
+      "to": {
+        "node": "writeRunning",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "runLatch",
+        "port": "Q"
+      },
+      "to": {
+        "node": "increment",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "tick",
+        "port": "value"
+      },
+      "to": {
+        "node": "increment",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "zero",
+        "port": "value"
+      },
+      "to": {
+        "node": "increment",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "increment",
+        "port": "out"
+      },
+      "to": {
+        "node": "accumulate",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "clear",
+        "port": "value"
+      },
+      "to": {
+        "node": "clearAmount",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "elapsedRead",
+        "port": "value"
+      },
+      "to": {
+        "node": "clearAmount",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "zero",
+        "port": "value"
+      },
+      "to": {
+        "node": "clearAmount",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "clearAmount",
+        "port": "out"
+      },
+      "to": {
+        "node": "zeroOut",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "ElapsedTenths",
+      "type": "int32",
+      "initial": "0"
+    },
+    {
+      "name": "Running",
+      "type": "bool",
+      "initial": "false"
+    },
+    {
+      "name": "OneTenth",
+      "type": "int32",
+      "initial": "1"
+    },
+    {
+      "name": "Zero",
+      "type": "int32",
+      "initial": "0"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartStop",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Clear",
+      "direction": "input",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "startStop": {
+        "x": 40,
+        "y": 40
+      },
+      "clear": {
+        "x": 40,
+        "y": 160
+      },
+      "runLatch": {
+        "x": 240,
+        "y": 60
+      },
+      "writeRunning": {
+        "x": 440,
+        "y": 40
+      },
+      "tick": {
+        "x": 440,
+        "y": 260
+      },
+      "zero": {
+        "x": 440,
+        "y": 340
+      },
+      "elapsedRead": {
+        "x": 440,
+        "y": 440
+      },
+      "increment": {
+        "x": 660,
+        "y": 180
+      },
+      "accumulate": {
+        "x": 880,
+        "y": 180
+      },
+      "clearAmount": {
+        "x": 660,
+        "y": 400
+      },
+      "zeroOut": {
+        "x": 880,
+        "y": 400
+      }
+    }
+  }
+}

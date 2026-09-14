@@ -1,0 +1,287 @@
+{
+  "formatVersion": 5,
+  "name": "modbus-diagnostic",
+  "target": "atmega2560-mega",
+  "targets": [
+    "atmega2560-mega"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "ch",
+      "type": "analog-input",
+      "name": "Channel1In"
+    },
+    {
+      "id": "pub",
+      "type": "variable-write",
+      "name": "Channel1"
+    },
+    {
+      "id": "ms",
+      "type": "variable-read",
+      "name": "ModbusMsSinceRequest"
+    },
+    {
+      "id": "msT",
+      "type": "to-text",
+      "properties": {
+        "type": "int32"
+      }
+    },
+    {
+      "id": "l0",
+      "type": "hd44780-text",
+      "name": "Lcd",
+      "properties": {
+        "line": "0"
+      }
+    },
+    {
+      "id": "rq",
+      "type": "variable-read",
+      "name": "ModbusRequestCount"
+    },
+    {
+      "id": "rqT",
+      "type": "to-text",
+      "properties": {
+        "type": "int32"
+      }
+    },
+    {
+      "id": "l1",
+      "type": "hd44780-text",
+      "name": "Lcd",
+      "properties": {
+        "line": "1"
+      }
+    },
+    {
+      "id": "er",
+      "type": "variable-read",
+      "name": "ModbusErrorCount"
+    },
+    {
+      "id": "erT",
+      "type": "to-text",
+      "properties": {
+        "type": "int32"
+      }
+    },
+    {
+      "id": "l2",
+      "type": "hd44780-text",
+      "name": "Lcd",
+      "properties": {
+        "line": "2"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "ch",
+        "port": "value"
+      },
+      "to": {
+        "node": "pub",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "ms",
+        "port": "value"
+      },
+      "to": {
+        "node": "msT",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "msT",
+        "port": "text"
+      },
+      "to": {
+        "node": "l0",
+        "port": "text"
+      }
+    },
+    {
+      "from": {
+        "node": "rq",
+        "port": "value"
+      },
+      "to": {
+        "node": "rqT",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "rqT",
+        "port": "text"
+      },
+      "to": {
+        "node": "l1",
+        "port": "text"
+      }
+    },
+    {
+      "from": {
+        "node": "er",
+        "port": "value"
+      },
+      "to": {
+        "node": "erT",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "erT",
+        "port": "text"
+      },
+      "to": {
+        "node": "l2",
+        "port": "text"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "Channel1",
+      "type": "float32",
+      "initial": "0"
+    },
+    {
+      "name": "ModbusConnected",
+      "type": "bool",
+      "initial": "false"
+    },
+    {
+      "name": "ModbusMsSinceRequest",
+      "type": "int32",
+      "initial": "2147483647"
+    },
+    {
+      "name": "ModbusLastException",
+      "type": "int32",
+      "initial": "0"
+    },
+    {
+      "name": "ModbusRequestCount",
+      "type": "int32",
+      "initial": "0"
+    },
+    {
+      "name": "ModbusErrorCount",
+      "type": "int32",
+      "initial": "0"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Channel1In",
+      "direction": "input",
+      "type": "float32"
+    }
+  ],
+  "devices": [
+    {
+      "name": "Eth",
+      "type": "wiznet:w5100"
+    },
+    {
+      "name": "Lcd",
+      "type": "hitachi:hd44780-i2c"
+    }
+  ],
+  "modbus": {
+    "wordOrder": "abcd",
+    "entries": [
+      {
+        "variable": "Channel1",
+        "space": "inputRegister",
+        "address": 0,
+        "encoding": "float32"
+      },
+      {
+        "variable": "ModbusMsSinceRequest",
+        "space": "inputRegister",
+        "address": 2,
+        "encoding": "int32",
+        "group": "Status"
+      },
+      {
+        "variable": "ModbusRequestCount",
+        "space": "inputRegister",
+        "address": 4,
+        "encoding": "int32",
+        "group": "Status"
+      },
+      {
+        "variable": "ModbusErrorCount",
+        "space": "inputRegister",
+        "address": 6,
+        "encoding": "int32",
+        "group": "Status"
+      }
+    ]
+  },
+  "ui": {
+    "nodes": {
+      "ch": {
+        "x": 40,
+        "y": 400
+      },
+      "er": {
+        "x": 40,
+        "y": 260
+      },
+      "erT": {
+        "x": 250,
+        "y": 260
+      },
+      "l0": {
+        "x": 460,
+        "y": 40
+      },
+      "l1": {
+        "x": 460,
+        "y": 150
+      },
+      "l2": {
+        "x": 460,
+        "y": 260
+      },
+      "ms": {
+        "x": 40,
+        "y": 40
+      },
+      "msT": {
+        "x": 250,
+        "y": 40
+      },
+      "pub": {
+        "x": 250,
+        "y": 400
+      },
+      "rq": {
+        "x": 40,
+        "y": 150
+      },
+      "rqT": {
+        "x": 250,
+        "y": 150
+      }
+    }
+  }
+}

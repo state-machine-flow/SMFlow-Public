@@ -1,0 +1,38 @@
+{
+  "formatVersion": 1,
+  "project": "modbus-analog",
+  "bindings": {
+    "atmega2560-mega": {
+      "Channel1In": "A0",
+      "Channel2In": "A1",
+      "Channel3In": "A2",
+      "Channel4In": "A3",
+      "FaultLamp": "D8"
+    }
+  },
+  "devices": {
+    "atmega2560-mega": {
+      "Eth": {
+        "bus": "spi0",
+        "cs": "D10",
+        "pins": {
+          "sd_cs": "D4"
+        },
+        "config": {
+          "ip": "192.168.1.50",
+          "mac": "DE:AD:BE:EF:FE:01"
+        }
+      }
+    }
+  },
+  "modbus": {
+    "atmega2560-mega": {
+      "transport": "tcp",
+      "controller": "Eth",
+      "port": 502,
+      "unitId": 1,
+      "livenessWindowMs": 5000,
+      "octetsPerTick": 64
+    }
+  }
+}
