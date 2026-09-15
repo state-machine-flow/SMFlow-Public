@@ -10,6 +10,72 @@ All notable changes to SMFlow are recorded here. The format follows
 ### Changed
 ### Fixed
 
+## [0.9.10-beta1] - 2026-09-15
+
+### Added
+
+- **AI assistants can author flows.** `smflow mcp` starts a Model Context Protocol server that
+  Claude Desktop, Claude Code, Cursor, VS Code and Windsurf can connect to. An assistant can read a
+  project, ask what node types and targets this build actually has, look up a board's pinout, and
+  propose changes to the graph. It authors from what the server reports, not from what it
+  remembers, so it cannot invent a node or a pin that does not exist.
+- **Every proposal is reviewed before it lands.** Changes arrive in the editor as a staged proposal
+  with a plain summary and a ghosted preview on the canvas, and nothing is applied until you accept
+  it. A "Trust AI edits for this session" toggle is available when you want hands-free iteration;
+  it is in-memory only and is off again next launch.
+- **Headless mode.** `smflow mcp --project <path>` works on a project file with no editor running,
+  for scripting and CI. In that mode there is no review step — proposals apply directly.
+- **Connect an AI client, from Settings.** The dialog gives the exact `smflow` path for this
+  installation and a ready-to-paste configuration for each supported client, along with the file it
+  belongs in. See `docs/guide/ai-assistants.md`.
+- **Worked examples ship inside the binary.** The server hands a connecting assistant a short
+  authoring brief plus example flows, so its guidance always matches the node catalogue this build
+  reports. No network access is involved.
+- **CLI authoring verbs.** `smflow new`, `smflow add-node`, `smflow connect` and `smflow apply`
+  build a project from a script without opening the editor.
+- **Undo and redo.** `Ctrl+Z` / `Ctrl+Y`, with readable labels for what is being undone. Applying a
+  change and undoing it restores the project file byte for byte.
+
+### Notes
+
+- The control channel the editor exposes is loopback-only, carries a per-session bearer token, and
+  stops with the editor. Deploying to hardware is never available through it.
+
+## [0.9.9-beta1] - 2026-09-14
+
+### Added
+
+- **A serial console in the editor.** The bottom panel is tabbed — **Build** keeps the diagnostics
+  and toolchain output, **Serial** shows what the board is saying. Pick a port, press Attach, and
+  the editor watches for boards arriving and leaving. The port is held only while attached, so
+  uploads and other tools on the machine can still open it.
+- **`serial-tx`, so the graph chooses when to send.** Its `send` input is a rising edge: a condition
+  held true transmits once, not once per scan. It reports `sent`, `busy`, and a saturating count of
+  frames dropped for want of outbox room — a link that cannot keep up says so rather than stretching
+  the scan.
+- **Serial endpoints are declared hardware.** A project names an endpoint, binds it to a UART, and
+  sets baud rate and outbox size in the `.iomap`. The graph names the endpoint by id, so moving a
+  program to another board changes which UART carries it and nothing else.
+- **`to-text` takes a format template.** Defaulting to `{}`: `frame count: {}\n` renders
+  `frame count: 42` and a newline, `{0.00} V` renders `42.00 V`. Escapes are `\n`, `\r`, `\t`,
+  `\\`, `{{` and `}}`; anything else is a validation error.
+- **A resizable, floatable output panel.** A splitter resizes the bottom panel, and **⇱ Float**
+  moves it into its own window when a console wants more height than the editor can spare.
+- **Linux targets print to `stdout`.** An endpoint named as the console is the process's own output
+  rather than a UART, so a `linux-x64` build logs without needing a terminal.
+- **`samples/basics/serial-debug`** — a counter, a format template and a `serial-tx` on a timed
+  task, showing the same output in the simulator, on `stdout`, and at 9600 baud from an ATmega328.
+
+### Changed
+
+- The free tier allows one serial endpoint. The console viewer itself is not gated; this limits how
+  many UARTs one program may drive.
+
+### Fixed
+
+- Pulling the USB cable mid-read is now reported as a disconnect instead of leaving the console
+  quiet with no explanation.
+
 ## [0.9.7-beta1] - 2026-09-14
 
 ### Added
