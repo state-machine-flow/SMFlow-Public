@@ -1,3 +1,36 @@
+# SMFlow-Public — release role
+
+This repository is the public face of SMFlow: documentation, samples, and the **published
+releases**. The editor's source lives in the private `SMFlow` repo (`F:/repos/ctacke/SMFlow`), and
+its release workflow publishes installers *here*. Nothing is built in this repository.
+
+## When a release is asked for
+
+A release is never cut from this repository alone. The full sequence lives in the private repo's
+`CLAUDE.md` under "Releasing" — follow it there. This repository's part of it:
+
+1. **Add the version's entry to `releases/CHANGELOG.md`** before the release is published. Keep a
+   Changelog form, `## [<version>] - <date>`, newest first, written for the person installing it.
+   This file is user-facing and is *not* generated from the private repo's `CHANGELOG.md`; both must
+   be updated, and they are worded differently on purpose.
+2. **Commit and push it to `main`** ahead of the tag, so the release tag lands on a commit that
+   documents the release.
+3. **Do not create the `v<version>` tag by hand.** The private repo's workflow creates it here when
+   it publishes, pointing at whatever `main` is then. A hand-made local tag will disagree with it.
+4. **Verify the release is not a draft** once the workflow is green:
+
+   ```
+   gh release view v<version> --json isDraft,isPrerelease,assets
+   ```
+
+   The packaging tool merges into a leftover draft if one exists, which leaves the release
+   undownloadable while the workflow still reports success. Publish with
+   `gh release edit v<version> --draft=false --prerelease`.
+
+A release only counts as done when `gh release view` reports `isDraft=false` and the five assets
+(`SMFlow-win-Setup.exe`, `SMFlow-win-Portable.zip`, the `.nupkg`, `RELEASES`, `releases.win.json`)
+are attached. Betas stay marked as prereleases — that is the channel the in-app updater follows.
+
 # context-mode — MANDATORY routing rules
 
 You have context-mode MCP tools available. These rules are NOT optional — they protect your context window from flooding. A single unrouted command can dump 56 KB into context and waste the entire session.
