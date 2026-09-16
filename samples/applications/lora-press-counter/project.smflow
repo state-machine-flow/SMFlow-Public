@@ -223,7 +223,7 @@
       "type": "bool"
     }
   ],
-  "devices": [
+  "peripherals": [
     {
       "name": "Radio",
       "type": "semtech:sx1262"

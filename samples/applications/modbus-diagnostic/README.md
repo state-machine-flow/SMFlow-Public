@@ -65,11 +65,11 @@ backpack.
 | Ethernet controller | `spi0`, CS **D10**, SD CS **D4** | The shield reaches SPI through the **ICSP header** — D11–D13 are the Uno's SPI and are *not* SPI on a Mega. |
 | LCD | `i2c0` (D20 SDA / D21 SCL), **0x27** | |
 
-Two settings you will probably have to change, both in **Settings → Devices**:
+Two settings you will probably have to change, both in **Settings → Peripherals**:
 
 - **The LCD address.** `0x27` is a PCF8574T; a PCF8574**A**T is `0x3F`. They are indistinguishable
   without reading the chip marking, which is why SMFlow refuses to guess and the field starts empty
-  on a fresh device. A wrong address is a blank screen and nothing else.
+  on a fresh peripheral. A wrong address is a blank screen and nothing else.
 - **The IP and MAC.** The sample ships `192.168.1.50` and `DE:AD:BE:EF:FE:01`. The address must suit
   your network and the MAC must be unique on the segment.
 
@@ -111,7 +111,7 @@ into a cycle-time spike.
 
 ## Why the display and not a serial console
 
-SMFlow's generated code prints nothing. There is a UART HAL for device buses, but no diagnostic
+SMFlow's generated code prints nothing. There is a UART HAL for peripheral buses, but no diagnostic
 console — so on a headless board the only way to ask the firmware what it thinks it is doing is to
 put it on something you can see. That is a real gap rather than a design choice, and it is why this
 sample exists.

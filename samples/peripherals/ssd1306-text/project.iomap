@@ -17,7 +17,7 @@
       }
     }
   },
-  "devices": {
+  "peripherals": {
     "esp32-s3": {
       "Oled": {
         "bus": "i2c1",

@@ -41,7 +41,7 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 | `pwm-piezo` | atmega2560-mega, simulator | A PWM duty cycle and a piezo tone, and the timers they claim |
 | `piezo-double-beep` | atmega2560-mega, simulator | Gating a tone with `select`; a piezo and nothing else to wire |
 
-### devices/ — peripherals over I²C and SPI
+### peripherals/ — peripherals over I²C and SPI
 | Sample | Targets | Shows |
 |---|---|---|
 | `ssd1306-text` | rp2040-pico, esp32-s3, simulator | Text and counters on an I²C OLED |

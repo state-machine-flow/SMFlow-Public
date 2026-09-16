@@ -1,12 +1,12 @@
 # SMFlow
 
-**Visual programming that compiles to native C++ — no runtime on the device.**
+**Visual programming that compiles to native C++ — no runtime on the controller.**
 
 SMFlow is a desktop environment for building deterministic industrial and embedded control programs
 as a node-and-wire graph. The graph *is* the source code. It is compiled ahead of time into ordinary,
 readable C++ and then into a native binary for your target.
 
-There is no interpreter, no scripting engine, and no SMFlow runtime on the device. Your Pico, ESP32,
+There is no interpreter, no scripting engine, and no SMFlow runtime on the controller. Your Pico, ESP32,
 Opta, or Linux box runs plain compiled code — nothing else has to be installed.
 
 - Website: **[smflow.co](https://smflow.co)**
@@ -70,7 +70,7 @@ Each sample is a complete project folder you can open directly in the editor.
 | [`logic/motor-interlock`](samples/logic/motor-interlock) | Safety interlock with combinational logic |
 | [`timing/start-delay`](samples/timing/start-delay) | On-delay timing in a periodic task |
 | [`io/pico-latch`](samples/io/pico-latch) | A two-state latch on a Raspberry Pi Pico |
-| [`devices/ssd1306-text`](samples/devices/ssd1306-text) | Text and telemetry on an I²C OLED |
+| [`peripherals/ssd1306-text`](samples/peripherals/ssd1306-text) | Text and telemetry on an I²C OLED |
 | [`applications/lora-press-counter`](samples/applications/lora-press-counter) | Binary LoRa packets from a button counter |
 | [`applications/modbus-analog`](samples/applications/modbus-analog) | Analog channels served to a SCADA system as Modbus TCP registers |
 

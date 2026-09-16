@@ -1,7 +1,7 @@
 # SMFlow documentation
 
 The manual for SMFlow — a visual programming environment that compiles node-and-wire graphs into
-native C++ with no runtime on the device.
+native C++ with no runtime on the controller.
 
 ## Getting started
 
@@ -18,7 +18,7 @@ native C++ with no runtime on the device.
 - [Building and deploying](guide/building-and-deploying.md) — targets, artifacts, flashing
 - [Testing flows](guide/testing.md) — `.smtest` files and `smflow test`
 - [Working with an AI assistant](guide/ai-assistants.md) — connecting Claude, Cursor, Copilot, and friends
-- [The CLI](guide/cli.md) — `validate`, `build`, `simulate`, `test`, `deploy`, `targets`, `devices`
+- [The CLI](guide/cli.md) — `validate`, `build`, `simulate`, `test`, `deploy`, `targets`, `peripherals`
 - [Project file format](guide/project-format.md) — what `.smflow` and `.iomap` contain
 - [Troubleshooting](guide/troubleshooting.md)
 

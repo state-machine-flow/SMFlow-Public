@@ -129,7 +129,7 @@
       "type": "bool"
     }
   ],
-  "devices": [
+  "peripherals": [
     {
       "name": "Oled",
       "type": "solomon:ssd1306"

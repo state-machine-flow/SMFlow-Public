@@ -6,7 +6,7 @@
       "radioReset": "GPIO5"
     }
   },
-  "devices": {
+  "peripherals": {
     "esp32-s3": {
       "Radio": {
         "bus": "fspi",

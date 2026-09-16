@@ -25,7 +25,7 @@ Button (DI) ──┬──► [CU] Counter [CV] ──► [in_pressCount] Creat
 - **Derived Input Port:** `in_pressCount` (`DataType.Int32`)
 - **Output Port:** `payload` (`DataType.Bytes`, 4 bytes total length)
 
-## Device Configuration
+## Peripheral Configuration
 
-- **Device Instance:** `Radio`
-- **Device Type:** `semtech:sx1262` (Asynchronous SPI LoRa Transceiver)
+- **Peripheral Instance:** `Radio`
+- **Peripheral Type:** `semtech:sx1262` (Asynchronous SPI LoRa Transceiver)

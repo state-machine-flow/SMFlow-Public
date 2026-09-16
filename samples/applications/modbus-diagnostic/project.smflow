@@ -194,7 +194,7 @@
       "type": "float32"
     }
   ],
-  "devices": [
+  "peripherals": [
     {
       "name": "Eth",
       "type": "wiznet:w5100"

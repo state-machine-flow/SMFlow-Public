@@ -8,6 +8,22 @@ All notable changes to SMFlow are recorded here. The format follows
 
 ### Added
 ### Changed
+
+- Peripherals are now called peripherals, and the board or machine you deploy to is called a
+  controller. The editor menu is **Project > Peripherals...**, the toolbar reads **Deploy to**, and
+  **Build > Deploy** replaces "Deploy to Device".
+- Projects and io maps save a `peripherals` key where they used to save `devices`. Existing
+  projects still open: a file written under the old name is read, converted, and written back under
+  the new one the next time it is saved, so nothing needs editing by hand.
+- Generated C++ emits `namespace peripherals` instead of `namespace devices`. Rebuild rather than
+  relinking against old object files.
+- `smflow devices` is now `smflow controllers`, since it lists attached boards rather than
+  peripherals. The old verb still works for now.
+- For AI assistants: the MCP tool `list_devices` is now `list_peripherals`, and the authoring
+  operations are `add_peripheral`, `rename_peripheral`, `remove_peripheral`,
+  `set_peripheral_binding` and `clear_peripheral_binding`.
+- The `samples/devices/` folder is now `samples/peripherals/`.
+
 ### Fixed
 
 ## [0.9.10-beta1] - 2026-09-15

@@ -203,7 +203,7 @@
       "type": "bool"
     }
   ],
-  "devices": [
+  "peripherals": [
     {
       "name": "Eth",
       "type": "wiznet:w5100"

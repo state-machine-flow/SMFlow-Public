@@ -73,7 +73,7 @@ An **Elegoo Mega 2560 R3** (or a genuine Arduino Mega 2560) with a **W5100 Ether
 
 The shield's controller is named in `project.iomap`, because a driver has to be chosen before
 anything can be probed. **A W5100 and a W5500 are not register-compatible** — read the silkscreen on
-the largest chip and set the device type to match. Once running, the driver reports which part it
+the largest chip and set the peripheral type to match. Once running, the driver reports which part it
 actually found: declare one and fit the other and `EthernetControllerOk` goes false, rather than the
 board building cleanly and never answering.
 
@@ -88,7 +88,7 @@ The controller also declares `EthernetControllerOk` and `EthernetAddressed`. The
 you the shield is seated and is the part you said it was; the second is what a flow gates on. Neither
 is the same as `ModbusConnected`, which measures whether a client is talking to you.
 
-The MAC and the IP are yours to choose, on the controller in **Settings → Devices**. Neither is
+The MAC and the IP are yours to choose, on the controller in **Settings → Peripherals**. Neither is
 defaulted. A MAC has to be unique on the segment, and a generated one would differ
 between two builds of the same program. The address is static rather than DHCP because
 `Ethernet.begin(mac)` blocks for up to a minute, and a board that never boots because a DHCP server

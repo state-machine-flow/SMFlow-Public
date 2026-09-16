@@ -30,12 +30,12 @@ Every pin is 3.3 V logic and **not** 5 V tolerant.
 ## Deploying it
 
 From the editor: open `project.smflow`, check the target strip reads `rp2040-pico`, choose the board
-in the Device box, and press **F7** (Build ▸ Deploy to Device).
+in the Deploy to box, and press **F7** (Build ▸ Deploy).
 
 From the CLI:
 
 ```
-smflow devices
+smflow controllers
 smflow deploy examples/pico-latch/project.smflow
 ```
 

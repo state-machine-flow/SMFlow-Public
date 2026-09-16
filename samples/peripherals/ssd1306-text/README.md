@@ -1,6 +1,6 @@
 # SSD1306 OLED Text Display Example
 
-This example demonstrates how to use the **SSD1306 128x64 I2C OLED display** device to render static and dynamic text strings and counter telemetry on microcontroller targets (Raspberry Pi Pico, ESP32-S3) and in the SMFlow simulator.
+This example demonstrates how to use the **SSD1306 128x64 I2C OLED display** peripheral to render static and dynamic text strings and counter telemetry on microcontroller targets (Raspberry Pi Pico, ESP32-S3) and in the SMFlow simulator.
 
 ## Overview
 
@@ -22,10 +22,10 @@ SSD1306 Text (Line 0, Text: "SMFlow OLED")
 SSD1306 Text (Line 4, Text: "Status: OK")
 ```
 
-## Device Configuration
+## Peripheral Configuration
 
-- **Device Name:** `Oled`
-- **Device Type:** `solomon:ssd1306` (128x64 Monochrome I2C OLED Display)
+- **Peripheral Name:** `Oled`
+- **Peripheral Type:** `solomon:ssd1306` (128x64 Monochrome I2C OLED Display)
 - **I2C Bus:**
   - Raspberry Pi Pico: `i2c0` (GP4 SDA / GP5 SCL)
   - ESP32-S3: `i2c0` (GPIO8 SDA / GPIO9 SCL)

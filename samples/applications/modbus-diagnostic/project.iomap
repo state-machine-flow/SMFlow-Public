@@ -6,7 +6,7 @@
       "Channel1In": "A0"
     }
   },
-  "devices": {
+  "peripherals": {
     "atmega2560-mega": {
       "Eth": {
         "bus": "spi0",

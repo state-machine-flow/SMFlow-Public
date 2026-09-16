@@ -10,10 +10,10 @@ This is opt-in and off until you turn it on.
 
 It can:
 
-- read the graph, the tasks, the shared variables, and the configured devices
+- read the graph, the tasks, the shared variables, and the configured peripherals
 - look up which nodes exist, which targets are supported, and what pins a board actually has
 - run validation and read the errors back
-- **propose** changes — nodes, wires, parameters, tasks, variables, device bindings
+- **propose** changes — nodes, wires, parameters, tasks, variables, peripheral bindings
 - build the project and report what the compiler said
 
 It cannot:
@@ -126,7 +126,7 @@ It does not guess at your hardware. It asks:
 | `list_node_types` | Every node this build has, with ports and types |
 | `list_targets` / `describe_target` | Supported boards; a board's pins, ADC and PWM channels, buses, clock |
 | `read_graph` / `describe_project` | The project as it is now |
-| `list_devices` / `list_variables` | Configured peripherals and shared variables |
+| `list_peripherals` / `list_variables` | Configured peripherals and shared variables |
 | `get_diagnostics` | Validation errors and warnings |
 | `list_examples` / `get_example` | Worked flows shipped with this build |
 | `propose_changes` | Submits a batch of edits for review |

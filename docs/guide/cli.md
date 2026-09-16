@@ -33,7 +33,7 @@ version-stamped one.
 | `smflow analyze <project>` | Reports on the generated program |
 | `smflow report <project>` | Produces a build report |
 | `smflow targets` | Lists the targets this build can compile for |
-| `smflow devices` | Lists attached boards |
+| `smflow controllers` | Lists attached boards |
 | `smflow license status` | Shows the current license and what it grants |
 
 ## Exit codes
