@@ -11,7 +11,7 @@
         "txBufferOctets": 256
       },
       "LoRa": {
-        "bus": "ttyAMA0",
+        "bus": "serial0",
         "baud": 9600,
         "txCapacity": 128,
         "txBufferOctets": 256

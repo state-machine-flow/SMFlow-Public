@@ -14,6 +14,19 @@
         "pin": "GPIO19",
         "resistor": "pullDown"
       }
+    },
+    "heltec-lora32-v3": {
+      "Button": {
+        "pin": "GPIO7",
+        "resistor": "pullDown"
+      },
+      "Input1": {
+        "pin": "GPIO19",
+        "resistor": "pullDown"
+      },
+      "Busy": "GPIO35",
+      "Done": "GPIO2",
+      "Error": "GPIO3"
     }
   },
   "peripherals": {
@@ -35,6 +48,34 @@
           "busy": "GPIO4",
           "dio1": "GPIO6",
           "reset": "GPIO5"
+        }
+      }
+    },
+    "heltec-lora32-v3": {
+      "Oled": {
+        "bus": "i2c0",
+        "address": "0x3C",
+        "pins": {
+          "reset": "GPIO21"
+        }
+      },
+      "Radio": {
+        "bus": "spi_lora",
+        "cs": "GPIO8",
+        "pins": {
+          "busy": "GPIO13",
+          "dio1": "GPIO14",
+          "reset": "GPIO12"
+        },
+        "config": {
+          "frequencyHz": "915125000",
+          "spreadingFactor": "7",
+          "bandwidthKhz": "125",
+          "codingRate": "5",
+          "syncWord": "private",
+          "txPowerDbm": "14",
+          "tcxoVoltageMv": "1800",
+          "preambleSymbols": "8"
         }
       }
     }

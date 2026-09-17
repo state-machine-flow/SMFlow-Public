@@ -1,9 +1,10 @@
 {
   "formatVersion": 4,
   "name": "lora-press-counter",
-  "target": "esp32-s3",
+  "target": "heltec-lora32-v3",
   "targets": [
-    "esp32-s3"
+    "esp32-s3",
+    "heltec-lora32-v3"
   ],
   "tasks": [
     {
