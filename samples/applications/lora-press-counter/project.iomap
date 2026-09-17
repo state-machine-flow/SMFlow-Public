@@ -3,14 +3,37 @@
   "project": "lora-press-counter",
   "bindings": {
     "esp32-s3": {
-      "radioReset": "GPIO5"
+      "Busy": "GPIO1",
+      "Button": {
+        "pin": "GPIO7",
+        "resistor": "pullDown"
+      },
+      "Done": "GPIO2",
+      "Error": "GPIO3",
+      "Input1": {
+        "pin": "GPIO19",
+        "resistor": "pullDown"
+      }
     }
   },
   "peripherals": {
     "esp32-s3": {
+      "Oled": {
+        "bus": "i2c1",
+        "address": "0x3C",
+        "pins": {
+          "reset": "GPIO21",
+          "power": "GPIO36"
+        },
+        "config": {
+          "powerActiveLow": "true"
+        }
+      },
       "Radio": {
         "bus": "fspi",
         "pins": {
+          "busy": "GPIO4",
+          "dio1": "GPIO6",
           "reset": "GPIO5"
         }
       }

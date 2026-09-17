@@ -64,14 +64,21 @@
       }
     },
     {
-      "id": "n6",
-      "type": "digital-input",
-      "name": "Input2"
+      "id": "fmt",
+      "type": "to-text",
+      "name": "CountText",
+      "properties": {
+        "format": "Sent: {}",
+        "type": "int32"
+      }
     },
     {
-      "id": "n7",
-      "type": "digital-output",
-      "name": "radioReset"
+      "id": "oled",
+      "type": "ssd1306-text",
+      "name": "Oled",
+      "properties": {
+        "line": "0"
+      }
     }
   ],
   "connections": [
@@ -177,12 +184,22 @@
     },
     {
       "from": {
-        "node": "n6",
-        "port": "value"
+        "node": "cnt",
+        "port": "CV"
       },
       "to": {
-        "node": "n7",
+        "node": "fmt",
         "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "fmt",
+        "port": "text"
+      },
+      "to": {
+        "node": "oled",
+        "port": "text"
       }
     }
   ],
@@ -211,22 +228,16 @@
       "logical": "Error",
       "direction": "output",
       "type": "bool"
-    },
-    {
-      "logical": "Input2",
-      "direction": "input",
-      "type": "bool"
-    },
-    {
-      "logical": "radioReset",
-      "direction": "output",
-      "type": "bool"
     }
   ],
   "peripherals": [
     {
       "name": "Radio",
       "type": "semtech:sx1262"
+    },
+    {
+      "name": "Oled",
+      "type": "solomon:ssd1306"
     }
   ],
   "ui": {
@@ -242,6 +253,10 @@
       "cnt": {
         "x": 257.6,
         "y": 253.59999999999997
+      },
+      "fmt": {
+        "x": 1038.0824000000002,
+        "y": 475.1935999999999
       },
       "led": {
         "x": 1028.7999999999997,
@@ -263,13 +278,9 @@
         "x": 1034.2368000000001,
         "y": 227.228
       },
-      "n6": {
-        "x": 25.233599999999917,
-        "y": 479.9976
-      },
-      "n7": {
-        "x": 1026.1456000000003,
-        "y": 467.2200000000001
+      "oled": {
+        "x": 1312.8008000000002,
+        "y": 448.48240000000004
       },
       "tx": {
         "x": 751.1999999999998,

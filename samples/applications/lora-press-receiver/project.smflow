@@ -1,0 +1,159 @@
+{
+  "formatVersion": 5,
+  "name": "lora-press-receiver",
+  "target": "linux-arm64",
+  "targets": [
+    "linux-arm64",
+    "linux-x64"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 50
+    }
+  ],
+  "nodes": [
+    {
+      "id": "rx",
+      "type": "serial-rx",
+      "name": "LoRa"
+    },
+    {
+      "id": "unpacker",
+      "type": "unpack-payload",
+      "properties": {
+        "schema": "pressCount:int32:be"
+      }
+    },
+    {
+      "id": "gate",
+      "type": "and"
+    },
+    {
+      "id": "formatter",
+      "type": "to-text",
+      "properties": {
+        "format": "Received LoRa count: {}\n",
+        "type": "int32"
+      }
+    },
+    {
+      "id": "console",
+      "type": "serial-tx",
+      "name": "Console"
+    },
+    {
+      "id": "n1",
+      "type": "variable-read",
+      "name": "start"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "rx",
+        "port": "data"
+      },
+      "to": {
+        "node": "unpacker",
+        "port": "payload"
+      }
+    },
+    {
+      "from": {
+        "node": "rx",
+        "port": "received"
+      },
+      "to": {
+        "node": "gate",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "unpacker",
+        "port": "valid"
+      },
+      "to": {
+        "node": "gate",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "unpacker",
+        "port": "out_pressCount"
+      },
+      "to": {
+        "node": "formatter",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "formatter",
+        "port": "text"
+      },
+      "to": {
+        "node": "console",
+        "port": "data"
+      }
+    },
+    {
+      "from": {
+        "node": "gate",
+        "port": "out"
+      },
+      "to": {
+        "node": "console",
+        "port": "send"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "rx",
+        "port": "enable"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "start",
+      "type": "bool",
+      "initial": "false"
+    }
+  ],
+  "hardware": [],
+  "ui": {
+    "nodes": {
+      "console": {
+        "x": 939.2,
+        "y": 117.60000000000002
+      },
+      "formatter": {
+        "x": 668.0000000000001,
+        "y": 275.2
+      },
+      "gate": {
+        "x": 670.4000000000001,
+        "y": 135.20000000000002
+      },
+      "n1": {
+        "x": -38.24000000000002,
+        "y": 139.28000000000017
+      },
+      "rx": {
+        "x": 214.39999999999998,
+        "y": 103.19999999999999
+      },
+      "unpacker": {
+        "x": 432,
+        "y": 24.80000000000001
+      }
+    }
+  }
+}
