@@ -1,0 +1,195 @@
+{
+  "formatVersion": 5,
+  "name": "untitled",
+  "target": "heltec-lora32-v3",
+  "targets": [
+    "heltec-lora32-v3"
+  ],
+  "tasks": [
+    {
+      "name": "main",
+      "periodMs": 10
+    },
+    {
+      "name": "task2",
+      "periodMs": 0,
+      "kind": "init"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "sx1262-rx",
+      "name": "lora"
+    },
+    {
+      "id": "n3",
+      "type": "unpack-payload",
+      "properties": {
+        "schema": "pressCount:int32:be"
+      }
+    },
+    {
+      "id": "en",
+      "type": "variable-read",
+      "name": "RadioEnable"
+    },
+    {
+      "id": "fmt",
+      "type": "to-text",
+      "properties": {
+        "format": "Count: {}",
+        "type": "int32"
+      }
+    },
+    {
+      "id": "n6",
+      "type": "to-text",
+      "properties": {
+        "format": "RSSI: {0.00}",
+        "type": "float32"
+      }
+    },
+    {
+      "id": "n8",
+      "type": "ssd1306-text",
+      "name": "oled",
+      "task": "task2",
+      "properties": {
+        "text": "LoRa Rx"
+      }
+    },
+    {
+      "id": "n9",
+      "type": "ssd1306-text",
+      "name": "oled",
+      "properties": {
+        "line": "1"
+      }
+    },
+    {
+      "id": "n10",
+      "type": "ssd1306-text",
+      "name": "oled",
+      "properties": {
+        "line": "2"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "n1",
+        "port": "payload"
+      },
+      "to": {
+        "node": "n3",
+        "port": "payload"
+      }
+    },
+    {
+      "from": {
+        "node": "en",
+        "port": "value"
+      },
+      "to": {
+        "node": "n1",
+        "port": "enable"
+      }
+    },
+    {
+      "from": {
+        "node": "n3",
+        "port": "out_pressCount"
+      },
+      "to": {
+        "node": "fmt",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "rssi"
+      },
+      "to": {
+        "node": "n6",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "fmt",
+        "port": "text"
+      },
+      "to": {
+        "node": "n9",
+        "port": "text"
+      }
+    },
+    {
+      "from": {
+        "node": "n6",
+        "port": "text"
+      },
+      "to": {
+        "node": "n10",
+        "port": "text"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "RadioEnable",
+      "type": "bool",
+      "initial": "true"
+    }
+  ],
+  "hardware": [],
+  "peripherals": [
+    {
+      "name": "lora",
+      "type": "semtech:sx1262"
+    },
+    {
+      "name": "oled",
+      "type": "solomon:ssd1306"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "en": {
+        "x": 45.200000000000216,
+        "y": 154.39999999999995
+      },
+      "fmt": {
+        "x": 775.6000000000003,
+        "y": 142.39999999999995
+      },
+      "n1": {
+        "x": 274.0000000000001,
+        "y": 116.00000000000003
+      },
+      "n10": {
+        "x": 1248.3999999999999,
+        "y": 308
+      },
+      "n3": {
+        "x": 509.20000000000005,
+        "y": 99.19999999999996
+      },
+      "n6": {
+        "x": 538.8000000000001,
+        "y": 321.6
+      },
+      "n8": {
+        "x": 52.400000000000006,
+        "y": 136.00000000000009
+      },
+      "n9": {
+        "x": 1260.3999999999999,
+        "y": 105.6
+      }
+    }
+  }
+}

@@ -1,8 +1,9 @@
 {
   "formatVersion": 5,
   "name": "lora-press-receiver",
-  "target": "linux-arm64",
+  "target": "heltec-lora32-v3",
   "targets": [
+    "heltec-lora32-v3",
     "linux-arm64",
     "linux-x64"
   ],
@@ -38,14 +39,14 @@
       }
     },
     {
-      "id": "console",
-      "type": "serial-tx",
-      "name": "Console"
-    },
-    {
       "id": "n1",
       "type": "variable-read",
       "name": "start"
+    },
+    {
+      "id": "n2",
+      "type": "ssd1306-text",
+      "name": "display"
     }
   ],
   "connections": [
@@ -91,32 +92,22 @@
     },
     {
       "from": {
-        "node": "formatter",
-        "port": "text"
-      },
-      "to": {
-        "node": "console",
-        "port": "data"
-      }
-    },
-    {
-      "from": {
-        "node": "gate",
-        "port": "out"
-      },
-      "to": {
-        "node": "console",
-        "port": "send"
-      }
-    },
-    {
-      "from": {
         "node": "n1",
         "port": "value"
       },
       "to": {
         "node": "rx",
         "port": "enable"
+      }
+    },
+    {
+      "from": {
+        "node": "formatter",
+        "port": "text"
+      },
+      "to": {
+        "node": "n2",
+        "port": "text"
       }
     }
   ],
@@ -128,12 +119,14 @@
     }
   ],
   "hardware": [],
+  "peripherals": [
+    {
+      "name": "display",
+      "type": "solomon:ssd1306"
+    }
+  ],
   "ui": {
     "nodes": {
-      "console": {
-        "x": 939.2,
-        "y": 117.60000000000002
-      },
       "formatter": {
         "x": 668.0000000000001,
         "y": 275.2
@@ -145,6 +138,10 @@
       "n1": {
         "x": -38.24000000000002,
         "y": 139.28000000000017
+      },
+      "n2": {
+        "x": 984.3999999999996,
+        "y": 281.6
       },
       "rx": {
         "x": 214.39999999999998,
