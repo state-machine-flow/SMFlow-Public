@@ -1,0 +1,15 @@
+{
+  "formatVersion": 1,
+  "project": "untitled",
+  "bindings": {},
+  "serial": {
+    "atmega328-nano": {
+      "console": {
+        "bus": "uart0",
+        "baud": 9600,
+        "txCapacity": 64,
+        "txBufferOctets": 64
+      }
+    }
+  }
+}

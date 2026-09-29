@@ -1,0 +1,108 @@
+{
+  "formatVersion": 4,
+  "name": "untitled",
+  "target": "atmega328-nano",
+  "targets": [
+    "atmega328-nano",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "optical.apds9960.read",
+      "name": "APDS9960"
+    },
+    {
+      "id": "n2",
+      "type": "to-text",
+      "properties": {
+        "format": "{}\\r\\n"
+      }
+    },
+    {
+      "id": "n3",
+      "type": "serial-tx",
+      "name": "console"
+    },
+    {
+      "id": "n4",
+      "type": "blink",
+      "comment": "Valid only goes high once at startup, so we need a Blink to reassert it and trigger a serial write"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "n1",
+        "port": "proximity"
+      },
+      "to": {
+        "node": "n2",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "n2",
+        "port": "text"
+      },
+      "to": {
+        "node": "n3",
+        "port": "data"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "valid"
+      },
+      "to": {
+        "node": "n4",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "n4",
+        "port": "Q"
+      },
+      "to": {
+        "node": "n3",
+        "port": "send"
+      }
+    }
+  ],
+  "hardware": [],
+  "peripherals": [
+    {
+      "name": "APDS9960",
+      "type": "broadcom:apds9960"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "n1": {
+        "x": 247.5999999999999,
+        "y": 95.19999999999993
+      },
+      "n2": {
+        "x": 519.433448534936,
+        "y": 133.32105184072128
+      },
+      "n3": {
+        "x": 804.4,
+        "y": 149.6
+      },
+      "n4": {
+        "x": 518.8000000000001,
+        "y": 262.4000000000001
+      }
+    }
+  }
+}
