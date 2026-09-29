@@ -8,7 +8,57 @@ All notable changes to SMFlow are recorded here. The format follows
 
 ### Added
 ### Changed
+### Fixed
 
+## [0.9.11-beta1] - 2026-09-29
+
+### Added
+
+- **Group boxes, for organising a crowded flow.** Select some nodes and press **Ctrl+G** (or
+  *Edit > Group Selection*) to draw a labeled box around them. Drag the title bar to move the box
+  and everything inside it as one undoable step, drag the bottom-right corner to resize,
+  double-click the title to rename, and press Delete to remove the box - its nodes stay where they
+  are. A group is decoration: it owns no nodes and cannot change what your project builds.
+- **Lasso multi-select.** Hold **Ctrl** and drag on empty canvas to sweep a rectangle over a
+  cluster; every node it touches joins the selection. Ctrl-clicking a single node still toggles it,
+  and dragging the background without Ctrl still pans.
+- **Notes on a node.** Each node has a `[+]` button on its lower edge that opens a comment block
+  attached to the node. Click the block to type, Escape to abandon the edit, and the button again to
+  fold it away. The text is saved in the project, so the reason a threshold is 47 lives beside the
+  node. Comments are documentation only and never change the generated C++.
+- **Serial endpoints have a UI.** **Project > Serial Ports...** declares a logical endpoint by name,
+  picks its UART bus and baud rate, and shows the endpoints and buffer sizes configured for each
+  target - no more editing the `.smflow` by hand to add a `Console`.
+- **Deploy to a Linux controller over the network.** **Build > Deploy** sends the generated C++ to
+  the controller, compiles it there, installs a systemd unit and restarts the service, so the
+  program survives a power cycle. Each step reports as it happens, and a compile that fails there
+  returns the compiler's own output.
+- **Controllers you configure, not just boards we find.** The **Deploy to** picker lists attached
+  boards and configured network machines together, with a **Manage...** row to add, edit, remove and
+  test them. **Test connection** reports the controller's architecture and whether it has a C++
+  compiler - the two things a deployment depends on. Password sign-in is supported, which is what a
+  stock Raspberry Pi image has; tick **Remember** and it is encrypted for your Windows account.
+  Controllers are stored on your computer, never in the project, and no passphrase is kept.
+- **The controller's log, in the editor.** After a network deployment the service log follows itself
+  into the output pane. **Build > Follow Controller Log** (F8) starts it any time, **Stop Following**
+  ends it, and **Check service** shows a running / stopped / failed badge on demand.
+- **The Heltec WiFi LoRa 32 (V3) is a build target.** Its SX1262, OLED and Vext power switch are on
+  the pins the board wires them to, so a project picks `heltec-lora32-v3` rather than writing seven
+  pin bindings by hand. A radio on this board needs `tcxoVoltageMv` set to `1800`.
+- **Radio settings live on the peripheral.** Frequency, spreading factor, bandwidth, coding rate,
+  preamble, sync word, transmit power and TCXO supply are configuration on the binding. They all
+  have to match at the far end, and a mismatch is silent - so check them first when a link carries
+  nothing.
+- **License keys are emailed.** Both a purchase and the site's "send me my key again" recovery now
+  deliver by email.
+
+### Changed
+
+- **The free tier allows two serial endpoints, not one.** One link to the world plus the console to
+  watch it on. A cap of one meant that the moment a free program talked to a radio, a GPS or an
+  RS485 sensor it lost the console it was being debugged with.
+- **SMFlow Pro is $500 as an introductory price**, regular price $800. There is no end date on the
+  introduction: a license bought at $500 is perpetual on the usual terms and is never re-priced.
 - Peripherals are now called peripherals, and the board or machine you deploy to is called a
   controller. The editor menu is **Project > Peripherals...**, the toolbar reads **Deploy to**, and
   **Build > Deploy** replaces "Deploy to Device".
@@ -25,6 +75,21 @@ All notable changes to SMFlow are recorded here. The format follows
 - The `samples/devices/` folder is now `samples/peripherals/`.
 
 ### Fixed
+
+- **The SX1262 now actually transmits.** A LoRa radio in a project used to compile to a simulation: a
+  two-scan countdown that raised Done, reported a fixed -65 dBm and 9.5 dB, and - if the same program
+  also received - handed the payload straight back to itself. It issued no SPI transaction, so a
+  board could report a successful send while nothing went out over the air. It has a real driver now,
+  and a transmission it cannot confirm reports Error rather than Done.
+- **A Linux target no longer refuses serial outboxes that fit a Raspberry Pi a thousand times over.**
+  Linux had inherited a 256-octet outbox budget sized for an ATmega328, so two 256-octet endpoints
+  failed with SMF0057 on a machine with a gigabyte of memory. Linux now budgets 64 KiB.
+- **Shared peripheral helpers are emitted once, not once per peripheral type.** A project driving two
+  different I2C peripherals produced a translation unit with two copies of the same register, CRC and
+  conversion helpers.
+- **For AI assistants: `describe_project` reported every live editor session as empty.** Node,
+  connection, variable and peripheral counts came back as nought while the name, target and revision
+  beside them were right. Headless mode was never affected.
 
 ## [0.9.10-beta1] - 2026-09-15
 
