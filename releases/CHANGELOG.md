@@ -49,6 +49,10 @@ All notable changes to SMFlow are recorded here. The format follows
   preamble, sync word, transmit power and TCXO supply are configuration on the binding. They all
   have to match at the far end, and a mismatch is silent - so check them first when a link carries
   nothing.
+- **A purchased license actually activates.** This build carries the production license issuer, so
+  a key issued for a purchase verifies and unlocks Pro. Earlier builds trusted no issuer: every
+  license was refused and every installation ran as Free, whatever had been bought. If you bought a
+  license before this release, install this build and activate again - your existing key works.
 - **License keys are emailed.** Both a purchase and the site's "send me my key again" recovery now
   deliver by email.
 
