@@ -1,0 +1,335 @@
+{
+  "formatVersion": 5,
+  "name": "untitled",
+  "target": "heltec-lora32-v3",
+  "targets": [
+    "heltec-lora32-v3"
+  ],
+  "tasks": [
+    {
+      "name": "main",
+      "periodMs": 10
+    },
+    {
+      "name": "task2",
+      "periodMs": 0,
+      "kind": "init"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "sx1262-rx",
+      "name": "lora"
+    },
+    {
+      "id": "n3",
+      "type": "unpack-payload",
+      "properties": {
+        "schema": "pressCount:int32:be"
+      }
+    },
+    {
+      "id": "en",
+      "type": "variable-read",
+      "name": "RadioEnable"
+    },
+    {
+      "id": "fmt",
+      "type": "to-text",
+      "properties": {
+        "format": "Count: {}",
+        "type": "int32"
+      }
+    },
+    {
+      "id": "n6",
+      "type": "to-text",
+      "properties": {
+        "format": "RSSI: {0.00}",
+        "type": "float32"
+      }
+    },
+    {
+      "id": "n8",
+      "type": "ssd1306-text",
+      "name": "oled",
+      "task": "task2",
+      "properties": {
+        "text": "LoRa Rx"
+      }
+    },
+    {
+      "id": "n9",
+      "type": "ssd1306-text",
+      "name": "oled",
+      "properties": {
+        "line": "1"
+      }
+    },
+    {
+      "id": "n10",
+      "type": "ssd1306-text",
+      "name": "oled",
+      "properties": {
+        "line": "2"
+      }
+    },
+    {
+      "id": "ackbuild",
+      "type": "create-payload",
+      "properties": {
+        "schema": "ackCount:int32:be"
+      }
+    },
+    {
+      "id": "acktx",
+      "type": "sx1262-tx",
+      "name": "lora"
+    },
+    {
+      "id": "ackcnt",
+      "type": "counter",
+      "properties": {
+        "presetCount": "1000"
+      }
+    },
+    {
+      "id": "ackfmt",
+      "type": "to-text",
+      "name": "AckText",
+      "properties": {
+        "format": "Acks: {}",
+        "type": "int32"
+      }
+    },
+    {
+      "id": "ackoled",
+      "type": "ssd1306-text",
+      "name": "oled",
+      "properties": {
+        "line": "3"
+      }
+    },
+    {
+      "id": "ackrst",
+      "type": "variable-read",
+      "name": "AckReset"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "n1",
+        "port": "payload"
+      },
+      "to": {
+        "node": "n3",
+        "port": "payload"
+      }
+    },
+    {
+      "from": {
+        "node": "en",
+        "port": "value"
+      },
+      "to": {
+        "node": "n1",
+        "port": "enable"
+      }
+    },
+    {
+      "from": {
+        "node": "n3",
+        "port": "out_pressCount"
+      },
+      "to": {
+        "node": "fmt",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "rssi"
+      },
+      "to": {
+        "node": "n6",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "fmt",
+        "port": "text"
+      },
+      "to": {
+        "node": "n9",
+        "port": "text"
+      }
+    },
+    {
+      "from": {
+        "node": "n6",
+        "port": "text"
+      },
+      "to": {
+        "node": "n10",
+        "port": "text"
+      }
+    },
+    {
+      "from": {
+        "node": "n3",
+        "port": "out_pressCount"
+      },
+      "to": {
+        "node": "ackbuild",
+        "port": "in_ackCount"
+      }
+    },
+    {
+      "from": {
+        "node": "ackbuild",
+        "port": "payload"
+      },
+      "to": {
+        "node": "acktx",
+        "port": "payload"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "available"
+      },
+      "to": {
+        "node": "acktx",
+        "port": "trigger"
+      }
+    },
+    {
+      "from": {
+        "node": "acktx",
+        "port": "done"
+      },
+      "to": {
+        "node": "ackcnt",
+        "port": "CU"
+      }
+    },
+    {
+      "from": {
+        "node": "ackcnt",
+        "port": "CV"
+      },
+      "to": {
+        "node": "ackfmt",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "ackfmt",
+        "port": "text"
+      },
+      "to": {
+        "node": "ackoled",
+        "port": "text"
+      }
+    },
+    {
+      "from": {
+        "node": "ackrst",
+        "port": "value"
+      },
+      "to": {
+        "node": "ackcnt",
+        "port": "R"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "RadioEnable",
+      "type": "bool",
+      "initial": "true"
+    },
+    {
+      "name": "AckReset",
+      "type": "bool",
+      "initial": "false"
+    }
+  ],
+  "hardware": [],
+  "peripherals": [
+    {
+      "name": "lora",
+      "type": "semtech:sx1262"
+    },
+    {
+      "name": "oled",
+      "type": "solomon:ssd1306"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "ackbuild": {
+        "x": 564.6851200000001,
+        "y": 342.14191999999986
+      },
+      "ackcnt": {
+        "x": 1169.01728,
+        "y": 319.88759999999974
+      },
+      "ackfmt": {
+        "x": 1409.01728,
+        "y": 319.88759999999974
+      },
+      "ackoled": {
+        "x": 1649.01728,
+        "y": 319.88759999999974
+      },
+      "ackrst": {
+        "x": 883.2249600000002,
+        "y": 482.14191999999963
+      },
+      "acktx": {
+        "x": 875.0501599999999,
+        "y": 305.7439999999999
+      },
+      "en": {
+        "x": 42.29600000000025,
+        "y": 118.58399999999992
+      },
+      "fmt": {
+        "x": 821.2799200000004,
+        "y": 73.29447999999998
+      },
+      "n1": {
+        "x": 274.0000000000001,
+        "y": 116.00000000000003
+      },
+      "n10": {
+        "x": 1105.50384,
+        "y": 637.1296800000001
+      },
+      "n3": {
+        "x": 572.44912,
+        "y": 71.08927999999997
+      },
+      "n6": {
+        "x": 554.02664,
+        "y": 636.6743200000001
+      },
+      "n8": {
+        "x": 52.400000000000006,
+        "y": 136.00000000000009
+      },
+      "n9": {
+        "x": 1116.33256,
+        "y": 51.721119999999914
+      }
+    }
+  }
+}

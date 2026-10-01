@@ -1,0 +1,35 @@
+{
+  "formatVersion": 1,
+  "project": "untitled",
+  "bindings": {},
+  "peripherals": {
+    "heltec-lora32-v3": {
+      "lora": {
+        "bus": "spi_lora",
+        "cs": "GPIO8",
+        "pins": {
+          "busy": "GPIO13",
+          "dio1": "GPIO14",
+          "reset": "GPIO12"
+        },
+        "config": {
+          "frequencyHz": "915125000",
+          "spreadingFactor": "7",
+          "bandwidthKhz": "125",
+          "codingRate": "5",
+          "syncWord": "private",
+          "txPowerDbm": "14",
+          "tcxoVoltageMv": "1800",
+          "preambleSymbols": "8"
+        }
+      },
+      "oled": {
+        "bus": "i2c0",
+        "address": "0x3C",
+        "pins": {
+          "reset": "GPIO21"
+        }
+      }
+    }
+  }
+}

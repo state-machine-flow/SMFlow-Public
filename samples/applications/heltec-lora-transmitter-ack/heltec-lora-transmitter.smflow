@@ -1,0 +1,458 @@
+{
+  "formatVersion": 5,
+  "name": "lora-press-counter",
+  "target": "heltec-lora32-v3",
+  "targets": [
+    "esp32-s3",
+    "heltec-lora32-v3"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "btn",
+      "type": "digital-input",
+      "name": "Button"
+    },
+    {
+      "id": "cnt",
+      "type": "counter",
+      "properties": {
+        "presetCount": "1000"
+      }
+    },
+    {
+      "id": "builder",
+      "type": "create-payload",
+      "properties": {
+        "schema": "pressCount:int32:be"
+      }
+    },
+    {
+      "id": "tx",
+      "type": "sx1262-tx",
+      "name": "Radio"
+    },
+    {
+      "id": "led",
+      "type": "digital-output",
+      "name": "Busy"
+    },
+    {
+      "id": "n1",
+      "type": "digital-input",
+      "name": "Input1"
+    },
+    {
+      "id": "n2",
+      "type": "digital-output",
+      "name": "Done"
+    },
+    {
+      "id": "n3",
+      "type": "digital-output",
+      "name": "Error"
+    },
+    {
+      "id": "n5",
+      "type": "counter",
+      "properties": {
+        "presetCount": "10"
+      }
+    },
+    {
+      "id": "fmt",
+      "type": "to-text",
+      "name": "CountText",
+      "properties": {
+        "format": "Sent: {}",
+        "type": "int32"
+      }
+    },
+    {
+      "id": "oled",
+      "type": "ssd1306-text",
+      "name": "Oled",
+      "properties": {
+        "line": "0"
+      }
+    },
+    {
+      "id": "rxen",
+      "type": "variable-read",
+      "name": "RadioEnable"
+    },
+    {
+      "id": "rx",
+      "type": "sx1262-rx",
+      "name": "Radio"
+    },
+    {
+      "id": "ackunp",
+      "type": "unpack-payload",
+      "properties": {
+        "schema": "ackCount:int32:be"
+      }
+    },
+    {
+      "id": "ackfmt",
+      "type": "to-text",
+      "name": "AckText",
+      "properties": {
+        "format": "Ack: {}",
+        "type": "int32"
+      }
+    },
+    {
+      "id": "ackoled",
+      "type": "ssd1306-text",
+      "name": "Oled",
+      "properties": {
+        "line": "1"
+      }
+    },
+    {
+      "id": "rssifmt",
+      "type": "to-text",
+      "name": "AckRssiText",
+      "properties": {
+        "format": "RSSI: {0.00}",
+        "type": "float32"
+      }
+    },
+    {
+      "id": "rssioled",
+      "type": "ssd1306-text",
+      "name": "Oled",
+      "properties": {
+        "line": "2"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "btn",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "CU"
+      }
+    },
+    {
+      "from": {
+        "node": "btn",
+        "port": "value"
+      },
+      "to": {
+        "node": "tx",
+        "port": "trigger"
+      }
+    },
+    {
+      "from": {
+        "node": "cnt",
+        "port": "CV"
+      },
+      "to": {
+        "node": "builder",
+        "port": "in_pressCount"
+      }
+    },
+    {
+      "from": {
+        "node": "builder",
+        "port": "payload"
+      },
+      "to": {
+        "node": "tx",
+        "port": "payload"
+      }
+    },
+    {
+      "from": {
+        "node": "tx",
+        "port": "busy"
+      },
+      "to": {
+        "node": "led",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "tx",
+        "port": "done"
+      },
+      "to": {
+        "node": "n2",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "tx",
+        "port": "error"
+      },
+      "to": {
+        "node": "n3",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "tx",
+        "port": "done"
+      },
+      "to": {
+        "node": "n5",
+        "port": "CU"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n5",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "cnt",
+        "port": "CV"
+      },
+      "to": {
+        "node": "fmt",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "fmt",
+        "port": "text"
+      },
+      "to": {
+        "node": "oled",
+        "port": "text"
+      }
+    },
+    {
+      "from": {
+        "node": "rxen",
+        "port": "value"
+      },
+      "to": {
+        "node": "rx",
+        "port": "enable"
+      }
+    },
+    {
+      "from": {
+        "node": "rx",
+        "port": "payload"
+      },
+      "to": {
+        "node": "ackunp",
+        "port": "payload"
+      }
+    },
+    {
+      "from": {
+        "node": "ackunp",
+        "port": "out_ackCount"
+      },
+      "to": {
+        "node": "ackfmt",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "ackfmt",
+        "port": "text"
+      },
+      "to": {
+        "node": "ackoled",
+        "port": "text"
+      }
+    },
+    {
+      "from": {
+        "node": "rx",
+        "port": "rssi"
+      },
+      "to": {
+        "node": "rssifmt",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "rssifmt",
+        "port": "text"
+      },
+      "to": {
+        "node": "rssioled",
+        "port": "text"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "RadioEnable",
+      "type": "bool",
+      "initial": "true"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Button",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Busy",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Input1",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Done",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Error",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "peripherals": [
+    {
+      "name": "Radio",
+      "type": "semtech:sx1262"
+    },
+    {
+      "name": "Oled",
+      "type": "solomon:ssd1306"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "ackfmt": {
+        "x": 814.8256319999999,
+        "y": 726.2368800000003
+      },
+      "ackoled": {
+        "x": 1071.6550239999992,
+        "y": 710.803088
+      },
+      "ackunp": {
+        "x": 582.2496319999998,
+        "y": 696.8688800000002
+      },
+      "btn": {
+        "x": 40,
+        "y": 80
+      },
+      "builder": {
+        "x": 491.19999999999993,
+        "y": 221.6000000000001
+      },
+      "cnt": {
+        "x": 257.6,
+        "y": 253.59999999999997
+      },
+      "fmt": {
+        "x": 1038.0824000000002,
+        "y": 475.1935999999999
+      },
+      "led": {
+        "x": 1028.7999999999997,
+        "y": 15.200000000000003
+      },
+      "n1": {
+        "x": 26.799999999999983,
+        "y": 384.8
+      },
+      "n2": {
+        "x": 1026.8,
+        "y": 120.80000000000004
+      },
+      "n3": {
+        "x": 1024.3159999999998,
+        "y": 360.04479999999995
+      },
+      "n5": {
+        "x": 1034.2368000000001,
+        "y": 227.228
+      },
+      "oled": {
+        "x": 1290.897864,
+        "y": 448.48240000000004
+      },
+      "rssifmt": {
+        "x": 835.1536319999998,
+        "y": 871.7248800000002
+      },
+      "rssioled": {
+        "x": 1073.2231839999997,
+        "y": 877.2531280000001
+      },
+      "rx": {
+        "x": 305.1536319999998,
+        "y": 741.7248800000002
+      },
+      "rxen": {
+        "x": 45.15363199999979,
+        "y": 761.7248800000002
+      },
+      "tx": {
+        "x": 751.1999999999998,
+        "y": 135.2
+      }
+    },
+    "groups": [
+      {
+        "id": "g1",
+        "label": "Receive ACK",
+        "x": 21.15363199999979,
+        "y": 658.8688800000002,
+        "width": 1332.7276639999998,
+        "height": 380.05534399999976,
+        "task": "Main"
+      },
+      {
+        "id": "g2",
+        "label": "Send Count",
+        "x": 2.799999999999983,
+        "y": -22.799999999999997,
+        "width": 1484.0008000000003,
+        "height": 611.9935999999998,
+        "task": "Main"
+      }
+    ]
+  }
+}
