@@ -1,0 +1,429 @@
+{
+  "_comment": "Shot manifest for the Fundamentals series. Each entry generates a placeholder PNG into <lab>/images/<file>. Backfill by overwriting the PNG — no markdown changes needed. Run: python make-placeholders.py",
+  "lab-00-concepts": [
+    {
+      "id": "0.01",
+      "file": "editor-tour.png",
+      "title": "The editor, annotated",
+      "spec": "Full editor window, a medium-sized flow open (motor-interlock is a good choice). Four numbered callouts: 1 node palette, 2 canvas, 3 inspector, 4 simulator panel (docked, collapsed is fine).",
+      "frame": "Full window, 1920x1080, 150% UI scale",
+      "alt": "The SMFlow editor with the node palette, canvas, inspector, and simulator panel labelled"
+    },
+    {
+      "id": "0.02",
+      "file": "scan-diagram.png",
+      "title": "The scan cycle",
+      "spec": "DIAGRAM, not a screenshot. Snapshot inputs -> run due tasks -> commit outputs -> diagnostics -> wait. Vertical flow, arrow looping back to the top. Match the ASCII version in the lab text.",
+      "frame": "Diagram, transparent or theme-neutral background",
+      "alt": "The scan cycle: snapshot inputs, run due tasks, commit outputs, diagnostics, wait for next tick"
+    },
+    {
+      "id": "0.03",
+      "file": "snapshot-timing.png",
+      "title": "Why a mid-scan change isn't seen",
+      "spec": "DIAGRAM. Timeline with scan boundaries. An input pin transitions 2 ms into a scan; mark clearly that the logic reads the snapshot taken at the boundary, and the change is only picked up at the NEXT boundary. This is the most important picture in Lab 0 — give it room.",
+      "frame": "Wide diagram, 16:9",
+      "alt": "Timeline showing an input changing mid-scan and not being seen until the next scan boundary"
+    },
+    {
+      "id": "0.04",
+      "file": "task-config.png",
+      "title": "Task configuration",
+      "spec": "The task configuration dialog or inspector pane, showing Name, Kind, Period, Priority, Budget. Kind picker open if possible, so Normal / Init / Interrupt are all visible.",
+      "frame": "Dialog, cropped tight with a little surrounding canvas for context",
+      "alt": "The task configuration dialog showing name, kind, period, priority, and budget"
+    },
+    {
+      "id": "0.05",
+      "file": "tick-gcd.png",
+      "title": "Two tasks, one tick",
+      "spec": "DIAGRAM. A 10 ms task and a 25 ms task on a shared 5 ms tick line. Mark every tick; mark which ticks each task fires on (10/20/30... and 25/50/75...). Caption the tick as GCD(10,25) = 5.",
+      "frame": "Wide diagram, 16:9",
+      "alt": "A 10 ms and a 25 ms task scheduled on a shared 5 ms tick"
+    },
+    {
+      "id": "0.06",
+      "file": "node-anatomy.png",
+      "title": "Anatomy of a node",
+      "spec": "One node on the canvas, zoomed, with the inspector beside it. Callouts: input ports, output ports, and properties (in the inspector). A compare or ton node works well since it has both.",
+      "frame": "Node + inspector, tight crop",
+      "alt": "A node with its input ports, output ports, and inspector properties labelled"
+    },
+    {
+      "id": "0.07",
+      "file": "type-refusal.png",
+      "title": "A refused connection",
+      "spec": "Mid-drag: a float32 output being dragged toward an int32 input, with the editor's refusal affordance visible (cursor state / port styling / tooltip). Capture the moment the editor says no, not the aftermath.",
+      "frame": "Two nodes and the wire being dragged between them",
+      "alt": "The editor refusing a connection between a float32 output and an int32 input"
+    },
+    {
+      "id": "0.08",
+      "file": "variable-config.png",
+      "title": "Declaring a shared variable",
+      "spec": "The variable configuration dialog: Name, Type, Initial value, Persistence. Set persistence to Retained so the retention option is visible.",
+      "frame": "Dialog, tight crop",
+      "alt": "The variable configuration dialog with name, type, initial value, and persistence"
+    },
+    {
+      "id": "0.09",
+      "file": "io-binding.png",
+      "title": "Logical names, per-target bindings",
+      "spec": "DIAGRAM. One logical name (EmergencyStop) on the left, fanning out to three target bindings: opta -> I2, rp2040-pico -> gpio17, simulator -> virtual point. Make the point that the graph side never changes.",
+      "frame": "Wide diagram, 16:9",
+      "alt": "One logical I/O name binding to different physical pins on three different targets"
+    },
+    {
+      "id": "0.10",
+      "file": "targets-cli.png",
+      "title": "smflow targets",
+      "spec": "Terminal, 18pt, running `smflow targets` with the full list visible. Light terminal theme.",
+      "frame": "Terminal only, cropped to the command and its output",
+      "alt": "Terminal output of the smflow targets command listing supported boards"
+    },
+    {
+      "id": "0.11",
+      "file": "peripheral-config.png",
+      "title": "Declaring a peripheral",
+      "spec": "The peripheral configuration UI with an SSD1306 declared: instance name and part type. If a bus/address field is shown, include it.",
+      "frame": "Dialog or inspector pane, tight crop",
+      "alt": "Declaring an SSD1306 display as a named peripheral"
+    },
+    {
+      "id": "0.12",
+      "file": "build-report.png",
+      "title": "The build report",
+      "spec": "The generated build-report.txt open in an editor or printed to terminal. Must show the Tasks table, the RAM (Application State) line, and the Stack Frame Depth 'bounded (flat scan loop)' line.",
+      "frame": "Full report, readable at 720p; crop the file-sizes section if needed for legibility",
+      "alt": "A SMFlow build report showing task periods, memory use, and bounded stack depth"
+    },
+    {
+      "id": "0.13",
+      "file": "diagnostic-highlight.png",
+      "title": "A diagnostic, highlighted on the canvas",
+      "spec": "The editor showing a validation error in the diagnostics list AND the offending node highlighted on the canvas. The link between the two is the point of the shot.",
+      "frame": "Canvas plus diagnostics panel",
+      "alt": "A validation error in the diagnostics panel with the offending node highlighted on the canvas"
+    },
+    {
+      "id": "0.14",
+      "file": "pipeline.png",
+      "title": "The whole pipeline",
+      "spec": "DIAGRAM. .smflow -> validation -> typed IR -> lowering -> C++ -> native binary, vertical, with the failure branch off validation. Match the ASCII version in the lab text.",
+      "frame": "Tall diagram",
+      "alt": "The SMFlow compilation pipeline from project file to native binary"
+    }
+  ],
+  "lab-01-first-flow": [
+    {
+      "id": "1.01",
+      "file": "hero-generated-code.png",
+      "title": "The payoff, up front",
+      "spec": "Full-frame generated application.cpp for the NOT gate, syntax highlit, nothing else in shot. This is the same image the video cold-opens on. Must be legible on a phone.",
+      "frame": "Editor, code only, 20pt+, no chrome",
+      "alt": "The generated application.cpp containing two lines: a bool local and io.Motor = !startButton"
+    },
+    {
+      "id": "1.02",
+      "file": "new-project.png",
+      "title": "A new, empty project",
+      "spec": "Editor just after File > New Project. Empty canvas, palette on the left, and the default Main task visible in the task list or inspector with its 10 ms period.",
+      "frame": "Full window",
+      "alt": "A newly created empty SMFlow project with a default Main task"
+    },
+    {
+      "id": "1.03",
+      "file": "palette-digital-input.png",
+      "title": "Finding the node",
+      "spec": "Node palette with the I/O category expanded and Digital Input hovered or selected. Include enough canvas to show where it is about to be dropped.",
+      "frame": "Palette plus left third of canvas",
+      "alt": "The node palette with the I/O category expanded and Digital Input selected"
+    },
+    {
+      "id": "1.04",
+      "file": "rename-node.png",
+      "title": "Naming matters",
+      "spec": "The Digital Input node selected, inspector open, Name field being set to StartButton. The name should be visible on the node on the canvas too.",
+      "frame": "Node plus inspector",
+      "alt": "Renaming a Digital Input node to StartButton in the inspector"
+    },
+    {
+      "id": "1.05",
+      "file": "three-nodes-placed.png",
+      "title": "Three nodes, not yet wired",
+      "spec": "StartButton, NOT, and Motor placed left to right, no wires yet. Clean spacing. This is the 'before' half of a before/after pair with 1.06.",
+      "frame": "Canvas only, nodes centered",
+      "alt": "Three unconnected nodes: StartButton, NOT, and Motor"
+    },
+    {
+      "id": "1.06",
+      "file": "wiring.png",
+      "title": "Drawing a wire",
+      "spec": "Mid-drag from StartButton.value toward NOT.in, with whatever the editor shows for a valid target port (highlight / snap). Catch it in motion.",
+      "frame": "Two nodes, tight",
+      "alt": "Dragging a connection from the StartButton value port to the NOT input port"
+    },
+    {
+      "id": "1.07",
+      "file": "complete-graph.png",
+      "title": "The finished flow",
+      "spec": "All three nodes wired. This image gets reused in the series index and the video thumbnail, so compose it properly: centered, generous margins, nothing selected.",
+      "frame": "Canvas only — hero composition",
+      "alt": "The completed flow: StartButton wired through a NOT node to Motor"
+    },
+    {
+      "id": "1.08",
+      "file": "validate-ok.png",
+      "title": "Valid",
+      "spec": "Terminal running `smflow validate lab-01.smflow` and printing `Lab 01 - First Flow: valid.`",
+      "frame": "Terminal, cropped to command and output",
+      "alt": "Terminal showing smflow validate reporting the project is valid"
+    },
+    {
+      "id": "1.09",
+      "file": "simulator-running.png",
+      "title": "It works",
+      "spec": "The simulator panel with StartButton toggled ON and Motor showing OFF. If the panel shows a scan counter, let it be a non-round number so it reads as genuinely running.",
+      "frame": "Simulator panel plus enough canvas for context",
+      "alt": "The simulator panel showing StartButton on and Motor off"
+    },
+    {
+      "id": "1.10",
+      "file": "generated-files.png",
+      "title": "Five files",
+      "spec": "File explorer or `ls` of the generated/ directory showing application.cpp, application.h, hardware.cpp, hardware.h, main.cpp.",
+      "frame": "Terminal or file tree, tight crop",
+      "alt": "The generated directory containing five C++ source files"
+    },
+    {
+      "id": "1.11",
+      "file": "application-cpp.png",
+      "title": "Your logic",
+      "spec": "application.cpp full frame with MainTask visible in full. Optionally annotate: an arrow from the graph's node names to the identifiers in the code. Large type.",
+      "frame": "Code only, 20pt+",
+      "alt": "The generated MainTask function assigning io.Motor from the negated startButton"
+    },
+    {
+      "id": "1.12",
+      "file": "grep-empty.png",
+      "title": "Nothing there",
+      "spec": "Terminal, the grep for Node|Graph|ExecuteNode|Runtime|Interpreter|ScriptEngine over generated/, returning nothing. Show the command AND the empty result AND the next prompt, so it reads as a completed search rather than a hung one.",
+      "frame": "Terminal, cropped to command and prompt",
+      "alt": "A grep for runtime and interpreter terms across the generated sources returning no matches"
+    },
+    {
+      "id": "1.13",
+      "file": "main-loop.png",
+      "title": "The scan loop",
+      "spec": "main.cpp scrolled to the while loop in main(). Highlight or annotate ReadInputs and WriteOutputs.",
+      "frame": "Code only, 20pt+",
+      "alt": "The generated scan loop calling ReadInputs, MainTask, and WriteOutputs"
+    },
+    {
+      "id": "1.14",
+      "file": "determinism-diff.png",
+      "title": "Byte-identical",
+      "spec": "Terminal showing the two builds and `diff -r build-a build-b` returning nothing, followed by a clean prompt. Same 'completed, not hung' consideration as 1.12.",
+      "frame": "Terminal",
+      "alt": "A recursive diff of two separate builds showing no differences"
+    },
+    {
+      "id": "1.15",
+      "file": "smf0005-error.png",
+      "title": "It refuses",
+      "spec": "Terminal with the SMF0005 error text in full. Pair with 1.16.",
+      "frame": "Terminal, cropped to the error",
+      "alt": "Terminal showing error SMF0005, a required input is not connected"
+    },
+    {
+      "id": "1.16",
+      "file": "smf0005-canvas.png",
+      "title": "Which node",
+      "spec": "The same error in the editor's diagnostics panel, with the Motor node highlighted on the canvas and its unconnected input port visibly flagged.",
+      "frame": "Canvas plus diagnostics panel",
+      "alt": "The Motor node highlighted on the canvas with its unconnected input flagged"
+    },
+    {
+      "id": "1.17",
+      "file": "solution-and-graph.png",
+      "title": "The exercise solution",
+      "spec": "The four-node AND version: StartButton and GuardClosed into an AND node into Motor. Wired and valid.",
+      "frame": "Canvas only",
+      "alt": "StartButton and GuardClosed wired into an AND node driving Motor"
+    }
+  ],
+  "lab-02-scan-cycle": [
+    {
+      "id": "2.01",
+      "file": "complete-graph.png",
+      "title": "The finished Lab 2 flow",
+      "spec": "All ten nodes wired: three inputs on the left, the motor chain and the alarm chain running right. Lay it out so the two chains are visually distinct and the GuardClosed fan-out is obvious. Reused in the thumbnail.",
+      "frame": "Canvas only, hero composition, nothing selected",
+      "alt": "The completed Lab 2 graph with ten nodes and two output chains"
+    },
+    {
+      "id": "2.02",
+      "file": "fanout.png",
+      "title": "One output, two destinations",
+      "spec": "Tight on the GuardClosed node with both its outgoing wires visible — one to the ready AND, one to the noguard NOT. Highlight or thicken both wires if the editor allows selection highlighting.",
+      "frame": "GuardClosed plus both destination nodes",
+      "alt": "Both output chains wired, with GuardClosed fanning out to two destinations"
+    },
+    {
+      "id": "2.03",
+      "file": "simulator-guard-open.png",
+      "title": "One input, two effects",
+      "spec": "Simulator with StartButton on and GuardClosed OFF. Motor must read off and Alarm must read on, both visible in the same frame — that simultaneity is the point.",
+      "frame": "Simulator panel, both outputs in frame",
+      "alt": "The simulator with the guard open, showing the motor stopped and the alarm active"
+    },
+    {
+      "id": "2.04",
+      "file": "application-cpp.png",
+      "title": "Ten nodes, two expressions",
+      "spec": "Full-frame generated MainTask: three const bool reads and two assignments. Consider a side-by-side or inset with the ten-node graph to make the collapse land. Large type.",
+      "frame": "Code only, 20pt+",
+      "alt": "The generated MainTask with three locals and two assignments"
+    },
+    {
+      "id": "2.05",
+      "file": "layout-vs-code.png",
+      "title": "Layout is not semantics",
+      "spec": "Split frame. Left: the canvas deliberately rearranged into a mess (outputs on the left, nodes overlapping). Right: the identical generated code, or the empty output of `diff -r before after`. The diff must show no output with a clean prompt after it.",
+      "frame": "Split 50/50, 16:9",
+      "alt": "A deliberately messy canvas layout beside the unchanged generated code"
+    },
+    {
+      "id": "2.06",
+      "file": "smf0007-cycle.png",
+      "title": "A cycle refuses to build",
+      "spec": "The SMF0007 error naming notjam, run, and motor. Ideally paired with the editor showing the feedback wire that caused it. Include the full message — the 'feedback loops require a state-bearing node' sentence is the teaching part.",
+      "frame": "Terminal, or terminal plus canvas inset",
+      "alt": "The SMF0007 cycle error naming the three nodes in the loop"
+    }
+  ],
+  "lab-03-tasks": [
+    {
+      "id": "3.01",
+      "file": "complete-graph.png",
+      "title": "Three tasks on one canvas",
+      "spec": "The nine nodes arranged so the three tasks read as three groups. If the editor tints or labels nodes by task, make sure that is visible. The absence of any wire between the Control and Report groups is the thing to see.",
+      "frame": "Canvas only, hero composition",
+      "alt": "The Lab 3 graph with three tasks shown as separate groups on the canvas"
+    },
+    {
+      "id": "3.02",
+      "file": "task-panel.png",
+      "title": "Declaring three tasks",
+      "spec": "The task panel or task list showing all three: Startup (init, no period), Control (10 ms), Report (250 ms). If the kind picker can be shown open on Startup, better.",
+      "frame": "Task panel, tight crop",
+      "alt": "The task configuration panel listing Startup as init, Control at 10 ms, and Report at 250 ms"
+    },
+    {
+      "id": "3.03",
+      "file": "simulator-lag.png",
+      "title": "Two rates, visibly",
+      "spec": "Hard shot, worth the effort: the simulator at an instant where Motor has already changed and StatusLamp has not. Step the simulator rather than running it free if that makes the moment catchable. A scan counter in frame helps sell it.",
+      "frame": "Simulator panel with both outputs and, if available, the scan counter",
+      "alt": "The simulator showing Motor already on while StatusLamp has not yet updated"
+    },
+    {
+      "id": "3.04",
+      "file": "three-tasks.png",
+      "title": "One function per task",
+      "spec": "Generated application.cpp showing StartupTask, ControlTask, and ReportTask together. Scroll position matters — get all three function signatures in one frame even if bodies are partly cut.",
+      "frame": "Code, 18pt+, all three signatures visible",
+      "alt": "The three generated task functions"
+    },
+    {
+      "id": "3.05",
+      "file": "shared-accessors.png",
+      "title": "Atomic by construction",
+      "spec": "LoadShared_Running and StoreShared_Running with their EnterCritical/ExitCritical pairs. Highlight the critical section calls.",
+      "frame": "Code only, 20pt+",
+      "alt": "The generated shared-variable accessors with critical sections"
+    },
+    {
+      "id": "3.06",
+      "file": "scheduler-loop.png",
+      "title": "The whole scheduler",
+      "spec": "main.cpp: kTickMs = 10 and the while loop with both modulo-guarded task calls. Annotate the tick constant and the two moduli. If the init task call above the loop fits in frame, include it.",
+      "frame": "Code, 18pt+",
+      "alt": "The generated scan loop with two modulo-guarded task calls"
+    },
+    {
+      "id": "3.07",
+      "file": "build-report.png",
+      "title": "Per-task cost",
+      "spec": "The build report Tasks table. Startup must show 'init' in the Period column where the others show times — that contrast is the point of the shot.",
+      "frame": "Report, tables only, cropped",
+      "alt": "The build report task table showing three tasks with Startup listed as init"
+    },
+    {
+      "id": "3.08",
+      "file": "smf0015.png",
+      "title": "A wire cannot cross tasks",
+      "spec": "The SMF0015 error with its full message naming both task names. Pair with the editor refusing the connection if that affordance is visible.",
+      "frame": "Terminal, or terminal plus canvas inset",
+      "alt": "The SMF0015 cross-task connection error"
+    }
+  ],
+  "lab-04-types": [
+    {
+      "id": "4.01",
+      "file": "complete-graph.png",
+      "title": "The finished Lab 4 flow",
+      "spec": "The full graph with TankLevel fanning out to the compare node and the to-text node. If the editor styles wires or ports by type, frame so the float32 and bool wires are distinguishable.",
+      "frame": "Canvas only, hero composition",
+      "alt": "The Lab 4 graph showing the analog input feeding both a compare node and a to-text node"
+    },
+    {
+      "id": "4.02",
+      "file": "compare-operator.png",
+      "title": "An operator is a property",
+      "spec": "The compare node selected with its inspector showing the Operator choice list open, all six options visible. The node's a/b/out ports should also be in frame — the shot is about ports versus properties.",
+      "frame": "Node plus inspector",
+      "alt": "The compare node's inspector with the operator choice list open"
+    },
+    {
+      "id": "4.03",
+      "file": "to-text-props.png",
+      "title": "Ports derived from a property",
+      "spec": "The to-text inspector with Type float32, Decimals 1, and the format template. Frame so the node's input port is visible alongside, since the Type choice is what gave it that port type.",
+      "frame": "Node plus inspector",
+      "alt": "The to-text inspector showing type, decimals, and the format template"
+    },
+    {
+      "id": "4.04",
+      "file": "simulator-console.png",
+      "title": "Analog in, text out",
+      "spec": "Simulator with the TankLevel slider above 80, HighAlarm lit, and several formatted lines in the console pane. Let the level values be arbitrary decimals, not round numbers.",
+      "frame": "Simulator panel including the console output pane",
+      "alt": "The simulator with the analog input slider above the setpoint, the alarm lit, and formatted console output"
+    },
+    {
+      "id": "4.05",
+      "file": "application-cpp.png",
+      "title": "float stays float",
+      "spec": "The generated MainTask. Annotate three things: the `const float` locals, the literal `>`, and the fixed-capacity Bytes<256> buffer. May need two stacked crops to stay legible.",
+      "frame": "Code, 20pt+",
+      "alt": "The generated MainTask showing float locals, the comparison, and the text assembly"
+    },
+    {
+      "id": "4.06",
+      "file": "smf0004.png",
+      "title": "No implicit conversion",
+      "spec": "The SMF0004 error for float32 into bool. The phrase 'no implicit conversion is performed' must be legible — it is the lab's thesis in the tool's own words.",
+      "frame": "Terminal, cropped to the error",
+      "alt": "The SMF0004 type mismatch error for float32 into bool"
+    },
+    {
+      "id": "4.07",
+      "file": "smf0003.png",
+      "title": "Ports are case-sensitive",
+      "spec": "The SMF0003 error naming the node, its type, and the port that does not exist.",
+      "frame": "Terminal, cropped to the error",
+      "alt": "The SMF0003 error naming the node, its type, and the missing port"
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "formatVersion": 6,
+  "name": "Lab 03 - Solution",
+  "variables": [
+    {
+      "name": "Running",
+      "type": "bool",
+      "initial": "false",
+      "persistence": "none"
+    },
+    {
+      "name": "FalseConst",
+      "type": "bool",
+      "initial": "false",
+      "persistence": "none"
+    },
+    {
+      "name": "TrueConst",
+      "type": "bool",
+      "initial": "true",
+      "persistence": "none"
+    }
+  ],
+  "tasks": [
+    {
+      "name": "Startup",
+      "periodMs": 0,
+      "kind": "init"
+    },
+    {
+      "name": "Control",
+      "periodMs": 10
+    },
+    {
+      "name": "Report",
+      "periodMs": 250
+    }
+  ],
+  "nodes": [
+    {
+      "id": "seed_src",
+      "type": "variable-read",
+      "name": "FalseConst",
+      "task": "Startup"
+    },
+    {
+      "id": "seed",
+      "type": "variable-write",
+      "name": "Running",
+      "task": "Startup"
+    },
+    {
+      "id": "start",
+      "type": "digital-input",
+      "name": "StartButton",
+      "task": "Control"
+    },
+    {
+      "id": "guard",
+      "type": "digital-input",
+      "name": "GuardClosed",
+      "task": "Control"
+    },
+    {
+      "id": "andg",
+      "type": "and",
+      "task": "Control"
+    },
+    {
+      "id": "wrun",
+      "type": "variable-write",
+      "name": "Running",
+      "task": "Control"
+    },
+    {
+      "id": "motor",
+      "type": "digital-output",
+      "name": "Motor",
+      "task": "Control"
+    },
+    {
+      "id": "rrun",
+      "type": "variable-read",
+      "name": "Running",
+      "task": "Report"
+    },
+    {
+      "id": "lamp",
+      "type": "digital-output",
+      "name": "StatusLamp",
+      "task": "Report"
+    },
+    {
+      "id": "always",
+      "type": "variable-read",
+      "name": "TrueConst",
+      "task": "Report"
+    },
+    {
+      "id": "beat",
+      "type": "blink",
+      "properties": {
+        "timeHigh": "500",
+        "timeLow": "500"
+      },
+      "task": "Report"
+    },
+    {
+      "id": "hb",
+      "type": "digital-output",
+      "name": "Heartbeat",
+      "task": "Report"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "seed_src",
+        "port": "value"
+      },
+      "to": {
+        "node": "seed",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "start",
+        "port": "value"
+      },
+      "to": {
+        "node": "andg",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "guard",
+        "port": "value"
+      },
+      "to": {
+        "node": "andg",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "andg",
+        "port": "out"
+      },
+      "to": {
+        "node": "wrun",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "andg",
+        "port": "out"
+      },
+      "to": {
+        "node": "motor",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "rrun",
+        "port": "value"
+      },
+      "to": {
+        "node": "lamp",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "always",
+        "port": "value"
+      },
+      "to": {
+        "node": "beat",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "beat",
+        "port": "Q"
+      },
+      "to": {
+        "node": "hb",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "GuardClosed",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Motor",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "StatusLamp",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Heartbeat",
+      "direction": "output",
+      "type": "bool"
+    }
+  ]
+}

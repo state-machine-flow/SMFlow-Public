@@ -52,6 +52,7 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 | `lora-press-counter` | rp2040-pico, esp32-s3 | Binary LoRa packets with a payload schema |
 | `modbus-analog` | atmega2560-mega | Four analog channels served as Modbus TCP input registers, and a fallback when the client goes away |
 | `modbus-diagnostic` | atmega2560-mega | The same server with its status counters on a 20x4 LCD — a commissioning tool for when a client gets nothing back |
+| `persistent-counter` | simulator, heltec-lora32-v3, esp32-s3, rp2040-pico, opta, atmega... | Retaining state across power cycles with persistent non-volatile storage |
 
 ## What a sample folder contains
 

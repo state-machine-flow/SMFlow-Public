@@ -1,0 +1,220 @@
+{
+  "formatVersion": 6,
+  "name": "Lab 04 - Solution",
+  "variables": [
+    {
+      "name": "HighSetpoint",
+      "type": "float32",
+      "initial": "80.0",
+      "persistence": "none"
+    },
+    {
+      "name": "LowSetpoint",
+      "type": "float32",
+      "initial": "20.0",
+      "persistence": "none"
+    }
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 100
+    }
+  ],
+  "nodes": [
+    {
+      "id": "enable",
+      "type": "digital-input",
+      "name": "ReportEnable"
+    },
+    {
+      "id": "level",
+      "type": "analog-input",
+      "name": "TankLevel"
+    },
+    {
+      "id": "sp",
+      "type": "variable-read",
+      "name": "HighSetpoint"
+    },
+    {
+      "id": "cmp",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      }
+    },
+    {
+      "id": "alarm",
+      "type": "digital-output",
+      "name": "HighAlarm"
+    },
+    {
+      "id": "beat",
+      "type": "blink",
+      "properties": {
+        "timeHigh": "1000",
+        "timeLow": "1000"
+      }
+    },
+    {
+      "id": "txt",
+      "type": "to-text",
+      "properties": {
+        "type": "float32",
+        "decimals": "1",
+        "format": "Level: {} % \n"
+      }
+    },
+    {
+      "id": "con",
+      "type": "serial-tx",
+      "name": "Console"
+    },
+    {
+      "id": "losp",
+      "type": "variable-read",
+      "name": "LowSetpoint"
+    },
+    {
+      "id": "cmplo",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      }
+    },
+    {
+      "id": "loalarm",
+      "type": "digital-output",
+      "name": "LowAlarm"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "level",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "sp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp",
+        "port": "out"
+      },
+      "to": {
+        "node": "alarm",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "level",
+        "port": "value"
+      },
+      "to": {
+        "node": "txt",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "txt",
+        "port": "text"
+      },
+      "to": {
+        "node": "con",
+        "port": "data"
+      }
+    },
+    {
+      "from": {
+        "node": "beat",
+        "port": "Q"
+      },
+      "to": {
+        "node": "con",
+        "port": "send"
+      }
+    },
+    {
+      "from": {
+        "node": "enable",
+        "port": "value"
+      },
+      "to": {
+        "node": "beat",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "level",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmplo",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "losp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmplo",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmplo",
+        "port": "out"
+      },
+      "to": {
+        "node": "loalarm",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "TankLevel",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "HighAlarm",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "ReportEnable",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "LowAlarm",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "targets": [
+    "simulator",
+    "linux-x64"
+  ]
+}

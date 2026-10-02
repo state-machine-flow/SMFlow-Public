@@ -1,0 +1,44 @@
+test "initial press count is zero"
+
+Given:
+    Button = false
+
+When:
+    execute 1 cycle
+
+Then:
+    PressCount == 0
+
+test "pressing button increments count"
+
+Given:
+    Button = false
+
+When:
+    execute 1 cycle
+    Button = true
+    execute 1 cycle
+    Button = false
+    execute 5 cycles
+
+Then:
+    PressCount == 1
+
+test "a second press increments to two"
+
+Given:
+    Button = false
+
+When:
+    execute 1 cycle
+    Button = true
+    execute 1 cycle
+    Button = false
+    execute 5 cycles
+    Button = true
+    execute 1 cycle
+    Button = false
+    execute 5 cycles
+
+Then:
+    PressCount == 2

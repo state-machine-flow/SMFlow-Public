@@ -1,0 +1,234 @@
+{
+  "formatVersion": 6,
+  "name": "Lab 02 - Solution",
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "digital-input",
+      "name": "StartButton"
+    },
+    {
+      "id": "guard",
+      "type": "digital-input",
+      "name": "GuardClosed"
+    },
+    {
+      "id": "jam",
+      "type": "digital-input",
+      "name": "JamDetect"
+    },
+    {
+      "id": "notjam",
+      "type": "not"
+    },
+    {
+      "id": "ready",
+      "type": "and"
+    },
+    {
+      "id": "run",
+      "type": "and"
+    },
+    {
+      "id": "motor",
+      "type": "digital-output",
+      "name": "Motor"
+    },
+    {
+      "id": "noguard",
+      "type": "not"
+    },
+    {
+      "id": "fault",
+      "type": "or"
+    },
+    {
+      "id": "alarm",
+      "type": "digital-output",
+      "name": "Alarm"
+    },
+    {
+      "id": "forced",
+      "type": "and"
+    },
+    {
+      "id": "fault2",
+      "type": "or"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "jam",
+        "port": "value"
+      },
+      "to": {
+        "node": "notjam",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "start",
+        "port": "value"
+      },
+      "to": {
+        "node": "ready",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "guard",
+        "port": "value"
+      },
+      "to": {
+        "node": "ready",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "ready",
+        "port": "out"
+      },
+      "to": {
+        "node": "run",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "notjam",
+        "port": "out"
+      },
+      "to": {
+        "node": "run",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "run",
+        "port": "out"
+      },
+      "to": {
+        "node": "motor",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "guard",
+        "port": "value"
+      },
+      "to": {
+        "node": "noguard",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "jam",
+        "port": "value"
+      },
+      "to": {
+        "node": "fault",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "noguard",
+        "port": "out"
+      },
+      "to": {
+        "node": "fault",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "start",
+        "port": "value"
+      },
+      "to": {
+        "node": "forced",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "noguard",
+        "port": "out"
+      },
+      "to": {
+        "node": "forced",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "fault2",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "forced",
+        "port": "out"
+      },
+      "to": {
+        "node": "fault2",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "fault2",
+        "port": "out"
+      },
+      "to": {
+        "node": "alarm",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "GuardClosed",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "JamDetect",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Motor",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Alarm",
+      "direction": "output",
+      "type": "bool"
+    }
+  ]
+}

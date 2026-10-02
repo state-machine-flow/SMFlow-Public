@@ -1,0 +1,296 @@
+{
+  "formatVersion": 6,
+  "name": "persistent-counter",
+  "targets": [
+    "simulator",
+    "heltec-lora32-v3",
+    "esp32-s3",
+    "rp2040-pico",
+    "atmega328-nano",
+    "atmega328-uno",
+    "atmega2560-mega",
+    "linux-x64"
+  ],
+  "variables": [
+    {
+      "name": "PressCount",
+      "type": "int32",
+      "initial": "0",
+      "persistence": "retained"
+    },
+    {
+      "name": "One",
+      "type": "int32",
+      "initial": "1",
+      "persistence": "none"
+    },
+    {
+      "name": "Zero",
+      "type": "int32",
+      "initial": "0",
+      "persistence": "none"
+    }
+  ],
+  "persistence": {
+    "retained": {
+      "simulator": "sim-store",
+      "heltec-lora32-v3": "nvs0",
+      "esp32-s3": "nvs0",
+      "rp2040-pico": "flash0",
+      "atmega328-nano": "eeprom0",
+      "atmega328-uno": "eeprom0",
+      "atmega2560-mega": "eeprom0",
+      "linux-x64": "file0"
+    }
+  },
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "btn",
+      "type": "digital-input",
+      "name": "Button"
+    },
+    {
+      "id": "read_one",
+      "type": "variable-read",
+      "name": "One"
+    },
+    {
+      "id": "read_zero",
+      "type": "variable-read",
+      "name": "Zero"
+    },
+    {
+      "id": "inc",
+      "type": "select",
+      "properties": {
+        "type": "int32"
+      }
+    },
+    {
+      "id": "accumulate",
+      "type": "variable-update",
+      "name": "PressCount",
+      "properties": {
+        "operation": "add"
+      }
+    },
+    {
+      "id": "save",
+      "type": "persist-save",
+      "properties": {
+        "region": "retained"
+      }
+    },
+    {
+      "id": "status",
+      "type": "persist-status",
+      "properties": {
+        "region": "retained"
+      }
+    },
+    {
+      "id": "restore_edge",
+      "type": "rising-edge"
+    },
+    {
+      "id": "or_send",
+      "type": "or"
+    },
+    {
+      "id": "read_count",
+      "type": "variable-read",
+      "name": "PressCount"
+    },
+    {
+      "id": "text",
+      "type": "to-text",
+      "properties": {
+        "type": "int32",
+        "decimals": "0",
+        "format": "Count: {}\n"
+      }
+    },
+    {
+      "id": "console",
+      "type": "serial-tx",
+      "name": "Console"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "btn",
+        "port": "value"
+      },
+      "to": {
+        "node": "inc",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "read_one",
+        "port": "value"
+      },
+      "to": {
+        "node": "inc",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "read_zero",
+        "port": "value"
+      },
+      "to": {
+        "node": "inc",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "inc",
+        "port": "out"
+      },
+      "to": {
+        "node": "accumulate",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "btn",
+        "port": "value"
+      },
+      "to": {
+        "node": "save",
+        "port": "trigger"
+      }
+    },
+    {
+      "from": {
+        "node": "status",
+        "port": "restored"
+      },
+      "to": {
+        "node": "restore_edge",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "btn",
+        "port": "value"
+      },
+      "to": {
+        "node": "or_send",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "restore_edge",
+        "port": "Q"
+      },
+      "to": {
+        "node": "or_send",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "read_count",
+        "port": "value"
+      },
+      "to": {
+        "node": "text",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "text",
+        "port": "text"
+      },
+      "to": {
+        "node": "console",
+        "port": "data"
+      }
+    },
+    {
+      "from": {
+        "node": "or_send",
+        "port": "out"
+      },
+      "to": {
+        "node": "console",
+        "port": "send"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Button",
+      "direction": "input",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "btn": {
+        "x": 60,
+        "y": 100
+      },
+      "read_one": {
+        "x": 60,
+        "y": 200
+      },
+      "read_zero": {
+        "x": 60,
+        "y": 280
+      },
+      "inc": {
+        "x": 280,
+        "y": 180
+      },
+      "accumulate": {
+        "x": 500,
+        "y": 180
+      },
+      "save": {
+        "x": 280,
+        "y": 320
+      },
+      "status": {
+        "x": 60,
+        "y": 440
+      },
+      "restore_edge": {
+        "x": 280,
+        "y": 440
+      },
+      "or_send": {
+        "x": 500,
+        "y": 320
+      },
+      "read_count": {
+        "x": 500,
+        "y": 440
+      },
+      "text": {
+        "x": 720,
+        "y": 440
+      },
+      "console": {
+        "x": 940,
+        "y": 380
+      }
+    }
+  }
+}

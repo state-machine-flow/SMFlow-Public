@@ -73,6 +73,7 @@ Each sample is a complete project folder you can open directly in the editor.
 | [`peripherals/ssd1306-text`](samples/peripherals/ssd1306-text) | Text and telemetry on an I²C OLED |
 | [`applications/lora-press-counter`](samples/applications/lora-press-counter) | Binary LoRa packets from a button counter |
 | [`applications/modbus-analog`](samples/applications/modbus-analog) | Analog channels served to a SCADA system as Modbus TCP registers |
+| [`applications/persistent-counter`](samples/applications/persistent-counter) | State retention across power cycles with persistent storage |
 
 See [samples/README.md](samples/README.md) for the full catalog and contribution rules.
 

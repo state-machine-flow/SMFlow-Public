@@ -1,0 +1,83 @@
+{
+  "formatVersion": 4,
+  "name": "Lab 01 - Solution",
+  "tasks": [
+    {
+      "name": "main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "digital-input",
+      "name": "StartButton"
+    },
+    {
+      "id": "guard",
+      "type": "digital-input",
+      "name": "GuardClosed"
+    },
+    {
+      "id": "and1",
+      "type": "and"
+    },
+    {
+      "id": "motor",
+      "type": "digital-output",
+      "name": "Motor"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "start",
+        "port": "value"
+      },
+      "to": {
+        "node": "and1",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "guard",
+        "port": "value"
+      },
+      "to": {
+        "node": "and1",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "and1",
+        "port": "out"
+      },
+      "to": {
+        "node": "motor",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "GuardClosed",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Motor",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {}
+  }
+}
