@@ -1,52 +1,21 @@
 {
   "formatVersion": 6,
   "name": "persistent-counter",
+  "target": "atmega328-nano",
   "targets": [
-    "simulator",
-    "heltec-lora32-v3",
-    "esp32-s3",
-    "rp2040-pico",
+    "atmega2560-mega",
     "atmega328-nano",
     "atmega328-uno",
-    "atmega2560-mega",
-    "linux-x64"
+    "esp32-s3",
+    "heltec-lora32-v3",
+    "linux-x64",
+    "rp2040-pico",
+    "simulator"
   ],
-  "variables": [
-    {
-      "name": "PressCount",
-      "type": "int32",
-      "initial": "0",
-      "persistence": "retained"
-    },
-    {
-      "name": "One",
-      "type": "int32",
-      "initial": "1",
-      "persistence": "none"
-    },
-    {
-      "name": "Zero",
-      "type": "int32",
-      "initial": "0",
-      "persistence": "none"
-    }
-  ],
-  "persistence": {
-    "retained": {
-      "simulator": "sim-store",
-      "heltec-lora32-v3": "nvs0",
-      "esp32-s3": "nvs0",
-      "rp2040-pico": "flash0",
-      "atmega328-nano": "eeprom0",
-      "atmega328-uno": "eeprom0",
-      "atmega2560-mega": "eeprom0",
-      "linux-x64": "file0"
-    }
-  },
   "tasks": [
     {
       "name": "Main",
-      "periodMs": 10
+      "periodMs": 500
     }
   ],
   "nodes": [
@@ -111,9 +80,9 @@
       "id": "text",
       "type": "to-text",
       "properties": {
-        "type": "int32",
         "decimals": "0",
-        "format": "Count: {}\n"
+        "format": "Count: {}\n",
+        "type": "int32"
       }
     },
     {
@@ -234,6 +203,24 @@
       }
     }
   ],
+  "variables": [
+    {
+      "name": "PressCount",
+      "type": "int32",
+      "initial": "0",
+      "persistence": "retained"
+    },
+    {
+      "name": "One",
+      "type": "int32",
+      "initial": "1"
+    },
+    {
+      "name": "Zero",
+      "type": "int32",
+      "initial": "0"
+    }
+  ],
   "hardware": [
     {
       "logical": "Button",
@@ -241,55 +228,67 @@
       "type": "bool"
     }
   ],
+  "persistence": {
+    "retained": {
+      "atmega2560-mega": "eeprom0",
+      "atmega328-nano": "eeprom0",
+      "atmega328-uno": "eeprom0",
+      "esp32-s3": "nvs0",
+      "heltec-lora32-v3": "nvs0",
+      "linux-x64": "file0",
+      "rp2040-pico": "flash0",
+      "simulator": "sim-store"
+    }
+  },
   "ui": {
     "nodes": {
-      "btn": {
-        "x": 60,
-        "y": 100
-      },
-      "read_one": {
-        "x": 60,
-        "y": 200
-      },
-      "read_zero": {
-        "x": 60,
-        "y": 280
-      },
-      "inc": {
-        "x": 280,
-        "y": 180
-      },
       "accumulate": {
-        "x": 500,
-        "y": 180
+        "x": 735.1999999999995,
+        "y": 375.1999999999997
       },
-      "save": {
-        "x": 280,
-        "y": 320
-      },
-      "status": {
-        "x": 60,
-        "y": 440
-      },
-      "restore_edge": {
-        "x": 280,
-        "y": 440
-      },
-      "or_send": {
-        "x": 500,
-        "y": 320
-      },
-      "read_count": {
-        "x": 500,
-        "y": 440
-      },
-      "text": {
-        "x": 720,
-        "y": 440
+      "btn": {
+        "x": -20.799999999999827,
+        "y": 82.40000000000006
       },
       "console": {
-        "x": 940,
-        "y": 380
+        "x": 962.4,
+        "y": 240.80000000000018
+      },
+      "inc": {
+        "x": 467.9999999999994,
+        "y": 347.1999999999999
+      },
+      "or_send": {
+        "x": 509.60000000000014,
+        "y": 132.0000000000002
+      },
+      "read_count": {
+        "x": 476.79999999999995,
+        "y": 24.80000000000058
+      },
+      "read_one": {
+        "x": 58.40000000000009,
+        "y": 381.59999999999985
+      },
+      "read_zero": {
+        "x": 56.799999999999955,
+        "y": 487.19999999999976
+      },
+      "restore_edge": {
+        "x": 77.6000000000005,
+        "y": 235.20000000000027
+      },
+      "save": {
+        "x": 270.4000000000003,
+        "y": -68.7999999999995
+      },
+      "status": {
+        "x": -170.39999999999972,
+        "y": 219.2000000000004
+      },
+      "text": {
+        "x": 722.3999999999999,
+        "y": 33.60000000000057
       }
     }
   }
