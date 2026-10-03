@@ -10,6 +10,41 @@ All notable changes to SMFlow are recorded here. The format follows
 ### Changed
 ### Fixed
 
+## [0.9.12-beta1] - 2026-10-02
+
+### Added
+
+- **Values that survive a power cycle.** A shared variable can be marked persistent and comes back
+  after the power is cycled, instead of restarting at its declared initial value - what a calibration
+  coefficient, a commissioned setpoint, an hour meter or a totalizer has always needed. Tick it in the
+  variable editor and choose a region: `config` is written rarely, by a person, at commissioning time;
+  `retained` is written by the program as it runs. They are kept apart because flash and EEPROM wear
+  out, and the two kinds of data do not wear them at the same rate.
+- **Three nodes to drive it.** `persist-save` writes a region, `persist-clear` returns it to its
+  declared defaults, and `persist-status` reports whether the values were restored, defaulted or
+  found corrupt - so a flow can raise an alarm when the stored record was rejected rather than trust
+  numbers it should not. A write happens only when you trigger one: nothing is saved behind your back,
+  and the cost sits where you put it in the scan. All three carry the usual `busy` / `done` / `error`
+  ports and a region picker.
+- **Every target has somewhere to put it.** Internal EEPROM on the AVRs, an NVS partition on the
+  ESP32-S3, a reserved internal flash sector on the RP2040 and the Opta, a file written
+  temp-then-rename on Linux so a power cut cannot leave half a record, and a file in the simulator -
+  so retention can be tried on the desktop before the hardware exists. External parts are supported
+  too: a **24LC256 I2C EEPROM** and an **MB85RC I2C FRAM** bind like any other device.
+- **Store bindings in Project Settings.** A persistence section says which store holds each region on
+  each target, beside the existing IO binding table. Left blank, a target with exactly one candidate
+  store allocates itself, so the common board needs no decision at all.
+- **CAN, over the MCP2515.** The MCP2515 controller with an MCP2551-class transceiver is a peripheral
+  you bind on any SPI-capable board, with `can-tx`, `can-rx` and `can-status` nodes. Bit timing is
+  worked out at build time from the crystal you declare and the bitrate you ask for, so an unreachable
+  combination is a build error naming the rates you can have - not a bus that silently never
+  acknowledges. Frames per scan are budgeted like any other asynchronous device, so a busy bus cannot
+  stretch a scan. Bus-off is reported, not hidden: `can-status` exposes the error counters and the
+  bus-off flag, and recovery is requested by the flow, because rejoining a bus is a control decision.
+- **A comment node.** A standalone block of text you can drop anywhere on the canvas and move like a
+  node, for the paragraph that belongs to the whole flow rather than to one node. It has no ports, it
+  is documentation only, and it cannot change a line of the generated C++.
+
 ## [0.9.11-beta1] - 2026-09-29
 
 ### Added
