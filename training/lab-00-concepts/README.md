@@ -393,11 +393,11 @@ silently wrote every scan would destroy the part in a weekend. Lab 11 covers thi
 **The graph never names a pin.** It names a logical resource:
 
 ```
-Graph:      EmergencyStop              ← what the program means
+Graph:      StopButton              ← what the program means
 
 Binding:    opta       → I2            ← how each board realizes it
             rp2040-pico → gpio17
-            simulator   → virtual.EmergencyStop
+            simulator   → virtual.StopButton
 ```
 
 The binding lives beside the graph, not inside it. Nothing in the graph changes when the board
@@ -407,7 +407,7 @@ A logical resource carries a name, a direction, a type, and a per-target binding
 
 ```
 HardwareResource
-├── LogicalName   "EmergencyStop"
+├── LogicalName   "StopButton"
 ├── Direction     Input | Output
 ├── DataType      bool
 └── Bindings      { "opta": "I2", "rp2040-pico": "gpio17" }

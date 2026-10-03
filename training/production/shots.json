@@ -69,7 +69,7 @@
       "id": "0.09",
       "file": "io-binding.png",
       "title": "Logical names, per-target bindings",
-      "spec": "DIAGRAM. One logical name (EmergencyStop) on the left, fanning out to three target bindings: opta -> I2, rp2040-pico -> gpio17, simulator -> virtual point. Make the point that the graph side never changes.",
+      "spec": "DIAGRAM. One logical name (StopButton) on the left, fanning out to three target bindings: opta -> I2, rp2040-pico -> gpio17, simulator -> virtual point. Make the point that the graph side never changes.",
       "frame": "Wide diagram, 16:9",
       "alt": "One logical I/O name binding to different physical pins on three different targets"
     },
@@ -424,6 +424,56 @@
       "spec": "The SMF0003 error naming the node, its type, and the port that does not exist.",
       "frame": "Terminal, cropped to the error",
       "alt": "The SMF0003 error naming the node, its type, and the missing port"
+    }
+  ],
+  "lab-05-state": [
+    {
+      "id": "5.01",
+      "file": "complete-graph.png",
+      "title": "The finished Lab 5 flow",
+      "spec": "Nine nodes: three inputs, the set-reset latch, counter and falling-edge, three outputs. Lay out so the three state-bearing nodes (latch, counter, fe) read as the spine. If the editor marks stateful nodes distinctly, make that visible.",
+      "frame": "Canvas only, hero composition, nothing selected",
+      "alt": "The completed Lab 5 graph with a set-reset latch, counter, and falling-edge pulse"
+    },
+    {
+      "id": "5.02",
+      "file": "sealin-rejected.png",
+      "title": "The ladder reflex, refused",
+      "spec": "Split or inset: the four-node seal-in on the canvas with the feedback wire clearly looping back, and the SMF0007 error. The sentence 'Feedback loops require a state-bearing node, which does not exist yet' must be legible — the rest of the lab is its answer.",
+      "frame": "Canvas plus terminal or diagnostics panel",
+      "alt": "The seal-in attempt drawn on the canvas with the SMF0007 cycle error"
+    },
+    {
+      "id": "5.03",
+      "file": "simulator-pulse.png",
+      "title": "One scan wide",
+      "spec": "The simulator single-stepped to the exact scan where CycleEnd is true, with Motor having just gone false. A visible scan counter sells that this is one scan and not a held value. Stepping, not free-run.",
+      "frame": "Simulator panel, Motor and CycleEnd both in frame",
+      "alt": "The simulator stepped to the exact scan where CycleEnd is true"
+    },
+    {
+      "id": "5.04",
+      "file": "application-cpp.png",
+      "title": "Load, compute, store",
+      "spec": "Full MainTask. Annotate one state node's three lines (load state.s1_latched, compute t6, store it) to show the pattern, then let the reader see it repeat twice more. Call out `startButton || t3 && !stopButton` as the seal-in the compiler wrote.",
+      "frame": "Code only, 20pt+; two stacked crops if needed for legibility",
+      "alt": "The generated MainTask with three state loads and three state stores"
+    },
+    {
+      "id": "5.05",
+      "file": "build-report.png",
+      "title": "State, priced",
+      "spec": "Two panes if possible: the linux-x64 report Tasks table showing 7 B state, and the atmega328-uno 'RAM (Application State) 13 bytes / State: 7 B, IO: 6 B' line. The AVR one is the one that makes the number feel real.",
+      "frame": "Report excerpts, cropped tight",
+      "alt": "The build report showing 7 bytes of application state"
+    },
+    {
+      "id": "5.06",
+      "file": "power-cycle.png",
+      "title": "State is RAM",
+      "spec": "Before/after pair: the simulator with the motor latched on and a count of six, then the same panel immediately after a restart showing motor off and count zero. Consider insetting the InitializeApplication function, which is the explanation.",
+      "frame": "Two simulator states side by side",
+      "alt": "Two simulator runs side by side: a count of six before restart, zero after"
     }
   ]
 }

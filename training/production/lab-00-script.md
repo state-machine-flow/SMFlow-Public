@@ -277,7 +277,7 @@ shape.
 
 **[VO]** Now I/O, and this is one of my favorite design decisions in the product.
 
-**[VO]** The graph never names a pin. It names a logical resource — `EmergencyStop`. The binding to
+**[VO]** The graph never names a pin. It names a logical resource — `StopButton`. The binding to
 an actual pin lives beside the graph, in a table, per target.
 
 **[VO]** Opta, that's I2. Pico, gpio17. Simulator, a virtual point.

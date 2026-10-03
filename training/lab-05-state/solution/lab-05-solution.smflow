@@ -1,0 +1,171 @@
+{
+  "formatVersion": 6,
+  "name": "Lab 05 - Solution",
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "digital-input",
+      "name": "RunButton"
+    },
+    {
+      "id": "tg",
+      "type": "toggle"
+    },
+    {
+      "id": "rstlatch",
+      "type": "digital-input",
+      "name": "StopButton"
+    },
+    {
+      "id": "rstcnt",
+      "type": "digital-input",
+      "name": "ResetCount"
+    },
+    {
+      "id": "motor",
+      "type": "digital-output",
+      "name": "Motor"
+    },
+    {
+      "id": "cnt",
+      "type": "counter",
+      "properties": {
+        "presetCount": "10"
+      }
+    },
+    {
+      "id": "batch",
+      "type": "digital-output",
+      "name": "BatchComplete"
+    },
+    {
+      "id": "fe",
+      "type": "falling-edge"
+    },
+    {
+      "id": "pulse",
+      "type": "digital-output",
+      "name": "CycleEnd"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "rstcnt",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "cnt",
+        "port": "Q"
+      },
+      "to": {
+        "node": "batch",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "fe",
+        "port": "Q"
+      },
+      "to": {
+        "node": "pulse",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "start",
+        "port": "value"
+      },
+      "to": {
+        "node": "tg",
+        "port": "CLK"
+      }
+    },
+    {
+      "from": {
+        "node": "rstlatch",
+        "port": "value"
+      },
+      "to": {
+        "node": "tg",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "tg",
+        "port": "Q"
+      },
+      "to": {
+        "node": "motor",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "tg",
+        "port": "Q"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "CU"
+      }
+    },
+    {
+      "from": {
+        "node": "tg",
+        "port": "Q"
+      },
+      "to": {
+        "node": "fe",
+        "port": "IN"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "RunButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ResetCount",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Motor",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "BatchComplete",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "CycleEnd",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "StopButton",
+      "direction": "input",
+      "type": "bool"
+    }
+  ]
+}

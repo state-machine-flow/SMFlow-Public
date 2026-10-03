@@ -1,0 +1,25 @@
+{
+  "formatVersion": 6, "name": "Seal-in attempt",
+  "tasks": [ { "name": "Main", "periodMs": 10 } ],
+  "nodes": [
+    { "id":"start","type":"digital-input","name":"StartButton" },
+    { "id":"stop","type":"digital-input","name":"StopButton" },
+    { "id":"seal","type":"or" },
+    { "id":"nstop","type":"not" },
+    { "id":"run","type":"and" },
+    { "id":"motor","type":"digital-output","name":"Motor" }
+  ],
+  "connections": [
+    { "from":{"node":"start","port":"value"},"to":{"node":"seal","port":"a"} },
+    { "from":{"node":"run","port":"out"},    "to":{"node":"seal","port":"b"} },
+    { "from":{"node":"stop","port":"value"}, "to":{"node":"nstop","port":"in"} },
+    { "from":{"node":"seal","port":"out"},   "to":{"node":"run","port":"a"} },
+    { "from":{"node":"nstop","port":"out"},  "to":{"node":"run","port":"b"} },
+    { "from":{"node":"run","port":"out"},    "to":{"node":"motor","port":"value"} }
+  ],
+  "hardware": [
+    { "logical":"StartButton","direction":"input","type":"bool" },
+    { "logical":"StopButton","direction":"input","type":"bool" },
+    { "logical":"Motor","direction":"output","type":"bool" }
+  ]
+}

@@ -138,15 +138,15 @@ A tank level sensor, a threshold alarm, and a formatted console line. The first 
 
 ## Part II — Building real logic
 
-### Lab 5 — State: latches, counters, and edges
-A start/stop station with a seal-in. Then the same thing with `set-reset`, then with `toggle`.
+### [Lab 5 — State: latches, counters, and edges](lab-05-state/)
+A start/stop station. The ladder seal-in is rejected as a cycle — then built properly.
 
-- `set-reset`, `toggle`, `counter`, `rising-edge`, `falling-edge`
-- Where state lives in the generated C++ (spoiler: a `static` struct, not a heap)
-- Scan-to-scan persistence versus power-cycle persistence (foreshadows Lab 11)
-- **On your own:** add a cycle counter that survives a stop
-
-*Sample basis:* `samples/logic/motor-interlock`, `samples/timing/stopwatch`
+- `set-reset`, `counter`, `toggle`, `rising-edge`, `falling-edge`
+- Where retained state lives in the generated C++: a plain struct, no heap, priced in the report
+- That `counter` and `toggle` edge-detect internally, and when you still need an edge node
+- Reading dominance off the emitted expression instead of a datasheet
+- **Break it:** unconnected reset (`SMF0005`), and a power cycle that wipes the count
+- **Concept:** surviving a scan and surviving a power cycle are different mechanisms
 
 ### Lab 6 — Timers
 `ton` and `tof` against a real control problem: a motor that must run 3 seconds after the stop
@@ -272,7 +272,7 @@ B-roll notes live in [`production/`](production/). See
 | 2 Scan cycle | ✅ | 0/6 | — | — |
 | 3 Tasks and periods | ✅ | 0/8 | — | — |
 | 4 Types and ports | ✅ | 0/7 | — | — |
-| 5 State | — | — | — | — |
+| 5 State | ✅ | 0/6 | — | — |
 | 6 Timers | — | — | — | — |
 | 7 Variables and debug | — | — | — | — |
 | 8 First deploy | — | — | — | — |

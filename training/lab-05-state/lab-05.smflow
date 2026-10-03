@@ -1,0 +1,34 @@
+{
+  "formatVersion": 6,
+  "name": "Lab 05 - State",
+  "tasks": [ { "name": "Main", "periodMs": 10 } ],
+  "nodes": [
+    { "id":"start",  "type":"digital-input",  "name":"StartButton" },
+    { "id":"stop",   "type":"digital-input",  "name":"StopButton" },
+    { "id":"rstcnt", "type":"digital-input",  "name":"ResetCount" },
+    { "id":"latch",  "type":"set-reset" },
+    { "id":"motor",  "type":"digital-output", "name":"Motor" },
+    { "id":"cnt",    "type":"counter", "properties": { "presetCount": "10" } },
+    { "id":"batch",  "type":"digital-output", "name":"BatchComplete" },
+    { "id":"fe",     "type":"falling-edge" },
+    { "id":"pulse",  "type":"digital-output", "name":"CycleEnd" }
+  ],
+  "connections": [
+    { "from":{"node":"start","port":"value"},  "to":{"node":"latch","port":"S"} },
+    { "from":{"node":"stop","port":"value"},   "to":{"node":"latch","port":"R"} },
+    { "from":{"node":"latch","port":"Q"},      "to":{"node":"motor","port":"value"} },
+    { "from":{"node":"latch","port":"Q"},      "to":{"node":"cnt","port":"CU"} },
+    { "from":{"node":"rstcnt","port":"value"}, "to":{"node":"cnt","port":"R"} },
+    { "from":{"node":"cnt","port":"Q"},        "to":{"node":"batch","port":"value"} },
+    { "from":{"node":"latch","port":"Q"},      "to":{"node":"fe","port":"IN"} },
+    { "from":{"node":"fe","port":"Q"},         "to":{"node":"pulse","port":"value"} }
+  ],
+  "hardware": [
+    { "logical":"StartButton",   "direction":"input",  "type":"bool" },
+    { "logical":"StopButton",    "direction":"input",  "type":"bool" },
+    { "logical":"ResetCount",    "direction":"input",  "type":"bool" },
+    { "logical":"Motor",         "direction":"output", "type":"bool" },
+    { "logical":"BatchComplete", "direction":"output", "type":"bool" },
+    { "logical":"CycleEnd",      "direction":"output", "type":"bool" }
+  ]
+}

@@ -104,7 +104,7 @@ Screenshot conventions, the manifest, and the placeholder generator are in
 | 2 Scan cycle | ✅ | — | ✅ 6 | 0/6 | — | — | — | — |
 | 3 Tasks and periods | ✅ | — | ✅ 8 | 0/8 | — | — | — | — |
 | 4 Types and ports | ✅ | — | ✅ 7 | 0/7 | — | — | — | — |
-| 5 State | — | — | — | — | — | — | — | — |
+| 5 State | ✅ | — | ✅ 6 | 0/6 | — | — | — | — |
 | 6 Timers | — | — | — | — | — | — | — | — |
 | 7 Variables and debug | — | — | — | — | — | — | — | — |
 | 8 First deploy | — | — | — | — | — | — | — | — |
