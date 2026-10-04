@@ -18,7 +18,8 @@
       "type": "ton",
       "properties": {
         "presetTime": "300"
-      }
+      },
+      "comment": "Defines a 300 ms startup window. Fed by the constant Always=true, this on-delay's Q goes true 300 ms after boot and then stays true; notDone inverts it, so notDone is true only during the first 300 ms. This is how you get 'run only at startup' without a dedicated init task."
     },
     {
       "id": "notDone",
@@ -30,7 +31,8 @@
       "properties": {
         "timeHigh": "100",
         "timeLow": "100"
-      }
+      },
+      "comment": "A 5 Hz pulse train (100 ms on / 100 ms off). On its own it would beep forever. ANDed with the 300 ms window below, only the pulses inside that window survive - two of them - which is what makes it a *double* beep."
     },
     {
       "id": "gate",
@@ -51,7 +53,8 @@
       "type": "select",
       "properties": {
         "type": "float32"
-      }
+      },
+      "comment": "select as a mux: buzzer frequency = gate ? AlarmHz(2700) : Silent(0). The boolean 'beep now' gate becomes a frequency or silence for the tone output - the bridge from logic to an analog-style output."
     },
     {
       "id": "buzzer",
@@ -64,12 +67,19 @@
       "properties": {
         "timeHigh": "500",
         "timeLow": "500"
-      }
+      },
+      "comment": "A separate 1 Hz LED blink with nothing to do with the beep. It shows two independently-timed behaviors living in the same task and scan."
     },
     {
       "id": "led",
       "type": "digital-output",
       "name": "Heartbeat"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A power-on double beep, then silence, alongside a forever LED heartbeat. The idea: a 300 ms on-delay (window) marks a startup period, and ANDing it with a 100/100 ms blink lets exactly two pulses through before the window closes for good. A select turns that gate into a tone frequency. Nothing actually stops - the beep just ends because its gate stays false afterward. Gating a tone with select, on a board that needs nothing wired but the piezo."
     }
   ],
   "connections": [
@@ -216,6 +226,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 580
+      },
       "always": {
         "x": 40,
         "y": 120

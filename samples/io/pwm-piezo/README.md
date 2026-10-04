@@ -102,9 +102,9 @@ node is therefore a compile error rather than a silently dead node.
 ## Building
 
 ```bash
-smflow validate samples/io/pwm-piezo/project.smflow
-smflow build    samples/io/pwm-piezo/project.smflow --target atmega2560-mega
-smflow build    samples/io/pwm-piezo/project.smflow --target simulator
+smflow validate samples/io/pwm-piezo/pwm-piezo.smflow
+smflow build    samples/io/pwm-piezo/pwm-piezo.smflow --target atmega2560-mega
+smflow build    samples/io/pwm-piezo/pwm-piezo.smflow --target simulator
 ```
 
 The Mega build compiles with `arduino-cli` to roughly 6.3 KB of flash and 120 bytes of RAM.

@@ -35,7 +35,8 @@
     {
       "id": "pub1",
       "type": "variable-write",
-      "name": "Channel1"
+      "name": "Channel1",
+      "comment": "Stores the reading in the Channel1 variable. The 'modbus' section at the bottom publishes Channel1 as input register 0; a float32 takes two 16-bit registers, which is why the four channels sit at addresses 0, 2, 4, 6."
     },
     {
       "id": "pub2",
@@ -55,16 +56,24 @@
     {
       "id": "link",
       "type": "variable-read",
-      "name": "ModbusConnected"
+      "name": "ModbusConnected",
+      "comment": "ModbusConnected is a status variable the Modbus server maintains at runtime - the flow only reads it. It is true while a client is actively polling. The other Modbus* variables (request count, error count, ms-since-request, last exception) are populated by the stack the same way."
     },
     {
       "id": "lost",
-      "type": "not"
+      "type": "not",
+      "comment": "FaultLamp = NOT ModbusConnected. If the client stops polling, the lamp lights - the 'client went away' fallback, so the device can flag that nobody is reading it rather than sitting silent."
     },
     {
       "id": "fault",
       "type": "digital-output",
       "name": "FaultLamp"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A Modbus TCP server exposing four analog channels. Each 10 ms scan reads the inputs into Channel1-4; the 'modbus' section publishes them as input registers a SCADA/PLC client can poll. Two details matter: a float32 occupies two 16-bit registers (so addresses step by 2), and wordOrder 'abcd' fixes how the two halves are ordered on the wire. The server runs over the Eth peripheral (bound in the .iomap); its connection state shows up in the ModbusConnected variable, which the graph reads to detect a lost client."
     }
   ],
   "connections": [
@@ -258,6 +267,10 @@
   },
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 580
+      },
       "ch1": {
         "x": 40,
         "y": 40

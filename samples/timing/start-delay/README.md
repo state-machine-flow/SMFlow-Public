@@ -10,6 +10,6 @@ SMFlow does and does not guarantee here.
 ## Run it
 
 ```
-smflow simulate samples/timing/start-delay/project.smflow
-smflow test     samples/timing/start-delay/project.smflow
+smflow simulate samples/timing/start-delay/start-delay.smflow
+smflow test     samples/timing/start-delay/start-delay.smflow
 ```

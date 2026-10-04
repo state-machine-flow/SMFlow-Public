@@ -1,6 +1,6 @@
 {
   "formatVersion": 4,
-  "name": "lora-press-counter",
+  "name": "heltec-lora-transmitter-simple",
   "target": "heltec-lora32-v3",
   "targets": [
     "esp32-s3",
@@ -30,12 +30,14 @@
       "type": "create-payload",
       "properties": {
         "schema": "pressCount:int32:be"
-      }
+      },
+      "comment": "Packs named inputs into the raw bytes a LoRa packet carries, using the same 'field:type:endian' schema the receiver unpacks with. The in_pressCount port feeds the one field. This schema and the receiver's must stay identical - change one, change both."
     },
     {
       "id": "tx",
       "type": "sx1262-tx",
-      "name": "Radio"
+      "name": "Radio",
+      "comment": "Transmits the current payload when 'trigger' fires. A LoRa send is not instant - it takes tens of milliseconds - so the radio reports progress on separate ports: 'busy' is high during the air time, 'done' pulses when the packet is out, 'error' on failure. Fire-and-watch: you kick off the send, then react to busy/done/error, never assuming it completed within this scan."
     },
     {
       "id": "led",
@@ -80,6 +82,12 @@
       "properties": {
         "line": "0"
       }
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "The transmitting half of the LoRa link (pair with heltec-lora-receiver-simple). A button bumps a press counter; that value is packed into a binary payload and sent over the SX1262 radio. Because a radio send spans many scans, it is fire-and-watch: 'trigger' starts it and busy/done/error report how it went - wired here to a Busy LED, Done/Error outputs, and a completed-send counter. The OLED shows how many presses have been sent."
     }
   ],
   "connections": [
@@ -243,6 +251,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 520
+      },
       "btn": {
         "x": 40,
         "y": 80

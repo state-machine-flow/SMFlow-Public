@@ -1,9 +1,9 @@
 {
   "formatVersion": 4,
-  "name": "pico-interlock",
+  "name": "motor-interlock",
   "tasks": [
     {
-      "name": "Main",
+      "name": "main",
       "periodMs": 10
     }
   ],
@@ -11,16 +11,17 @@
     {
       "id": "n1",
       "type": "digital-input",
-      "name": "StartButton"
+      "name": "EmergencyStop"
     },
     {
       "id": "n2",
       "type": "digital-input",
-      "name": "EmergencyStop"
+      "name": "StartButton"
     },
     {
       "id": "n3",
-      "type": "not"
+      "type": "not",
+      "comment": "EmergencyStop is inverted so that a true E-stop forces Motor off no matter what StartButton does. On real hardware an E-stop is wired normally-closed (active-low), so a cut wire also reads as 'stop' — the fail-safe direction."
     },
     {
       "id": "n4",
@@ -30,12 +31,18 @@
       "id": "n5",
       "type": "digital-output",
       "name": "Motor"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A minimal safety interlock: Motor = (NOT EmergencyStop) AND StartButton. The motor runs only while Start is held and E-stop is clear; both conditions are re-checked every 10 ms scan. The logical names here are bound to real terminals in an .iomap on hardware — see io/pico-interlock and io/opta-interlock for this same graph running on a board."
     }
   ],
   "connections": [
     {
       "from": {
-        "node": "n2",
+        "node": "n1",
         "port": "value"
       },
       "to": {
@@ -45,8 +52,8 @@
     },
     {
       "from": {
-        "node": "n1",
-        "port": "value"
+        "node": "n3",
+        "port": "out"
       },
       "to": {
         "node": "n4",
@@ -55,8 +62,8 @@
     },
     {
       "from": {
-        "node": "n3",
-        "port": "out"
+        "node": "n2",
+        "port": "value"
       },
       "to": {
         "node": "n4",
@@ -76,19 +83,14 @@
   ],
   "hardware": [
     {
-      "logical": "StartButton",
-      "direction": "input",
-      "type": "bool"
-    },
-    {
       "logical": "EmergencyStop",
       "direction": "input",
       "type": "bool"
     },
     {
-      "logical": "Temperature",
+      "logical": "StartButton",
       "direction": "input",
-      "type": "float32"
+      "type": "bool"
     },
     {
       "logical": "Motor",
@@ -98,6 +100,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 300
+      },
       "n1": {
         "x": 40,
         "y": 40
@@ -108,7 +114,7 @@
       },
       "n3": {
         "x": 240,
-        "y": 160
+        "y": 40
       },
       "n4": {
         "x": 430,

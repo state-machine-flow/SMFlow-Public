@@ -1,6 +1,6 @@
 {
   "formatVersion": 5,
-  "name": "untitled",
+  "name": "heltec-lora-receiver-simple",
   "target": "heltec-lora32-v3",
   "targets": [
     "heltec-lora32-v3"
@@ -20,14 +20,16 @@
     {
       "id": "n1",
       "type": "sx1262-rx",
-      "name": "lora"
+      "name": "lora",
+      "comment": "LoRa receive node for the SX1262 radio (the 'lora' peripheral). 'payload' is the raw bytes of the most recent packet; 'rssi' is its received signal strength in dBm; 'enable' gates the radio on and off. Frequency, bandwidth and spreading factor are not set here - they live in the .iomap and must match the transmitter."
     },
     {
       "id": "n3",
       "type": "unpack-payload",
       "properties": {
         "schema": "pressCount:int32:be"
-      }
+      },
+      "comment": "Decodes the raw bytes into named fields using a 'field:type:endian' schema. Here the single field pressCount (big-endian int32) appears as the output port out_pressCount. A LoRa packet has no self-describing header, so this schema must match the transmitter's pack-payload schema exactly or the bytes decode to nonsense."
     },
     {
       "id": "en",
@@ -74,6 +76,12 @@
       "properties": {
         "line": "2"
       }
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "The receiving half of a LoRa link - pair it with heltec-lora-transmitter-simple. Each scan it takes the latest packet off the SX1262 radio, unpacks a big-endian int32 'pressCount' from the raw bytes, and shows the count plus the signal strength (RSSI) on the OLED. The init task paints the static 'LoRa Rx' title once. The key idea: LoRa carries opaque bytes, so both ends must agree on the payload schema by hand."
     }
   ],
   "connections": [
@@ -158,6 +166,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 45,
+        "y": 440
+      },
       "en": {
         "x": 45.200000000000216,
         "y": 154.39999999999995

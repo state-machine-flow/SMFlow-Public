@@ -39,7 +39,8 @@
       "type": "select",
       "properties": {
         "type": "int32"
-      }
+      },
+      "comment": "Branch-free increment: out = Button ? One(1) : Zero(0), added to PressCount below. Same mux pattern as timing/stopwatch - every scan does the same work."
     },
     {
       "id": "accumulate",
@@ -54,18 +55,21 @@
       "type": "persist-save",
       "properties": {
         "region": "retained"
-      }
+      },
+      "comment": "Writes the retained variables to non-volatile storage when 'trigger' fires - here, on a button press. You save on an event, not every scan: flash and EEPROM have limited write endurance, and 500 ms saves forever would wear them out. 'region: retained' names which store; the map is in the persistence section below."
     },
     {
       "id": "status",
       "type": "persist-status",
       "properties": {
         "region": "retained"
-      }
+      },
+      "comment": "Reports on the retained region. Its 'restored' port is true after boot when values were actually loaded back from NV (versus a first-ever run with no saved data). Here it drives the rising-edge so the count prints once right after a restore."
     },
     {
       "id": "restore_edge",
-      "type": "rising-edge"
+      "type": "rising-edge",
+      "comment": "Turns a level into a one-shot: Q is true for exactly one scan when IN goes false->true. Needed because 'restored' stays high for a while; without the edge, it would retrigger the serial send every scan."
     },
     {
       "id": "or_send",
@@ -89,6 +93,12 @@
       "id": "console",
       "type": "serial-tx",
       "name": "Console"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A button-press count that survives power cycles. PressCount is marked persistence: retained, and the 'persistence' section maps that logical 'retained' region to a real store per target - AVR EEPROM, ESP NVS, Pico flash, a file on Linux, an in-memory store in the simulator. The flow itself never names the chip or the storage technology. persist-save writes on each press; persist-status reports when the value came back at boot; the count is printed on a press, or once right after a restore."
     }
   ],
   "connections": [
@@ -242,6 +252,10 @@
   },
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": -170,
+        "y": 580
+      },
       "accumulate": {
         "x": 735.1999999999995,
         "y": 375.1999999999997

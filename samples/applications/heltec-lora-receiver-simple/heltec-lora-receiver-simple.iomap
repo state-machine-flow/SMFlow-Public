@@ -1,6 +1,6 @@
 {
   "formatVersion": 1,
-  "project": "untitled",
+  "project": "heltec-lora-receiver-simple",
   "bindings": {},
   "peripherals": {
     "heltec-lora32-v3": {

@@ -25,7 +25,8 @@
     {
       "id": "ms",
       "type": "variable-read",
-      "name": "ModbusMsSinceRequest"
+      "name": "ModbusMsSinceRequest",
+      "comment": "A status variable the Modbus stack maintains: milliseconds since the last client request. It climbs while the link is idle and snaps back toward 0 on each poll - the quickest 'is anyone talking to me?' check. It starts at 2147483647 (int-max), meaning no request has arrived yet."
     },
     {
       "id": "msT",
@@ -40,7 +41,8 @@
       "name": "Lcd",
       "properties": {
         "line": "0"
-      }
+      },
+      "comment": "Writes line 0 of the LCD. 'Lcd' is a single HD44780 peripheral over I2C; the three line nodes (l0/l1/l2) are just views of it at different rows - same shared-peripheral pattern as the SSD1306 sample. The I2C address lives in the .iomap."
     },
     {
       "id": "rq",
@@ -81,6 +83,12 @@
       "properties": {
         "line": "2"
       }
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A commissioning tool for a Modbus server. It serves one analog channel like modbus-analog, but its real job is the LCD: three status counters the Modbus stack keeps - ms since the last request (is the link alive?), total request count (is anyone polling?), and error count (are requests malformed?). Reach for it on the bench when a client gets nothing back and you need to see whether requests are even arriving, and whether the device is answering or faulting."
     }
   ],
   "connections": [
@@ -238,6 +246,10 @@
   },
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 520
+      },
       "ch": {
         "x": 40,
         "y": 400

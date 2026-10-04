@@ -49,6 +49,6 @@ downstream of it. `stopwatch.smtest` asserts this directly rather than papering 
 ## Run it
 
 ```
-smflow simulate samples/timing/stopwatch/project.smflow
-smflow test     samples/timing/stopwatch/project.smflow
+smflow simulate samples/timing/stopwatch/stopwatch.smflow
+smflow test     samples/timing/stopwatch/stopwatch.smflow
 ```

@@ -8,25 +8,30 @@ The receiving half of this is [lora-press-receiver](../lora-press-receiver).
 
 Press the button and:
 
-1. **Counter** increments its count (`CV`).
-2. **Create Payload** packs it as a 32-bit big-endian `pressCount` into a `Bytes<256>` buffer.
-3. **SX1262 TX** sees the rising edge on `trigger` and transmits the packet.
-4. `busy` is true while the packet is on the air, and lights the LED.
-5. `done` pulses for one scan when the radio confirms the packet went out. `error` latches if it did
-   not — a radio that stops answering fails rather than holding `busy` forever.
-6. **To Text** formats the count as `Sent: 12`, and **SSD1306 Text** writes it to line 0.
+1. **Select** chooses `One` (1) over `Zero` (0) when `Button` is pressed.
+2. **Update Variable** atomically adds 1 to `PressCount`, persisting across power loss via `retained` NVS storage.
+3. **Persist Save** triggers saving the `retained` region on the button press.
+4. **Create Payload** packs the count as a 32-bit big-endian `pressCount` into a `Bytes<256>` buffer.
+5. **SX1262 TX** sees the rising edge on `trigger` and transmits the packet.
+6. `busy` is true while the packet is on the air, and lights the LED.
+7. **To Text** formats the count as `Sent: 12`, and **SSD1306 Text** writes it to line 0.
 
 ```
-Button (DI) ─┬─► [CU] Counter [CV] ─┬─► [in_pressCount] Create Payload [payload] ─► [payload] SX1262 TX (Radio)
-             └─► [trigger] ─────────┼──────────────────────────────────────────────►
-                                    └─► [value] To Text [text] ─► [text] SSD1306 Text (Oled)
+Button (DI) ──┬──► [cond] Select [out] ──► [value] Update Variable ("PressCount", add)
+              │       ▲       ▲
+              │       │       └── [value] Variable Read ("Zero")
+              │       └────────── [value] Variable Read ("One")
+              │
+              ├──► [trigger] Persist Save ("retained")
+              │
+              ├──► [trigger] SX1262 TX (Radio)
+              │
+Variable Read ┼──► [in_pressCount] Create Payload [payload] ──► [payload] SX1262 TX (Radio)
+("PressCount")│
+              └──► [value] To Text [text] ──► [text] SSD1306 Text (Oled)
 
-                          SX1262 TX ─► [busy]  ─► Busy  (DO)
-                                    ─► [done]  ─► Done  (DO)
-                                    ─► [error] ─► Error (DO)
+                         SX1262 TX ──► [busy] ──► Busy (DO)
 ```
-
-`Input1` resets both counters.
 
 ## Boards
 
@@ -39,10 +44,7 @@ The radio and the display are soldered to this board, so the only thing to wire 
 | Signal | Pin | Note |
 |---|---|---|
 | Button | GPIO7 | to 3V3, pulled down internally |
-| Input1 | GPIO19 | resets both counters, pulled down |
 | Busy | GPIO35 | the on-board LED |
-| Done | GPIO2 | |
-| Error | GPIO3 | |
 
 The radio is on GPIO8–GPIO14 and the display on GPIO17/GPIO18 with reset on GPIO21. The board also
 powers its display from Vext on GPIO36, which the target switches on at start-up — that is what
@@ -50,12 +52,12 @@ picking the board rather than the bare chip buys you, and why this section does 
 
 ### A bare ESP32-S3 with modules wired to it — `esp32-s3`
 
-Wire it however you like and say so in `project.iomap`, under the `esp32-s3` section. The pins
+Wire it however you like and say so in `heltec-lora-transmitter-ack.iomap`, under the `esp32-s3` section. The pins
 recorded there are one working arrangement, not a requirement.
 
 ## Radio settings
 
-In `project.iomap`, under the `Radio` peripheral. **Every one of these must match at the receiving
+In `heltec-lora-transmitter-ack.iomap`, under the `Radio` peripheral. **Every one of these must match at the receiving
 end.** A mismatch is silent: the receiver simply never hears a packet, and nothing at either end
 reports a problem.
 

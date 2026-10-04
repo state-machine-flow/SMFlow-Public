@@ -9,8 +9,8 @@ refuses to generate code rather than guessing a default.
 ## Run it
 
 ```
-smflow simulate samples/logic/motor-interlock/project.smflow
-smflow test     samples/logic/motor-interlock/project.smflow
+smflow simulate samples/logic/motor-interlock/motor-interlock.smflow
+smflow test     samples/logic/motor-interlock/motor-interlock.smflow
 ```
 
 Hardware variants of the same logic live in [`../../io/pico-interlock`](../../io/pico-interlock) and

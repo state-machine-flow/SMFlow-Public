@@ -85,8 +85,8 @@ arduino-cli lib install "Ethernet"
 Then:
 
 ```
-smflow validate samples/applications/modbus-diagnostic/project.smflow
-smflow build    samples/applications/modbus-diagnostic/project.smflow --target atmega2560-mega
+smflow validate samples/applications/modbus-diagnostic/modbus-diagnostic.smflow
+smflow build    samples/applications/modbus-diagnostic/modbus-diagnostic.smflow --target atmega2560-mega
 ```
 
 Costs on an ATmega2560, measured: **20,150 bytes of flash (7%)** and **1,549 bytes of SRAM (18%)**,

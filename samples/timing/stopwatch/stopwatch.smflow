@@ -23,7 +23,8 @@
     },
     {
       "id": "runLatch",
-      "type": "toggle"
+      "type": "toggle",
+      "comment": "A toggle (T flip-flop). Q flips on each rising edge of CLK (StartStop), so one press runs, the next stops. R (Clear) forces Q off. This is how a momentary button becomes a sticky run/stop state that survives between scans."
     },
     {
       "id": "writeRunning",
@@ -50,7 +51,8 @@
       "type": "select",
       "properties": {
         "type": "int32"
-      }
+      },
+      "comment": "select is a multiplexer, not a branch: out = cond ? whenTrue : whenFalse. Here out = running ? OneTenth(1) : Zero(0). Rather than conditionally executing an 'add', the graph always adds, but the amount is 1 or 0. Same work every scan — that is the branch-free style these flows favor."
     },
     {
       "id": "accumulate",
@@ -58,7 +60,8 @@
       "name": "ElapsedTenths",
       "properties": {
         "operation": "add"
-      }
+      },
+      "comment": "variable-update is a read-modify-write of a shared variable in one node: ElapsedTenths += value. At a 100 ms scan, adding 1 while running makes ElapsedTenths count tenths of a second. Two updates target ElapsedTenths this scan (this add and the subtract below); they apply in execution order, not simultaneously."
     },
     {
       "id": "clearAmount",
@@ -73,7 +76,14 @@
       "name": "ElapsedTenths",
       "properties": {
         "operation": "subtract"
-      }
+      },
+      "comment": "The reset trick. clearAmount picks the current ElapsedTenths when Clear is held, else 0, and this node subtracts it. So pressing Clear drives the total to exactly zero without any 'set to a constant' node — again branch-free."
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A stopwatch counting tenths of a second. StartStop toggles a run latch; while running, each 100 ms scan adds 1 to ElapsedTenths. Clear resets it by subtracting the current total. The thing to notice: there is no 'if' node anywhere. Both the add amount and the subtract amount are chosen with a select (mux), so every scan does the same operations and takes the same time — important for deterministic control."
     }
   ],
   "connections": [
@@ -224,6 +234,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 560
+      },
       "startStop": {
         "x": 40,
         "y": 40

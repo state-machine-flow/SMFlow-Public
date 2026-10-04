@@ -16,7 +16,8 @@
     {
       "id": "drive",
       "type": "pwm-output",
-      "name": "Drive"
+      "name": "Drive",
+      "comment": "pwm-output's value is a duty cycle from 0.0 (off) to 1.0 (always on) - not a voltage. The Speed reading sets the duty directly."
     },
     {
       "id": "pitch",
@@ -26,7 +27,14 @@
     {
       "id": "buzzer",
       "type": "tone-output",
-      "name": "Buzzer"
+      "name": "Buzzer",
+      "comment": "tone-output's value is a frequency in hertz, not a duty cycle (0 or below is silence). 2700 Hz sits near a typical piezo's resonant peak, where it is loudest. A float output alone can't say whether it means duty, hertz or volts - the hardware 'channel' (here 'tone' vs 'pwm' on Drive) is what settles that."
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "Two independent numeric outputs in one scan: a Speed reading drives a PWM duty cycle, and a fixed AlarmHz drives a piezo tone. Each of pwm-output and tone-output claims a hardware timer on the target, so on a small MCU take care not to ask for more PWM/tone channels than the chip has timers to back them."
     }
   ],
   "connections": [
@@ -79,6 +87,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 60,
+        "y": 340
+      },
       "buzzer": {
         "x": 320,
         "y": 200

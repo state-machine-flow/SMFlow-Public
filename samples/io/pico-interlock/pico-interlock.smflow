@@ -1,6 +1,6 @@
 {
   "formatVersion": 4,
-  "name": "opta-interlock",
+  "name": "pico-interlock",
   "tasks": [
     {
       "name": "Main",
@@ -20,7 +20,8 @@
     },
     {
       "id": "n3",
-      "type": "not"
+      "type": "not",
+      "comment": "EmergencyStop is inverted so a true E-stop forces Motor off. Real E-stops are wired normally-closed (active-low), so a broken wire also reads as 'stop' - fail-safe."
     },
     {
       "id": "n4",
@@ -30,6 +31,12 @@
       "id": "n5",
       "type": "digital-output",
       "name": "Motor"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "The logic/motor-interlock graph, now targeting a real Pico. Motor = StartButton AND NOT EmergencyStop. The logical names bind to GPIO pins in pico-interlock.iomap; retargeting to another board changes only the .iomap, never this graph. (Temperature is declared and bound in the .iomap but not yet used here - a resource can exist before a flow consumes it.)"
     }
   ],
   "connections": [
@@ -98,6 +105,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 300
+      },
       "n1": {
         "x": 40,
         "y": 40

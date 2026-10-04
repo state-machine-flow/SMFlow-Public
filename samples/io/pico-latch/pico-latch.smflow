@@ -25,12 +25,19 @@
     },
     {
       "id": "n3",
-      "type": "set-reset"
+      "type": "set-reset",
+      "comment": "A set/reset latch - this is the memory. Q latches true on S (StartButton) and stays true after the button is released; R (StopButton) clears it. It holds its state between scans. Set-dominant: if S and R are held at once, Q stays true (the IEC SR convention)."
     },
     {
       "id": "n4",
       "type": "digital-output",
       "name": "RunLamp"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "The classic start/stop seal-in: a momentary Start latches the RunLamp on, a momentary Stop clears it. Without the latch the lamp would only be lit while a button was physically held. The three logical names are bound to real Pico GPIO pins in pico-latch.iomap (buttons to ground, active-low; lamp on its own pin) - that split between the flow and the pin map is the point of the .iomap file."
     }
   ],
   "connections": [
@@ -84,6 +91,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 60,
+        "y": 320
+      },
       "n1": {
         "x": 60,
         "y": 60

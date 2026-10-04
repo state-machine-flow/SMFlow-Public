@@ -75,7 +75,7 @@ format.
 
 ## Where the port is configured
 
-Not on the node. The node names `Console`; `project.iomap` says what `Console` is on each board:
+Not on the node. The node names `Console`; `serial-debug.iomap` says what `Console` is on each board:
 
 ```json
 "serial": {
@@ -95,15 +95,15 @@ editor remembers which port you were watching as a local preference instead.
 ## Running it
 
 ```
-smflow simulate samples/basics/serial-debug/project.smflow
+smflow simulate samples/basics/serial-debug/serial-debug.smflow
 > set Run true
 > set Sensor 3.271
 > step 30
 ```
 
 ```
-smflow build samples/basics/serial-debug/project.smflow --target atmega328-uno
-smflow build samples/basics/serial-debug/project.smflow --target linux-x64
+smflow build samples/basics/serial-debug/serial-debug.smflow --target atmega328-uno
+smflow build samples/basics/serial-debug/serial-debug.smflow --target linux-x64
 ```
 
 Under the simulator, frames go to the program's `stderr` — `stdin` and `stdout` are carrying the

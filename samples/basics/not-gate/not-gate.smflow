@@ -21,6 +21,12 @@
       "id": "motor",
       "type": "digital-output",
       "name": "Motor"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "How this runs",
+      "comment": "Main runs every 10 ms (periodMs). There is no main loop to write and nothing to poll: each period the whole graph is re-evaluated once, in dataflow order, then the outputs are driven. So this program means Motor = !StartButton, recomputed 100 times a second. That periodic, run-to-completion scan is the SMFlow execution model."
     }
   ],
   "connections": [
@@ -59,6 +65,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 100,
+        "y": 260
+      },
       "motor": {
         "x": 500,
         "y": 100

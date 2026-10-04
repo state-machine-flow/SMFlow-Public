@@ -1,6 +1,6 @@
 {
   "formatVersion": 4,
-  "name": "untitled",
+  "name": "apds-9960",
   "target": "atmega328-nano",
   "targets": [
     "atmega328-nano",
@@ -16,7 +16,8 @@
     {
       "id": "n1",
       "type": "optical.apds9960.read",
-      "name": "APDS9960"
+      "name": "APDS9960",
+      "comment": "A device-read node for the APDS9960 (the named peripheral below, reached over I2C). It exposes ports such as proximity and valid; here only proximity is used. 'valid' marks that the sensor is initialized and the reading is good."
     },
     {
       "id": "n2",
@@ -34,6 +35,12 @@
       "id": "n4",
       "type": "blink",
       "comment": "Valid only goes high once at startup, so we need a Blink to reassert it and trigger a serial write"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "Reads proximity from an APDS9960 optical sensor over I2C and prints it to the serial console. The 'send' input of serial-tx is an edge trigger, so something has to pulse it: since the sensor's 'valid' only rises once at startup, a free-running blink supplies a repeating strobe and a fresh reading goes out continuously. Both the APDS9960 peripheral and the console are bound to hardware in apds-9960.iomap."
     }
   ],
   "connections": [
@@ -87,6 +94,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 240,
+        "y": 380
+      },
       "n1": {
         "x": 247.5999999999999,
         "y": 95.19999999999993

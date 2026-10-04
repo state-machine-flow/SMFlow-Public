@@ -67,14 +67,14 @@ SMFlow maps the logical `retained` storage region and the logical `Console` seri
 
 ### 1. Run Automated Graph Tests
 ```bash
-smflow test examples/persistent-counter/counter.smtest
+smflow test samples/applications/persistent-counter/counter.smtest
 ```
 
 ### 2. Interactive Power-Cycle Simulation
 
 Build the desktop simulator:
 ```bash
-smflow build examples/persistent-counter/project.smflow --target simulator
+smflow build samples/applications/persistent-counter/persistent-counter.smflow --target simulator
 ./generated/persistent-counter.exe
 ```
 

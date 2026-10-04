@@ -29,14 +29,14 @@ Every pin is 3.3 V logic and **not** 5 V tolerant.
 
 ## Deploying it
 
-From the editor: open `project.smflow`, check the target strip reads `rp2040-pico`, choose the board
+From the editor: open `pico-latch.smflow`, check the target strip reads `rp2040-pico`, choose the board
 in the Deploy to box, and press **F7** (Build ▸ Deploy).
 
 From the CLI:
 
 ```
 smflow controllers
-smflow deploy examples/pico-latch/project.smflow
+smflow deploy samples/io/pico-latch/pico-latch.smflow
 ```
 
 A Pico that has never been programmed has no serial port. Hold **BOOTSEL** while plugging it in and

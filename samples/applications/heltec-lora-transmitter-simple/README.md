@@ -50,12 +50,12 @@ picking the board rather than the bare chip buys you, and why this section does 
 
 ### A bare ESP32-S3 with modules wired to it — `esp32-s3`
 
-Wire it however you like and say so in `project.iomap`, under the `esp32-s3` section. The pins
+Wire it however you like and say so in `heltec-lora-transmitter-simple.iomap`, under the `esp32-s3` section. The pins
 recorded there are one working arrangement, not a requirement.
 
 ## Radio settings
 
-In `project.iomap`, under the `Radio` peripheral. **Every one of these must match at the receiving
+In `heltec-lora-transmitter-simple.iomap`, under the `Radio` peripheral. **Every one of these must match at the receiving
 end.** A mismatch is silent: the receiver simply never hears a packet, and nothing at either end
 reports a problem.
 

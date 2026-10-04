@@ -23,7 +23,8 @@
       "type": "ton",
       "properties": {
         "presetTime": "2000"
-      }
+      },
+      "comment": "On-delay timer (the IEC 'TON'). Q turns on only after IN has been continuously true for presetTime (2000 ms). If IN drops before then, the elapsed time resets to zero and the wait starts over next time. It measures real elapsed time across scans, not a count of scans."
     },
     {
       "id": "not",
@@ -37,6 +38,12 @@
       "id": "motor",
       "type": "digital-output",
       "name": "Motor"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "An on-delay inside a periodic task. Motor = delay.Q AND (NOT EmergencyStop): the motor starts only after StartButton has been held for 2 s, and stops the instant E-stop is pressed. The delay smooths a start command; the E-stop path has no delay so it can always drop the motor immediately."
     }
   ],
   "connections": [
@@ -110,6 +117,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 300
+      },
       "and": {
         "x": 440,
         "y": 100

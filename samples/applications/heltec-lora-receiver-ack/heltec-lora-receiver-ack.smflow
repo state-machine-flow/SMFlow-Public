@@ -1,6 +1,6 @@
 {
   "formatVersion": 5,
-  "name": "untitled",
+  "name": "heltec-lora-receiver-ack",
   "target": "heltec-lora32-v3",
   "targets": [
     "heltec-lora32-v3"
@@ -80,12 +80,14 @@
       "type": "create-payload",
       "properties": {
         "schema": "ackCount:int32:be"
-      }
+      },
+      "comment": "Builds the return packet: the pressCount just received is echoed back as ackCount. This is its own schema, separate from the inbound one, and must match the transmitter's ack-unpack schema. Echoing the value lets the sender confirm its exact packet was heard."
     },
     {
       "id": "acktx",
       "type": "sx1262-tx",
-      "name": "lora"
+      "name": "lora",
+      "comment": "Transmits the ack on the SAME radio n1 receives on - both nodes name the one 'lora' peripheral. The SX1262 is half-duplex (it cannot receive and transmit at the same instant), so the ack is fired on n1's 'available' (just after a packet has been taken in), not concurrently with receiving."
     },
     {
       "id": "ackcnt",
@@ -115,6 +117,12 @@
       "id": "ackrst",
       "type": "variable-read",
       "name": "AckReset"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "The receiver, now acknowledging. It does everything heltec-lora-receiver-simple does, then sends an ack back carrying the count it just received, and tallies how many acks it has sent. The detail to notice: receive (n1) and the ack transmit (acktx) share the ONE 'lora' radio - the SX1262 is half-duplex, so the ack fires on n1's 'available' signal, right after a packet lands, rather than at the same time as receiving. Pair with heltec-lora-transmitter-ack."
     }
   ],
   "connections": [
@@ -274,6 +282,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 360
+      },
       "ackbuild": {
         "x": 564.6851200000001,
         "y": 342.14191999999986

@@ -71,7 +71,7 @@ An **Elegoo Mega 2560 R3** (or a genuine Arduino Mega 2560) with a **W5100 Ether
 | SD card chip select | **D4** | Deselected at startup. An SD card nobody deselects corrupts the shared bus |
 | SPI master | **D53** | Driven as an output, or the AVR drops out of master mode |
 
-The shield's controller is named in `project.iomap`, because a driver has to be chosen before
+The shield's controller is named in `modbus-analog.iomap`, because a driver has to be chosen before
 anything can be probed. **A W5100 and a W5500 are not register-compatible** — read the silkscreen on
 the largest chip and set the peripheral type to match. Once running, the driver reports which part it
 actually found: declare one and fit the other and `EthernetControllerOk` goes false, rather than the
@@ -109,8 +109,8 @@ arduino-cli lib install "Ethernet"
 Either way, then:
 
 ```
-smflow validate samples/applications/modbus-analog/project.smflow
-smflow build    samples/applications/modbus-analog/project.smflow --target atmega2560-mega
+smflow validate samples/applications/modbus-analog/modbus-analog.smflow
+smflow build    samples/applications/modbus-analog/modbus-analog.smflow --target atmega2560-mega
 ```
 
 ## What it costs on the board

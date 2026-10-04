@@ -34,7 +34,8 @@
       "type": "counter",
       "properties": {
         "presetCount": "1000"
-      }
+      },
+      "comment": "An up-counter. CU increments CV on each rising edge of CountButton; R (ResetButton) clears it and is reset-dominant. presetCount (1000) is the ceiling. CV is the live count, which gets formatted and shown on the OLED."
     },
     {
       "id": "count_text",
@@ -50,7 +51,8 @@
       "properties": {
         "col": "0",
         "line": "2"
-      }
+      },
+      "comment": "On Main, so it refreshes every 50 ms. It has no 'text' property; instead its 'text' input port is driven by the live count, so line 2 keeps updating. The static labels above set 'text' as a fixed property instead - property = constant, port = live."
     },
     {
       "id": "n1",
@@ -61,7 +63,8 @@
         "col": "0",
         "line": "0",
         "text": "Hello SMFlow!"
-      }
+      },
+      "comment": "task: init. The 'init' task (kind: init, periodMs 0) runs once at startup, not on a period - so this static label is painted a single time. All three of these nodes name the one 'Oled' peripheral (declared under 'peripherals', an SSD1306 over I2C); they are just views onto the same display at different lines."
     },
     {
       "id": "n2",
@@ -73,6 +76,12 @@
         "line": "4",
         "text": "Status: OK"
       }
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "Two tasks working together. 'init' runs once at boot to paint the static 'Hello SMFlow!' and 'Status: OK' labels; 'Main' runs every 50 ms to show a live, button-driven count. Everything prints to one named peripheral, Oled (an SSD1306 over I2C). Notice the flow never names an I2C bus or address - that binding lives in ssd1306-text.iomap. This is the first sample with both a dedicated init task and an external peripheral."
     }
   ],
   "connections": [
@@ -137,6 +146,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 400
+      },
       "btn_count": {
         "x": 40,
         "y": 160

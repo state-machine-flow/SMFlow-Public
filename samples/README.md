@@ -1,16 +1,17 @@
 # SMFlow samples
 
-Each sample is a complete project folder. Open the `project.smflow` in the editor and press **F5**
-to simulate or **F6** to build — that is all a sample needs.
+Each sample is a complete project folder. The `.smflow` file is named after the sample (e.g.
+`not-gate/not-gate.smflow`). Open it in the editor and press **F5** to simulate or **F6** to build —
+that is all a sample needs.
 
 The `smflow` CLI, installed alongside the editor, does the same from a script, and is the only way to
 run the `.smtest` suites some samples ship. It is not on your `PATH` by default; see
 [the CLI guide](../docs/guide/cli.md).
 
 ```
-smflow validate samples/basics/not-gate/project.smflow
-smflow simulate samples/basics/not-gate/project.smflow
-smflow build    samples/basics/not-gate/project.smflow --target linux-x64
+smflow validate samples/basics/not-gate/not-gate.smflow
+smflow simulate samples/basics/not-gate/not-gate.smflow
+smflow build    samples/basics/not-gate/not-gate.smflow --target linux-x64
 ```
 
 ## Catalog
@@ -58,10 +59,10 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 
 ```
 sample-name/
-  README.md         what it does, wiring, how to run it
-  project.smflow    the flow itself — this is the source
-  project.iomap     pin/terminal bindings, when the sample targets hardware
-  sample.smtest     graph-level tests, where the behavior is worth asserting
+  README.md             what it does, wiring, how to run it
+  sample-name.smflow    the flow itself — this is the source
+  sample-name.iomap     pin/terminal bindings, when the sample targets hardware
+  sample-name.smtest    graph-level tests, where the behavior is worth asserting
 ```
 
 Generated C++ and build output are **not** checked in — they are reproducible from the flow.

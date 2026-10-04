@@ -35,11 +35,11 @@ SSD1306 Text (Line 4, Text: "Status: OK")
 
 ```bash
 # Build for Raspberry Pi Pico
-smflow build examples/ssd1306-text --target rp2040-pico
+smflow build samples/peripherals/ssd1306-text --target rp2040-pico
 
 # Build for ESP32-S3
-smflow build examples/ssd1306-text --target esp32-s3
+smflow build samples/peripherals/ssd1306-text --target esp32-s3
 
 # Run in simulator
-smflow sim examples/ssd1306-text
+smflow sim samples/peripherals/ssd1306-text
 ```

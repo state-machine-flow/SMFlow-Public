@@ -25,7 +25,8 @@
       "properties": {
         "timeHigh": "500",
         "timeLow": "500"
-      }
+      },
+      "comment": "A free-running pulse source: while IN is true, Q is high for timeHigh ms then low for timeLow ms (here 1 Hz). Used as a send strobe so the console prints about once a second instead of on all ten scans per second."
     },
     {
       "id": "sensor",
@@ -39,12 +40,20 @@
         "decimals": "2",
         "format": "sensor: {0.00} V\n",
         "type": "float32"
-      }
+      },
+      "comment": "Builds the byte string to send. {0.00} is the incoming value formatted to two decimals; the trailing \\n is a real newline. Output is bytes, not a number."
     },
     {
       "id": "console",
       "type": "serial-tx",
-      "name": "Console"
+      "name": "Console",
+      "comment": "send is an edge trigger, not a level: one message goes out on each rising edge of send, carrying whatever is on data at that moment. 'Console' is a logical port; the .iomap picks the actual UART and baud per target (and for the simulator, stdout)."
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A debug-print pattern. Main scans at 100 ms, but you rarely want to print that often. Run gates a 1 Hz blink, and the blink's pulse strobes the serial port, so the formatted Sensor reading prints about once a second. The value is turned into text first (serial ports carry bytes, not floats). Nothing here names a pin or a baud rate: 'Console' and 'Sensor' are logical, bound to hardware in serial-debug.iomap."
     }
   ],
   "connections": [
@@ -103,6 +112,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 100,
+        "y": 420
+      },
       "beat": {
         "x": 320,
         "y": 80

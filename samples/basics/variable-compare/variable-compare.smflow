@@ -1,6 +1,6 @@
 {
   "formatVersion": 5,
-  "name": "untitled",
+  "name": "variable-compare",
   "targets": [
     "simulator"
   ],
@@ -14,7 +14,8 @@
     {
       "id": "n1",
       "type": "variable-read",
-      "name": "in1"
+      "name": "in1",
+      "comment": "Reads the shared variable 'in1' once at the top of the scan. The one output is wired to three compares below; that is fan-out of a single read, not three separate reads."
     },
     {
       "id": "n2",
@@ -23,7 +24,8 @@
     },
     {
       "id": "n3",
-      "type": "compare"
+      "type": "compare",
+      "comment": "compare is a single node type with an 'operator' property, not six different nodes. With no operator set it uses the default, '<', so this one emits in1 < in2. n4 is '==' and n5 is '>'."
     },
     {
       "id": "n4",
@@ -53,6 +55,12 @@
       "id": "n8",
       "type": "variable-write",
       "name": "comp3"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "Shared variables used as the data medium. in1 and in2 (float32) are read, compared three ways (<, ==, >), and the three boolean results are written back to comp1/comp2/comp3. variable-read/variable-write are how a graph touches named state declared in the 'variables' section, with an initial value and no pin behind it. Every scan recomputes all three results from the current values."
     }
   ],
   "connections": [
@@ -177,6 +185,10 @@
   "hardware": [],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 70,
+        "y": 450
+      },
       "n1": {
         "x": 70.00000000000003,
         "y": 76.00000000000001

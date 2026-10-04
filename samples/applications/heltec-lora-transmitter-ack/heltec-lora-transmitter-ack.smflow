@@ -1,6 +1,6 @@
 {
-  "formatVersion": 5,
-  "name": "lora-press-counter",
+  "formatVersion": 6,
+  "name": "heltec-lora-transmitter-ack",
   "target": "heltec-lora32-v3",
   "targets": [
     "esp32-s3",
@@ -19,18 +19,49 @@
       "name": "Button"
     },
     {
-      "id": "cnt",
-      "type": "counter",
+      "id": "read_one",
+      "type": "variable-read",
+      "name": "One"
+    },
+    {
+      "id": "read_zero",
+      "type": "variable-read",
+      "name": "Zero"
+    },
+    {
+      "id": "inc",
+      "type": "select",
       "properties": {
-        "presetCount": "1000"
+        "type": "int32"
       }
+    },
+    {
+      "id": "accumulate",
+      "type": "variable-update",
+      "name": "PressCount",
+      "properties": {
+        "operation": "add"
+      }
+    },
+    {
+      "id": "save",
+      "type": "persist-save",
+      "properties": {
+        "region": "retained"
+      }
+    },
+    {
+      "id": "read_count",
+      "type": "variable-read",
+      "name": "PressCount"
     },
     {
       "id": "builder",
       "type": "create-payload",
       "properties": {
         "schema": "pressCount:int32:be"
-      }
+      },
+      "comment": "Packs PressCount into the outbound bytes. Its schema must match the receiver's unpack-payload. PressCount is a retained variable (saved to NVS on each press), so the running count survives a reboot."
     },
     {
       "id": "tx",
@@ -41,28 +72,6 @@
       "id": "led",
       "type": "digital-output",
       "name": "Busy"
-    },
-    {
-      "id": "n1",
-      "type": "digital-input",
-      "name": "Input1"
-    },
-    {
-      "id": "n2",
-      "type": "digital-output",
-      "name": "Done"
-    },
-    {
-      "id": "n3",
-      "type": "digital-output",
-      "name": "Error"
-    },
-    {
-      "id": "n5",
-      "type": "counter",
-      "properties": {
-        "presetCount": "10"
-      }
     },
     {
       "id": "fmt",
@@ -89,14 +98,16 @@
     {
       "id": "rx",
       "type": "sx1262-rx",
-      "name": "Radio"
+      "name": "Radio",
+      "comment": "Receives the ack on the SAME 'Radio' peripheral that tx sends on - the SX1262 is half-duplex, so it listens after the send rather than at the same time. 'payload' is the ack bytes; 'rssi' is the ack's signal strength, shown so you can judge the return link quality."
     },
     {
       "id": "ackunp",
       "type": "unpack-payload",
       "properties": {
         "schema": "ackCount:int32:be"
-      }
+      },
+      "comment": "Decodes the ack. This schema must match the receiver's ack create-payload ('ackCount:int32:be'). The decoded ackCount is the count the receiver echoed back, so comparing it to what you sent confirms the round trip."
     },
     {
       "id": "ackfmt",
@@ -131,6 +142,12 @@
       "properties": {
         "line": "2"
       }
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A full round-trip LoRa node: it sends a press count and then listens for the receiver's ack on the one shared SX1262 (half-duplex). The count is kept in a retained variable saved to NVS, so it survives power cycles. The OLED shows the count sent, the ack value echoed back, and the ack's RSSI. The on-canvas groups ('Send Count', 'Receive ACK') are just visual grouping - they carry no behavior. Pair with heltec-lora-receiver-ack."
     }
   ],
   "connections": [
@@ -140,8 +157,48 @@
         "port": "value"
       },
       "to": {
-        "node": "cnt",
-        "port": "CU"
+        "node": "inc",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "read_one",
+        "port": "value"
+      },
+      "to": {
+        "node": "inc",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "read_zero",
+        "port": "value"
+      },
+      "to": {
+        "node": "inc",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "inc",
+        "port": "out"
+      },
+      "to": {
+        "node": "accumulate",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "btn",
+        "port": "value"
+      },
+      "to": {
+        "node": "save",
+        "port": "trigger"
       }
     },
     {
@@ -156,8 +213,8 @@
     },
     {
       "from": {
-        "node": "cnt",
-        "port": "CV"
+        "node": "read_count",
+        "port": "value"
       },
       "to": {
         "node": "builder",
@@ -186,58 +243,8 @@
     },
     {
       "from": {
-        "node": "n1",
+        "node": "read_count",
         "port": "value"
-      },
-      "to": {
-        "node": "cnt",
-        "port": "R"
-      }
-    },
-    {
-      "from": {
-        "node": "tx",
-        "port": "done"
-      },
-      "to": {
-        "node": "n2",
-        "port": "value"
-      }
-    },
-    {
-      "from": {
-        "node": "tx",
-        "port": "error"
-      },
-      "to": {
-        "node": "n3",
-        "port": "value"
-      }
-    },
-    {
-      "from": {
-        "node": "tx",
-        "port": "done"
-      },
-      "to": {
-        "node": "n5",
-        "port": "CU"
-      }
-    },
-    {
-      "from": {
-        "node": "n1",
-        "port": "value"
-      },
-      "to": {
-        "node": "n5",
-        "port": "R"
-      }
-    },
-    {
-      "from": {
-        "node": "cnt",
-        "port": "CV"
       },
       "to": {
         "node": "fmt",
@@ -317,11 +324,35 @@
   ],
   "variables": [
     {
+      "name": "PressCount",
+      "type": "int32",
+      "initial": "0",
+      "persistence": "retained"
+    },
+    {
+      "name": "One",
+      "type": "int32",
+      "initial": "1",
+      "persistence": "none"
+    },
+    {
+      "name": "Zero",
+      "type": "int32",
+      "initial": "0",
+      "persistence": "none"
+    },
+    {
       "name": "RadioEnable",
       "type": "bool",
       "initial": "true"
     }
   ],
+  "persistence": {
+    "retained": {
+      "esp32-s3": "nvs0",
+      "heltec-lora32-v3": "nvs0"
+    }
+  },
   "hardware": [
     {
       "logical": "Button",
@@ -330,21 +361,6 @@
     },
     {
       "logical": "Busy",
-      "direction": "output",
-      "type": "bool"
-    },
-    {
-      "logical": "Input1",
-      "direction": "input",
-      "type": "bool"
-    },
-    {
-      "logical": "Done",
-      "direction": "output",
-      "type": "bool"
-    },
-    {
-      "logical": "Error",
       "direction": "output",
       "type": "bool"
     }
@@ -361,6 +377,14 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 1080
+      },
+      "accumulate": {
+        "x": 480.0,
+        "y": 140.0
+      },
       "ackfmt": {
         "x": 814.8256319999999,
         "y": 726.2368800000003
@@ -374,44 +398,40 @@
         "y": 696.8688800000002
       },
       "btn": {
-        "x": 40,
-        "y": 80
+        "x": 40.0,
+        "y": 80.0
       },
       "builder": {
         "x": 491.19999999999993,
-        "y": 221.6000000000001
-      },
-      "cnt": {
-        "x": 257.6,
-        "y": 253.59999999999997
+        "y": 280.0
       },
       "fmt": {
         "x": 1038.0824000000002,
         "y": 475.1935999999999
       },
+      "inc": {
+        "x": 260.0,
+        "y": 140.0
+      },
       "led": {
         "x": 1028.7999999999997,
         "y": 15.200000000000003
       },
-      "n1": {
-        "x": 26.799999999999983,
-        "y": 384.8
-      },
-      "n2": {
-        "x": 1026.8,
-        "y": 120.80000000000004
-      },
-      "n3": {
-        "x": 1024.3159999999998,
-        "y": 360.04479999999995
-      },
-      "n5": {
-        "x": 1034.2368000000001,
-        "y": 227.228
-      },
       "oled": {
         "x": 1290.897864,
         "y": 448.48240000000004
+      },
+      "read_count": {
+        "x": 260.0,
+        "y": 380.0
+      },
+      "read_one": {
+        "x": 40.0,
+        "y": 200.0
+      },
+      "read_zero": {
+        "x": 40.0,
+        "y": 320.0
       },
       "rssifmt": {
         "x": 835.1536319999998,
@@ -428,6 +448,10 @@
       "rxen": {
         "x": 45.15363199999979,
         "y": 761.7248800000002
+      },
+      "save": {
+        "x": 260.0,
+        "y": 20.0
       },
       "tx": {
         "x": 751.1999999999998,

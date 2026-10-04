@@ -79,9 +79,9 @@ Press **reset** to hear the beeps again.
 ## Building
 
 ```bash
-smflow validate samples/io/piezo-double-beep/project.smflow
-smflow build    samples/io/piezo-double-beep/project.smflow --target atmega2560-mega
-smflow build    samples/io/piezo-double-beep/project.smflow --target simulator
+smflow validate samples/io/piezo-double-beep/piezo-double-beep.smflow
+smflow build    samples/io/piezo-double-beep/piezo-double-beep.smflow --target atmega2560-mega
+smflow build    samples/io/piezo-double-beep/piezo-double-beep.smflow --target simulator
 ```
 
 The Mega build compiles with `arduino-cli` to roughly 6.1 KB of flash and 144 bytes of RAM.

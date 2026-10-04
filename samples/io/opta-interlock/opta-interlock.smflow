@@ -1,9 +1,9 @@
 {
   "formatVersion": 4,
-  "name": "motor-interlock",
+  "name": "opta-interlock",
   "tasks": [
     {
-      "name": "main",
+      "name": "Main",
       "periodMs": 10
     }
   ],
@@ -11,16 +11,17 @@
     {
       "id": "n1",
       "type": "digital-input",
-      "name": "EmergencyStop"
+      "name": "StartButton"
     },
     {
       "id": "n2",
       "type": "digital-input",
-      "name": "StartButton"
+      "name": "EmergencyStop"
     },
     {
       "id": "n3",
-      "type": "not"
+      "type": "not",
+      "comment": "EmergencyStop is inverted so a true E-stop forces Motor off. Real E-stops are wired normally-closed (active-low), so a broken wire also reads as 'stop' - fail-safe."
     },
     {
       "id": "n4",
@@ -30,12 +31,18 @@
       "id": "n5",
       "type": "digital-output",
       "name": "Motor"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "The same interlock graph as io/pico-interlock, built for an Arduino Opta instead. Motor = StartButton AND NOT EmergencyStop. Only opta-interlock.iomap differs between the two samples - logical names bind to Opta terminals here, Pico GPIO there. The flow is identical, which is the whole point: the program is independent of the wiring."
     }
   ],
   "connections": [
     {
       "from": {
-        "node": "n1",
+        "node": "n2",
         "port": "value"
       },
       "to": {
@@ -45,8 +52,8 @@
     },
     {
       "from": {
-        "node": "n3",
-        "port": "out"
+        "node": "n1",
+        "port": "value"
       },
       "to": {
         "node": "n4",
@@ -55,8 +62,8 @@
     },
     {
       "from": {
-        "node": "n2",
-        "port": "value"
+        "node": "n3",
+        "port": "out"
       },
       "to": {
         "node": "n4",
@@ -76,14 +83,19 @@
   ],
   "hardware": [
     {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
       "logical": "EmergencyStop",
       "direction": "input",
       "type": "bool"
     },
     {
-      "logical": "StartButton",
+      "logical": "Temperature",
       "direction": "input",
-      "type": "bool"
+      "type": "float32"
     },
     {
       "logical": "Motor",
@@ -93,6 +105,10 @@
   ],
   "ui": {
     "nodes": {
+      "doc_overview": {
+        "x": 40,
+        "y": 300
+      },
       "n1": {
         "x": 40,
         "y": 40
@@ -103,7 +119,7 @@
       },
       "n3": {
         "x": 240,
-        "y": 40
+        "y": 160
       },
       "n4": {
         "x": 430,

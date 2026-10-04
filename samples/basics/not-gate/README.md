@@ -12,9 +12,9 @@ graph, validation, IR, generated C++, native binary — with nothing else in the
 ## Run it
 
 ```
-smflow simulate samples/basics/not-gate/project.smflow
-smflow test     samples/basics/not-gate/project.smflow
-smflow build    samples/basics/not-gate/project.smflow --target linux-x64
+smflow simulate samples/basics/not-gate/not-gate.smflow
+smflow test     samples/basics/not-gate/not-gate.smflow
+smflow build    samples/basics/not-gate/not-gate.smflow --target linux-x64
 ```
 
 No hardware or `.iomap` is needed for the simulator. To run it on a board, add pin bindings for
