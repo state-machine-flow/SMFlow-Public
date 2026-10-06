@@ -13,13 +13,13 @@ A dedicated reset input turns off all relays and returns the state machine to it
 SMFlow graphs are strictly directed acyclic graphs (DAGs) evaluated each scan cycle. Rather than using feedback loops, state is held within native stateful blocks:
 
 ```
-[ UserButton ] ──▶ [ NOT ] ──┬──▶ [ Toggle Bit0 ] ──┬──▶ [ Falling Edge ] ──▶ [ Toggle Bit1 ]
- (BTN_USER)                  │                      │
-                             ▼ (S)                  ▼
-                     [ Set/Reset Started ]      [ NOT Bit0 ]
+[ UserButton ] ──┬──▶ [ Toggle Bit0 ] ──┬──▶ [ Falling Edge ] ──▶ [ Toggle Bit1 ]
+ (BTN_USER)      │                       │
+                 ▼ (S)                   ▼
+         [ Set/Reset Started ]       [ NOT Bit0 ]
 ```
 
-1. **Input Inversion**: The Opta's on-board push button (`BTN_USER`) has an internal pull-up resistor and is active-low. An inverting `NOT` gate turns each physical button depression into an active-high rising pulse.
+1. **Active-low button, handled by the target**: The Opta's on-board push button (`BTN_USER`) has an internal pull-up and is active-low — idle HIGH, pressed LOW. The iomap binds it with a pull-up, so the Opta target reads it active-low (`digitalRead(BTN_USER) == LOW`): `UserButton` is `true` while pressed. Each press is therefore a clean rising edge straight into `Toggle Bit0` — no inverter gate in the graph, and no phantom press at power-on (idle reads `false`, matching the simulator).
 2. **2-Bit Ripple Counter**:
    - `Toggle Bit0` toggles state on each user button press ($0 \to 1 \to 0 \to 1 \dots$).
    - A `Falling Edge` detector watches `Bit0` and pulses `Toggle Bit1`'s clock whenever `Bit0` transitions from $1 \to 0$.

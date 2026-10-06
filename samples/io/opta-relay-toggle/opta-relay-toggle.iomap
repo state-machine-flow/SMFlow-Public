@@ -3,7 +3,14 @@
   "project": "opta-relay-toggle",
   "bindings": {
     "opta": {
-      "Input1": "BTN_USER",
+      "Input1": {
+        "pin": "BTN_USER",
+        "resistor": "pullUp"
+      },
+      "Output1": {
+        "pin": "LED_RESET",
+        "initial": "high"
+      },
       "Relay1": "RELAY1",
       "Relay2": "RELAY2",
       "Relay3": "RELAY3",

@@ -47,3 +47,60 @@ Then:
     Relay2 == true
     Relay3 == false
     Relay4 == true
+
+test "button press while 1 and 3 are on freezes in place, not at 2 and 4"
+
+When:
+    execute 1 cycle
+    set Input1 = true
+    execute 1 cycle
+    set Input1 = false
+    execute 1 cycle
+    advance 1 second
+    execute 1 cycle
+
+Then:
+    Relay1 == true
+    Relay2 == false
+    Relay3 == true
+    Relay4 == false
+
+test "button press while 2 and 4 are on freezes in place, not at 2 and 4 by accident"
+
+When:
+    execute 1 cycle
+    advance 1 second
+    execute 1 cycle
+    set Input1 = true
+    execute 1 cycle
+    set Input1 = false
+    advance 1 second
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == true
+    Relay3 == false
+    Relay4 == true
+
+test "resuming continues the same half-cycle, not a fresh one (true pause)"
+
+When:
+    execute 1 cycle
+    advance 500 ms
+    execute 1 cycle
+    set Input1 = true
+    execute 1 cycle
+    set Input1 = false
+    advance 3 seconds
+    set Input1 = true
+    execute 1 cycle
+    set Input1 = false
+    advance 700 ms
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == true
+    Relay3 == false
+    Relay4 == true

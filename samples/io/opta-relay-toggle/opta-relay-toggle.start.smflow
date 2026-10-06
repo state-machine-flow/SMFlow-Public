@@ -1,0 +1,107 @@
+{
+  "formatVersion": 5,
+  "name": "opta-relay-toggle",
+  "target": "opta",
+  "targets": [
+    "opta",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "enable",
+      "type": "variable-read",
+      "name": "Enable",
+      "comment": "Always true (nothing writes it), so the blinker runs. The blink IN input is required and this is the constant that satisfies it."
+    },
+    {
+      "id": "blink",
+      "type": "blink",
+      "properties": {
+        "timeHigh": "1000",
+        "timeLow": "1000"
+      },
+      "comment": "0.5 Hz square wave (1000 ms high, 1000 ms low). Its pause input is left open for now, so it never pauses. The button we add later wires into pause."
+    },
+    {
+      "id": "invert",
+      "type": "not",
+      "comment": "Inverts the blinker so Relays 2 and 4 are energized when Relays 1 and 3 are off, and vice versa."
+    },
+    {
+      "id": "relay1",
+      "type": "digital-output",
+      "name": "Relay1"
+    },
+    {
+      "id": "relay2",
+      "type": "digital-output",
+      "name": "Relay2"
+    },
+    {
+      "id": "relay3",
+      "type": "digital-output",
+      "name": "Relay3"
+    },
+    {
+      "id": "relay4",
+      "type": "digital-output",
+      "name": "Relay4"
+    }
+  ],
+  "connections": [
+    {
+      "from": { "node": "enable", "port": "value" },
+      "to": { "node": "blink", "port": "IN" }
+    },
+    {
+      "from": { "node": "blink", "port": "Q" },
+      "to": { "node": "relay1", "port": "value" }
+    },
+    {
+      "from": { "node": "blink", "port": "Q" },
+      "to": { "node": "relay3", "port": "value" }
+    },
+    {
+      "from": { "node": "blink", "port": "Q" },
+      "to": { "node": "invert", "port": "in" }
+    },
+    {
+      "from": { "node": "invert", "port": "out" },
+      "to": { "node": "relay2", "port": "value" }
+    },
+    {
+      "from": { "node": "invert", "port": "out" },
+      "to": { "node": "relay4", "port": "value" }
+    }
+  ],
+  "variables": [
+    {
+      "name": "Enable",
+      "type": "bool",
+      "initial": "true"
+    }
+  ],
+  "hardware": [
+    { "logical": "Relay1", "direction": "output", "type": "bool" },
+    { "logical": "Relay2", "direction": "output", "type": "bool" },
+    { "logical": "Relay3", "direction": "output", "type": "bool" },
+    { "logical": "Relay4", "direction": "output", "type": "bool" }
+  ],
+  "ui": {
+    "nodes": {
+      "enable": { "x": 20, "y": 160 },
+      "blink": { "x": 240, "y": 160, "commentExpanded": true },
+      "invert": { "x": 540, "y": 300, "commentExpanded": true },
+      "relay1": { "x": 820, "y": 40 },
+      "relay3": { "x": 820, "y": 130 },
+      "relay2": { "x": 820, "y": 240 },
+      "relay4": { "x": 820, "y": 330 }
+    }
+  }
+}

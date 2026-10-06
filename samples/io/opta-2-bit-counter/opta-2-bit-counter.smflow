@@ -17,18 +17,13 @@
       "id": "btn",
       "type": "digital-input",
       "name": "UserButton",
-      "comment": "On-board user pushbutton (active-low with internal pull-up on Opta)."
+      "comment": "On-board user pushbutton. Bound with a pull-up, so the Opta target reads it active-low: pressed is true, idle is false, and a press is a clean rising edge."
     },
     {
       "id": "rst",
       "type": "digital-input",
       "name": "ResetButton",
       "comment": "External reset input (terminal I1) that clears the sequence and de-energizes all relays."
-    },
-    {
-      "id": "inv_btn",
-      "type": "not",
-      "comment": "Inverts active-low button press so pressing produces an active-high rising pulse."
     },
     {
       "id": "t0",
@@ -117,16 +112,6 @@
         "port": "value"
       },
       "to": {
-        "node": "inv_btn",
-        "port": "in"
-      }
-    },
-    {
-      "from": {
-        "node": "inv_btn",
-        "port": "out"
-      },
-      "to": {
         "node": "t0",
         "port": "CLK"
       }
@@ -143,8 +128,8 @@
     },
     {
       "from": {
-        "node": "inv_btn",
-        "port": "out"
+        "node": "btn",
+        "port": "value"
       },
       "to": {
         "node": "started",
@@ -393,10 +378,6 @@
       "rst": {
         "x": 40,
         "y": 220
-      },
-      "inv_btn": {
-        "x": 180,
-        "y": 60
       },
       "started": {
         "x": 180,

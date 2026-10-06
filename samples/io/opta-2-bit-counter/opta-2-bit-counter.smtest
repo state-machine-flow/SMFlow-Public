@@ -1,7 +1,7 @@
 test "all relays off at boot"
 
 Given:
-    UserButton = true
+    UserButton = false
     ResetButton = false
 
 When:
@@ -16,10 +16,12 @@ Then:
 test "first press energizes relay 1"
 
 Given:
-    UserButton = true
+    UserButton = false
     ResetButton = false
 
 When:
+    execute 1 cycle
+    UserButton = true
     execute 1 cycle
     UserButton = false
     execute 1 cycle
@@ -33,10 +35,12 @@ Then:
 test "second press energizes relay 2"
 
 Given:
-    UserButton = true
+    UserButton = false
     ResetButton = false
 
 When:
+    execute 1 cycle
+    UserButton = true
     execute 1 cycle
     UserButton = false
     execute 1 cycle
@@ -54,10 +58,12 @@ Then:
 test "third press energizes relay 3"
 
 Given:
-    UserButton = true
+    UserButton = false
     ResetButton = false
 
 When:
+    execute 1 cycle
+    UserButton = true
     execute 1 cycle
     UserButton = false
     execute 1 cycle
@@ -79,10 +85,12 @@ Then:
 test "fourth press energizes relay 4"
 
 Given:
-    UserButton = true
+    UserButton = false
     ResetButton = false
 
 When:
+    execute 1 cycle
+    UserButton = true
     execute 1 cycle
     UserButton = false
     execute 1 cycle
@@ -108,10 +116,12 @@ Then:
 test "fifth press cycles back to relay 1"
 
 Given:
-    UserButton = true
+    UserButton = false
     ResetButton = false
 
 When:
+    execute 1 cycle
+    UserButton = true
     execute 1 cycle
     UserButton = false
     execute 1 cycle
@@ -141,14 +151,14 @@ Then:
 test "reset button turns off all relays"
 
 Given:
-    UserButton = true
+    UserButton = false
     ResetButton = false
 
 When:
     execute 1 cycle
-    UserButton = false
-    execute 1 cycle
     UserButton = true
+    execute 1 cycle
+    UserButton = false
     execute 1 cycle
     ResetButton = true
     execute 1 cycle

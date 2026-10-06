@@ -11,7 +11,7 @@
       "Relay4": "gpio25"
     },
     "opta": {
-      "UserButton": "BTN_USER",
+      "UserButton": { "pin": "BTN_USER", "resistor": "pullUp" },
       "ResetButton": "I1",
       "Relay1": "RELAY1",
       "Relay2": "RELAY2",

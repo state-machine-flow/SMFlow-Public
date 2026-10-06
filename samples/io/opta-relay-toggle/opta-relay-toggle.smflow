@@ -14,9 +14,10 @@
   ],
   "nodes": [
     {
-      "id": "run",
+      "id": "enable",
       "type": "variable-read",
-      "name": "Run"
+      "name": "Enable",
+      "comment": "Always true (nothing writes it), so the blinker runs. The blink IN input is required and this is the constant that satisfies it."
     },
     {
       "id": "blink",
@@ -25,12 +26,12 @@
         "timeHigh": "1000",
         "timeLow": "1000"
       },
-      "comment": "Generates a 0.5 Hz square wave (1000 ms high, 1000 ms low, 2000 ms period). Q alternates between true and false while Run is true."
+      "comment": "0.5 Hz square wave (1000 ms high, 1000 ms low). The button\u0027s toggle drives the pause input: while paused, Q freezes at its current level and the phase stands still, so the relays hold in place and resume mid-cycle."
     },
     {
       "id": "invert",
       "type": "not",
-      "comment": "Inverts the blinker output so Relays 2 and 4 are energized when Relays 1 and 3 are off, and vice versa."
+      "comment": "Inverts the blinker so Relays 2 and 4 are energized when Relays 1 and 3 are off, and vice versa."
     },
     {
       "id": "relay1",
@@ -53,37 +54,55 @@
       "name": "Relay4"
     },
     {
-      "id": "doc_overview",
-      "type": "comment",
-      "name": "What this shows",
-      "comment": "Toggles the four Arduino Opta relays at 0.5 Hz. Relays 1 and 3 energize together while Relays 2 and 4 are off, and vice versa. Each relay on the Opta automatically mirrors its state to its corresponding front-panel LED (LED_D0 through LED_D3)."
-    },
-    {
       "id": "n1",
       "type": "digital-input",
       "name": "Input1",
-      "comment": "When the user presses the user button..."
+      "comment": "The Opta user button. Each press pauses or resumes the blinking."
     },
     {
       "id": "n4",
       "type": "toggle",
-      "comment": "change the state of the Run variable"
+      "comment": "Flips on every button press. Starts false (running); each press flips the blinker\u0027s pause input."
     },
     {
       "id": "n5",
-      "type": "variable-write",
-      "name": "Run"
+      "type": "digital-output",
+      "name": "Output1"
+    },
+    {
+      "id": "n6",
+      "type": "not"
     }
   ],
   "connections": [
     {
       "from": {
-        "node": "run",
+        "node": "enable",
         "port": "value"
       },
       "to": {
         "node": "blink",
         "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n4",
+        "port": "CLK"
+      }
+    },
+    {
+      "from": {
+        "node": "n4",
+        "port": "Q"
+      },
+      "to": {
+        "node": "blink",
+        "port": "pause"
       }
     },
     {
@@ -138,18 +157,18 @@
     },
     {
       "from": {
-        "node": "n1",
-        "port": "value"
+        "node": "n4",
+        "port": "Q"
       },
       "to": {
-        "node": "n4",
-        "port": "CLK"
+        "node": "n6",
+        "port": "in"
       }
     },
     {
       "from": {
-        "node": "n4",
-        "port": "Q"
+        "node": "n6",
+        "port": "out"
       },
       "to": {
         "node": "n5",
@@ -159,7 +178,7 @@
   ],
   "variables": [
     {
-      "name": "Run",
+      "name": "Enable",
       "type": "bool",
       "initial": "true"
     }
@@ -189,57 +208,63 @@
       "logical": "Input1",
       "direction": "input",
       "type": "bool"
+    },
+    {
+      "logical": "Output1",
+      "direction": "output",
+      "type": "bool"
     }
   ],
   "ui": {
     "nodes": {
       "blink": {
-        "x": 239.19999999999993,
-        "y": 196.79999999999995,
+        "x": 420,
+        "y": 110.39999999999998,
         "commentExpanded": true
       },
-      "doc_overview": {
-        "x": 16,
-        "y": 360
+      "enable": {
+        "x": 20.000000000000057,
+        "y": 48.00000000000006,
+        "commentExpanded": true
       },
       "invert": {
-        "x": 474.4,
-        "y": 263.19999999999993,
+        "x": 664.8000000000001,
+        "y": 270.4,
         "commentExpanded": true
       },
       "n1": {
-        "x": 21.19999999999996,
-        "y": 36.79999999999998,
+        "x": -46.39999999999998,
+        "y": 244.80000000000007,
         "commentExpanded": true
       },
       "n4": {
-        "x": 255.60000000000002,
-        "y": 26.400000000000006,
+        "x": 173.60000000000002,
+        "y": 244.80000000000007,
         "commentExpanded": true
       },
       "n5": {
-        "x": 472.4,
-        "y": 33.599999999999994
+        "x": 647.6,
+        "y": 443.19999999999993
+      },
+      "n6": {
+        "x": 421.20000000000016,
+        "y": 456.80000000000007
       },
       "relay1": {
-        "x": 708.8,
-        "y": 25.599999999999994
+        "x": 910.4000000000001,
+        "y": 48
       },
       "relay2": {
-        "x": 712.7999999999997,
-        "y": 207.2
+        "x": 910.4000000000001,
+        "y": 248
       },
       "relay3": {
-        "x": 708.0000000000001,
-        "y": 116.79999999999995
+        "x": 910.4000000000001,
+        "y": 138
       },
       "relay4": {
-        "x": 713.6000000000001,
-        "y": 305.6
-      },
-      "run": {
-        "x": 20.80000000000001,
-        "y": 197.60000000000002
+        "x": 910.4000000000001,
+        "y": 338
       }
     }
   }
