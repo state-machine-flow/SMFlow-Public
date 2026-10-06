@@ -1,6 +1,6 @@
 {
-  "formatVersion": 5,
-  "name": "lora-press-counter",
+  "formatVersion": 6,
+  "name": "heltec-lora-transmitter-ack",
   "target": "heltec-lora32-v3",
   "targets": [
     "esp32-s3",
@@ -10,6 +10,11 @@
     {
       "name": "Main",
       "periodMs": 10
+    },
+    {
+      "name": "task2",
+      "periodMs": 0,
+      "kind": "init"
     }
   ],
   "nodes": [
@@ -19,18 +24,62 @@
       "name": "Button"
     },
     {
-      "id": "cnt",
-      "type": "counter",
+      "id": "debounce",
+      "type": "ton",
       "properties": {
-        "presetCount": "1000"
+        "presetTime": "50"
+      },
+      "comment": "Debounces the raw button input with a 50 ms on-delay filter, rejecting mechanical contact chatter."
+    },
+    {
+      "id": "btn_edge",
+      "type": "rising-edge",
+      "comment": "Converts the debounced button press into a single-scan pulse, so a held button registers exactly once."
+    },
+    {
+      "id": "read_one",
+      "type": "variable-read",
+      "name": "One"
+    },
+    {
+      "id": "read_zero",
+      "type": "variable-read",
+      "name": "Zero"
+    },
+    {
+      "id": "inc",
+      "type": "select",
+      "properties": {
+        "type": "int32"
       }
+    },
+    {
+      "id": "accumulate",
+      "type": "variable-update",
+      "name": "PressCount",
+      "properties": {
+        "operation": "add"
+      }
+    },
+    {
+      "id": "save",
+      "type": "persist-save",
+      "properties": {
+        "region": "retained"
+      }
+    },
+    {
+      "id": "read_count",
+      "type": "variable-read",
+      "name": "PressCount"
     },
     {
       "id": "builder",
       "type": "create-payload",
       "properties": {
         "schema": "pressCount:int32:be"
-      }
+      },
+      "comment": "Packs PressCount into the outbound bytes. Its schema must match the receiver\u0027s unpack-payload. PressCount is a retained variable (saved to NVS on each press), so the running count survives a reboot."
     },
     {
       "id": "tx",
@@ -41,28 +90,6 @@
       "id": "led",
       "type": "digital-output",
       "name": "Busy"
-    },
-    {
-      "id": "n1",
-      "type": "digital-input",
-      "name": "Input1"
-    },
-    {
-      "id": "n2",
-      "type": "digital-output",
-      "name": "Done"
-    },
-    {
-      "id": "n3",
-      "type": "digital-output",
-      "name": "Error"
-    },
-    {
-      "id": "n5",
-      "type": "counter",
-      "properties": {
-        "presetCount": "10"
-      }
     },
     {
       "id": "fmt",
@@ -78,7 +105,7 @@
       "type": "ssd1306-text",
       "name": "Oled",
       "properties": {
-        "line": "0"
+        "line": "1"
       }
     },
     {
@@ -89,14 +116,16 @@
     {
       "id": "rx",
       "type": "sx1262-rx",
-      "name": "Radio"
+      "name": "Radio",
+      "comment": "Receives the ack on the SAME \u0027Radio\u0027 peripheral that tx sends on - the SX1262 is half-duplex, so it listens after the send rather than at the same time. \u0027payload\u0027 is the ack bytes; \u0027rssi\u0027 is the ack\u0027s signal strength, shown so you can judge the return link quality."
     },
     {
       "id": "ackunp",
       "type": "unpack-payload",
       "properties": {
         "schema": "ackCount:int32:be"
-      }
+      },
+      "comment": "Decodes the ack. This schema must match the receiver\u0027s ack create-payload (\u0027ackCount:int32:be\u0027). The decoded ackCount is the count the receiver echoed back, so comparing it to what you sent confirms the round trip."
     },
     {
       "id": "ackfmt",
@@ -112,7 +141,7 @@
       "type": "ssd1306-text",
       "name": "Oled",
       "properties": {
-        "line": "1"
+        "line": "2"
       }
     },
     {
@@ -129,7 +158,22 @@
       "type": "ssd1306-text",
       "name": "Oled",
       "properties": {
-        "line": "2"
+        "line": "3"
+      }
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "A full round-trip LoRa node: it sends a press count and then listens for the receiver\u0027s ack on the one shared SX1262 (half-duplex). The count is kept in a retained variable saved to NVS, so it survives power cycles. The OLED shows the count sent, the ack value echoed back, and the ack\u0027s RSSI. The on-canvas groups (\u0027Send Count\u0027, \u0027Receive ACK\u0027) are just visual grouping - they carry no behavior. Pair with heltec-lora-receiver-ack."
+    },
+    {
+      "id": "n1",
+      "type": "ssd1306-text",
+      "name": "Oled",
+      "task": "task2",
+      "properties": {
+        "text": "LoRa Transmitter"
       }
     }
   ],
@@ -140,14 +184,74 @@
         "port": "value"
       },
       "to": {
-        "node": "cnt",
-        "port": "CU"
+        "node": "debounce",
+        "port": "IN"
       }
     },
     {
       "from": {
-        "node": "btn",
+        "node": "debounce",
+        "port": "Q"
+      },
+      "to": {
+        "node": "btn_edge",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "btn_edge",
+        "port": "Q"
+      },
+      "to": {
+        "node": "inc",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "read_one",
         "port": "value"
+      },
+      "to": {
+        "node": "inc",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "read_zero",
+        "port": "value"
+      },
+      "to": {
+        "node": "inc",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "inc",
+        "port": "out"
+      },
+      "to": {
+        "node": "accumulate",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "btn_edge",
+        "port": "Q"
+      },
+      "to": {
+        "node": "save",
+        "port": "trigger"
+      }
+    },
+    {
+      "from": {
+        "node": "btn_edge",
+        "port": "Q"
       },
       "to": {
         "node": "tx",
@@ -156,8 +260,8 @@
     },
     {
       "from": {
-        "node": "cnt",
-        "port": "CV"
+        "node": "read_count",
+        "port": "value"
       },
       "to": {
         "node": "builder",
@@ -186,58 +290,8 @@
     },
     {
       "from": {
-        "node": "n1",
+        "node": "read_count",
         "port": "value"
-      },
-      "to": {
-        "node": "cnt",
-        "port": "R"
-      }
-    },
-    {
-      "from": {
-        "node": "tx",
-        "port": "done"
-      },
-      "to": {
-        "node": "n2",
-        "port": "value"
-      }
-    },
-    {
-      "from": {
-        "node": "tx",
-        "port": "error"
-      },
-      "to": {
-        "node": "n3",
-        "port": "value"
-      }
-    },
-    {
-      "from": {
-        "node": "tx",
-        "port": "done"
-      },
-      "to": {
-        "node": "n5",
-        "port": "CU"
-      }
-    },
-    {
-      "from": {
-        "node": "n1",
-        "port": "value"
-      },
-      "to": {
-        "node": "n5",
-        "port": "R"
-      }
-    },
-    {
-      "from": {
-        "node": "cnt",
-        "port": "CV"
       },
       "to": {
         "node": "fmt",
@@ -317,6 +371,22 @@
   ],
   "variables": [
     {
+      "name": "PressCount",
+      "type": "int32",
+      "initial": "0",
+      "persistence": "retained"
+    },
+    {
+      "name": "One",
+      "type": "int32",
+      "initial": "1"
+    },
+    {
+      "name": "Zero",
+      "type": "int32",
+      "initial": "0"
+    },
+    {
       "name": "RadioEnable",
       "type": "bool",
       "initial": "true"
@@ -332,21 +402,6 @@
       "logical": "Busy",
       "direction": "output",
       "type": "bool"
-    },
-    {
-      "logical": "Input1",
-      "direction": "input",
-      "type": "bool"
-    },
-    {
-      "logical": "Done",
-      "direction": "output",
-      "type": "bool"
-    },
-    {
-      "logical": "Error",
-      "direction": "output",
-      "type": "bool"
     }
   ],
   "peripherals": [
@@ -359,87 +414,113 @@
       "type": "solomon:ssd1306"
     }
   ],
+  "persistence": {
+    "retained": {
+      "esp32-s3": "nvs0",
+      "heltec-lora32-v3": "nvs0"
+    }
+  },
   "ui": {
     "nodes": {
+      "accumulate": {
+        "x": 618.6292159999997,
+        "y": 178.34538399999994
+      },
       "ackfmt": {
-        "x": 814.8256319999999,
-        "y": 726.2368800000003
+        "x": 796.7879199999999,
+        "y": 688.8730480000003
       },
       "ackoled": {
-        "x": 1071.6550239999992,
-        "y": 710.803088
+        "x": 1053.6173119999992,
+        "y": 673.439256
       },
       "ackunp": {
-        "x": 582.2496319999998,
-        "y": 696.8688800000002
+        "x": 564.2119199999997,
+        "y": 659.5050480000002
       },
       "btn": {
         "x": 40,
-        "y": 80
+        "y": 60
+      },
+      "btn_edge": {
+        "x": 488.4319999999995,
+        "y": 41.60799999999998
       },
       "builder": {
-        "x": 491.19999999999993,
-        "y": 221.6000000000001
+        "x": 563.3508479999999,
+        "y": 304.47975199999985
       },
-      "cnt": {
-        "x": 257.6,
-        "y": 253.59999999999997
+      "debounce": {
+        "x": 266.15199999999993,
+        "y": 41.60800000000005
+      },
+      "doc_overview": {
+        "x": 1.1707902399998034,
+        "y": -128.7252601599996
       },
       "fmt": {
-        "x": 1038.0824000000002,
-        "y": 475.1935999999999
+        "x": 567.8134800000012,
+        "y": 445.56021599999997
+      },
+      "inc": {
+        "x": 322.87934399999966,
+        "y": 216.72464799999983
       },
       "led": {
-        "x": 1028.7999999999997,
-        "y": 15.200000000000003
+        "x": 1137.2159999999994,
+        "y": 17.135999999999996
       },
       "n1": {
-        "x": 26.799999999999983,
-        "y": 384.8
-      },
-      "n2": {
-        "x": 1026.8,
-        "y": 120.80000000000004
-      },
-      "n3": {
-        "x": 1024.3159999999998,
-        "y": 360.04479999999995
-      },
-      "n5": {
-        "x": 1034.2368000000001,
-        "y": 227.228
+        "x": 22.799999999999983,
+        "y": 132.79999999999998
       },
       "oled": {
-        "x": 1290.897864,
-        "y": 448.48240000000004
+        "x": 1068.0032800000006,
+        "y": 427.86787200000015
+      },
+      "read_count": {
+        "x": 260,
+        "y": 380
+      },
+      "read_one": {
+        "x": 40,
+        "y": 200
+      },
+      "read_zero": {
+        "x": 40,
+        "y": 320
       },
       "rssifmt": {
-        "x": 835.1536319999998,
-        "y": 871.7248800000002
+        "x": 817.1159199999997,
+        "y": 834.3610480000002
       },
       "rssioled": {
-        "x": 1073.2231839999997,
-        "y": 877.2531280000001
+        "x": 1055.1854719999997,
+        "y": 839.8892960000001
       },
       "rx": {
-        "x": 305.1536319999998,
-        "y": 741.7248800000002
+        "x": 287.11591999999973,
+        "y": 704.3610480000002
       },
       "rxen": {
-        "x": 45.15363199999979,
-        "y": 761.7248800000002
+        "x": 27.115919999999733,
+        "y": 724.3610480000002
+      },
+      "save": {
+        "x": 893.3198079999988,
+        "y": 15.187103999999977
       },
       "tx": {
-        "x": 751.1999999999998,
-        "y": 135.2
+        "x": 899.5430959999991,
+        "y": 146.89053600000003
       }
     },
     "groups": [
       {
         "id": "g1",
         "label": "Receive ACK",
-        "x": 21.15363199999979,
-        "y": 658.8688800000002,
+        "x": 3.1159199999997327,
+        "y": 621.5050480000002,
         "width": 1332.7276639999998,
         "height": 380.05534399999976,
         "task": "Main"
@@ -449,8 +530,8 @@
         "label": "Send Count",
         "x": 2.799999999999983,
         "y": -22.799999999999997,
-        "width": 1484.0008000000003,
-        "height": 611.9935999999998,
+        "width": 1334.5454720000002,
+        "height": 632.6081279999997,
         "task": "Main"
       }
     ]

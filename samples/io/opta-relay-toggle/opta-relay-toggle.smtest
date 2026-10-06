@@ -1,0 +1,49 @@
+test "initially 1 and 3 are on, 2 and 4 are off"
+
+When:
+    execute 1 cycle
+
+Then:
+    Relay1 == true
+    Relay2 == false
+    Relay3 == true
+    Relay4 == false
+
+test "toggles after 1 second: 1 and 3 off, 2 and 4 on"
+
+When:
+    execute 1 cycle
+    advance 1 second
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == true
+    Relay3 == false
+    Relay4 == true
+
+test "toggles back after 2 seconds: 1 and 3 on, 2 and 4 off"
+
+When:
+    execute 1 cycle
+    advance 2 seconds
+    execute 1 cycle
+
+Then:
+    Relay1 == true
+    Relay2 == false
+    Relay3 == true
+    Relay4 == false
+
+test "toggles again after 3 seconds: 1 and 3 off, 2 and 4 on"
+
+When:
+    execute 1 cycle
+    advance 3 seconds
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == true
+    Relay3 == false
+    Relay4 == true

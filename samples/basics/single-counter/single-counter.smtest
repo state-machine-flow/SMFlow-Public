@@ -1,0 +1,82 @@
+test "starts unasserted"
+
+Given:
+    CountInput = false
+    ResetInput = false
+
+When:
+    execute 1 cycle
+
+Then:
+    BatchDone == false
+
+test "reaches preset after 5 pulses"
+
+Given:
+    CountInput = false
+    ResetInput = false
+
+When:
+    execute 1 cycle
+    CountInput = true
+    execute 1 cycle
+    CountInput = false
+    execute 1 cycle
+    CountInput = true
+    execute 1 cycle
+    CountInput = false
+    execute 1 cycle
+    CountInput = true
+    execute 1 cycle
+    CountInput = false
+    execute 1 cycle
+    CountInput = true
+    execute 1 cycle
+    CountInput = false
+    execute 1 cycle
+
+Then:
+    BatchDone == false
+
+When:
+    CountInput = true
+    execute 1 cycle
+
+Then:
+    BatchDone == true
+
+test "reset clears output back to false"
+
+Given:
+    CountInput = false
+    ResetInput = false
+
+When:
+    CountInput = true
+    execute 1 cycle
+    CountInput = false
+    execute 1 cycle
+    CountInput = true
+    execute 1 cycle
+    CountInput = false
+    execute 1 cycle
+    CountInput = true
+    execute 1 cycle
+    CountInput = false
+    execute 1 cycle
+    CountInput = true
+    execute 1 cycle
+    CountInput = false
+    execute 1 cycle
+    CountInput = true
+    execute 1 cycle
+
+Then:
+    BatchDone == true
+
+When:
+    ResetInput = true
+    execute 1 cycle
+
+Then:
+    BatchDone == false

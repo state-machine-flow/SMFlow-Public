@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "project": "step-sequencer",
+  "bindings": {
+    "linux-x64": {
+      "SequenceDone": "gpio24",
+      "Stage1": "gpio22",
+      "Stage2": "gpio23",
+      "StartButton": "gpio17",
+      "StopButton": "gpio18"
+    },
+    "opta": {
+      "SequenceDone": "RELAY3",
+      "Stage1": "RELAY1",
+      "Stage2": "RELAY2",
+      "StartButton": "I1",
+      "StopButton": "I2"
+    },
+    "rp2040-pico": {
+      "SequenceDone": "GP14",
+      "Stage1": "GP25",
+      "Stage2": "GP13",
+      "StartButton": "GP16",
+      "StopButton": "GP15"
+    }
+  }
+}

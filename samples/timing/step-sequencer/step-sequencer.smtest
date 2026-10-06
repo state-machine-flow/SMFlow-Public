@@ -1,0 +1,82 @@
+test "all stages inactive at boot"
+
+Given:
+    StartButton = false
+    StopButton = false
+
+When:
+    execute 1 cycle
+
+Then:
+    Stage1 == false
+    Stage2 == false
+    SequenceDone == false
+
+test "start button begins stage 1"
+
+Given:
+    StartButton = true
+    StopButton = false
+
+When:
+    execute 1 cycle
+
+Then:
+    Stage1 == true
+    Stage2 == false
+    SequenceDone == false
+
+test "advancing past timer 1 transitions to stage 2"
+
+Given:
+    StartButton = true
+    StopButton = false
+
+When:
+    execute 1 cycle
+    StartButton = false
+    advance 2 seconds
+    execute 1 cycle
+
+Then:
+    Stage1 == false
+    Stage2 == true
+    SequenceDone == false
+
+test "advancing past timer 2 completes sequence"
+
+Given:
+    StartButton = true
+    StopButton = false
+
+When:
+    execute 1 cycle
+    StartButton = false
+    advance 2 seconds
+    execute 1 cycle
+    advance 3 seconds
+    execute 1 cycle
+
+Then:
+    Stage1 == false
+    Stage2 == false
+    SequenceDone == true
+
+test "stop button aborts sequence immediately"
+
+Given:
+    StartButton = true
+    StopButton = false
+
+When:
+    execute 1 cycle
+    StartButton = false
+    advance 1 second
+    execute 1 cycle
+    StopButton = true
+    execute 1 cycle
+
+Then:
+    Stage1 == false
+    Stage2 == false
+    SequenceDone == false

@@ -20,6 +20,7 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 |---|---|---|
 | `not-gate` | simulator, any | The minimal complete program |
 | `serial-debug` | atmega328-uno, linux-x64, simulator | Printing a labelled, formatted value to a serial console |
+| `single-counter` | simulator, opta, rp2040-pico, any | Canonical IEC 61131-3 counter block with edge detection, preset, and reset |
 
 ### logic/ — combinational and latching behavior
 | Sample | Targets | Shows |
@@ -31,6 +32,7 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 |---|---|---|
 | `start-delay` | simulator, any | On-delay inside a periodic task |
 | `stopwatch` | simulator, any | Toggle latch, accumulating an int32 counter per scan |
+| `step-sequencer` | simulator, opta, rp2040-pico, any | Multi-stage process control using cascaded on-delay timers and interlocked gates |
 
 ### io/ — real pins on real boards
 | Sample | Targets | Shows |
@@ -38,6 +40,8 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 | `pico-latch` | rp2040-pico | A two-state latch, `.iomap` pin binding |
 | `pico-interlock` | rp2040-pico | The interlock running on hardware |
 | `opta-interlock` | opta | The interlock on an Arduino Opta |
+| `opta-relay-toggle` | opta, simulator | Alternating relay pairs at 0.5 Hz (1 & 3 vs 2 & 4) |
+| `opta-2-bit-counter` | opta, simulator, linux-x64 | 4-relay sequential stepper using user button and a 2-bit ripple counter |
 | `pwm-piezo` | atmega2560-mega, simulator | A PWM duty cycle and a piezo tone, and the timers they claim |
 | `piezo-double-beep` | atmega2560-mega, simulator | Gating a tone with `select`; a piezo and nothing else to wire |
 

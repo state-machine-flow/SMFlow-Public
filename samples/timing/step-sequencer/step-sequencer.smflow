@@ -1,0 +1,300 @@
+{
+  "formatVersion": 4,
+  "name": "step-sequencer",
+  "targets": [
+    "opta",
+    "rp2040-pico",
+    "linux-x64",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_start",
+      "type": "digital-input",
+      "name": "StartButton",
+      "comment": "Momentary start pushbutton that initiates the multi-stage sequence."
+    },
+    {
+      "id": "in_stop",
+      "type": "digital-input",
+      "name": "StopButton",
+      "comment": "Stop / E-stop pushbutton that aborts the sequence and resets all stages to zero."
+    },
+    {
+      "id": "run_latch",
+      "type": "set-reset",
+      "comment": "Master sequence latch that holds the process active across scans."
+    },
+    {
+      "id": "timer1",
+      "type": "ton",
+      "properties": {
+        "presetTime": "2000"
+      },
+      "comment": "Stage 1 timer (2.0s). Begins timing when sequence starts."
+    },
+    {
+      "id": "not1",
+      "type": "not",
+      "comment": "Inverts Timer1.Q so Stage 1 turns off once Timer 1 finishes."
+    },
+    {
+      "id": "gate_step1",
+      "type": "and",
+      "comment": "Stage 1 interlock: active while Running AND NOT Timer1.Q."
+    },
+    {
+      "id": "out_step1",
+      "type": "digital-output",
+      "name": "Stage1",
+      "comment": "Physical output for Stage 1 (e.g. Fill valve)."
+    },
+    {
+      "id": "timer2",
+      "type": "ton",
+      "properties": {
+        "presetTime": "3000"
+      },
+      "comment": "Stage 2 timer (3.0s). Begins timing after Stage 1 finishes."
+    },
+    {
+      "id": "not2",
+      "type": "not",
+      "comment": "Inverts Timer2.Q so Stage 2 turns off once Timer 2 finishes."
+    },
+    {
+      "id": "gate_step2",
+      "type": "and",
+      "comment": "Stage 2 interlock: active while Timer1.Q AND NOT Timer2.Q."
+    },
+    {
+      "id": "out_step2",
+      "type": "digital-output",
+      "name": "Stage2",
+      "comment": "Physical output for Stage 2 (e.g. Agitate motor)."
+    },
+    {
+      "id": "out_done",
+      "type": "digital-output",
+      "name": "SequenceDone",
+      "comment": "Asserts true when all sequence stages have completed."
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "in_start",
+        "port": "value"
+      },
+      "to": {
+        "node": "run_latch",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "in_stop",
+        "port": "value"
+      },
+      "to": {
+        "node": "run_latch",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "run_latch",
+        "port": "Q"
+      },
+      "to": {
+        "node": "timer1",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer1",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not1",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "run_latch",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_step1",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not1",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_step1",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_step1",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_step1",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "timer1",
+        "port": "Q"
+      },
+      "to": {
+        "node": "timer2",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer2",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not2",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "timer1",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_step2",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not2",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_step2",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_step2",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_step2",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "timer2",
+        "port": "Q"
+      },
+      "to": {
+        "node": "out_done",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "StopButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Stage1",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Stage2",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "SequenceDone",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_start": {
+        "x": 60,
+        "y": 60
+      },
+      "in_stop": {
+        "x": 60,
+        "y": 180
+      },
+      "run_latch": {
+        "x": 220,
+        "y": 100
+      },
+      "timer1": {
+        "x": 400,
+        "y": 100
+      },
+      "not1": {
+        "x": 560,
+        "y": 40
+      },
+      "gate_step1": {
+        "x": 700,
+        "y": 40
+      },
+      "out_step1": {
+        "x": 860,
+        "y": 40
+      },
+      "timer2": {
+        "x": 560,
+        "y": 160
+      },
+      "not2": {
+        "x": 720,
+        "y": 140
+      },
+      "gate_step2": {
+        "x": 860,
+        "y": 140
+      },
+      "out_step2": {
+        "x": 1020,
+        "y": 140
+      },
+      "out_done": {
+        "x": 1020,
+        "y": 240
+      }
+    }
+  }
+}

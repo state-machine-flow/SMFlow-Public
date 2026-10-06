@@ -1,0 +1,246 @@
+{
+  "formatVersion": 5,
+  "name": "opta-relay-toggle",
+  "target": "opta",
+  "targets": [
+    "opta",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "run",
+      "type": "variable-read",
+      "name": "Run"
+    },
+    {
+      "id": "blink",
+      "type": "blink",
+      "properties": {
+        "timeHigh": "1000",
+        "timeLow": "1000"
+      },
+      "comment": "Generates a 0.5 Hz square wave (1000 ms high, 1000 ms low, 2000 ms period). Q alternates between true and false while Run is true."
+    },
+    {
+      "id": "invert",
+      "type": "not",
+      "comment": "Inverts the blinker output so Relays 2 and 4 are energized when Relays 1 and 3 are off, and vice versa."
+    },
+    {
+      "id": "relay1",
+      "type": "digital-output",
+      "name": "Relay1"
+    },
+    {
+      "id": "relay2",
+      "type": "digital-output",
+      "name": "Relay2"
+    },
+    {
+      "id": "relay3",
+      "type": "digital-output",
+      "name": "Relay3"
+    },
+    {
+      "id": "relay4",
+      "type": "digital-output",
+      "name": "Relay4"
+    },
+    {
+      "id": "doc_overview",
+      "type": "comment",
+      "name": "What this shows",
+      "comment": "Toggles the four Arduino Opta relays at 0.5 Hz. Relays 1 and 3 energize together while Relays 2 and 4 are off, and vice versa. Each relay on the Opta automatically mirrors its state to its corresponding front-panel LED (LED_D0 through LED_D3)."
+    },
+    {
+      "id": "n1",
+      "type": "digital-input",
+      "name": "Input1",
+      "comment": "When the user presses the user button..."
+    },
+    {
+      "id": "n4",
+      "type": "toggle",
+      "comment": "change the state of the Run variable"
+    },
+    {
+      "id": "n5",
+      "type": "variable-write",
+      "name": "Run"
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "run",
+        "port": "value"
+      },
+      "to": {
+        "node": "blink",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "blink",
+        "port": "Q"
+      },
+      "to": {
+        "node": "relay1",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "blink",
+        "port": "Q"
+      },
+      "to": {
+        "node": "relay3",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "blink",
+        "port": "Q"
+      },
+      "to": {
+        "node": "invert",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "invert",
+        "port": "out"
+      },
+      "to": {
+        "node": "relay2",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "invert",
+        "port": "out"
+      },
+      "to": {
+        "node": "relay4",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "n1",
+        "port": "value"
+      },
+      "to": {
+        "node": "n4",
+        "port": "CLK"
+      }
+    },
+    {
+      "from": {
+        "node": "n4",
+        "port": "Q"
+      },
+      "to": {
+        "node": "n5",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "Run",
+      "type": "bool",
+      "initial": "true"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Relay1",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Relay2",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Relay3",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Relay4",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "Input1",
+      "direction": "input",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "blink": {
+        "x": 239.19999999999993,
+        "y": 196.79999999999995,
+        "commentExpanded": true
+      },
+      "doc_overview": {
+        "x": 16,
+        "y": 360
+      },
+      "invert": {
+        "x": 474.4,
+        "y": 263.19999999999993,
+        "commentExpanded": true
+      },
+      "n1": {
+        "x": 21.19999999999996,
+        "y": 36.79999999999998,
+        "commentExpanded": true
+      },
+      "n4": {
+        "x": 255.60000000000002,
+        "y": 26.400000000000006,
+        "commentExpanded": true
+      },
+      "n5": {
+        "x": 472.4,
+        "y": 33.599999999999994
+      },
+      "relay1": {
+        "x": 708.8,
+        "y": 25.599999999999994
+      },
+      "relay2": {
+        "x": 712.7999999999997,
+        "y": 207.2
+      },
+      "relay3": {
+        "x": 708.0000000000001,
+        "y": 116.79999999999995
+      },
+      "relay4": {
+        "x": 713.6000000000001,
+        "y": 305.6
+      },
+      "run": {
+        "x": 20.80000000000001,
+        "y": 197.60000000000002
+      }
+    }
+  }
+}

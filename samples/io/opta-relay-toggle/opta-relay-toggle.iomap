@@ -1,0 +1,13 @@
+{
+  "formatVersion": 1,
+  "project": "opta-relay-toggle",
+  "bindings": {
+    "opta": {
+      "Input1": "BTN_USER",
+      "Relay1": "RELAY1",
+      "Relay2": "RELAY2",
+      "Relay3": "RELAY3",
+      "Relay4": "RELAY4"
+    }
+  }
+}

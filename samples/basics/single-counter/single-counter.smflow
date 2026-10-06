@@ -1,0 +1,113 @@
+{
+  "formatVersion": 4,
+  "name": "single-counter",
+  "targets": [
+    "opta",
+    "rp2040-pico",
+    "linux-x64",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_count",
+      "type": "digital-input",
+      "name": "CountInput",
+      "comment": "Pulse signal from an optical part sensor or push-button that increments the counter on each rising edge."
+    },
+    {
+      "id": "in_reset",
+      "type": "digital-input",
+      "name": "ResetInput",
+      "comment": "Reset pushbutton that forces the internal count back to zero (reset-dominant)."
+    },
+    {
+      "id": "cnt",
+      "type": "counter",
+      "properties": {
+        "presetCount": "5"
+      },
+      "comment": "Accumulates pulses on CU. When current value (CV) reaches presetCount (5), Q latches true."
+    },
+    {
+      "id": "out_done",
+      "type": "digital-output",
+      "name": "BatchDone",
+      "comment": "Indicates that the batch preset count of 5 has been reached."
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "in_count",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "CU"
+      }
+    },
+    {
+      "from": {
+        "node": "in_reset",
+        "port": "value"
+      },
+      "to": {
+        "node": "cnt",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "cnt",
+        "port": "Q"
+      },
+      "to": {
+        "node": "out_done",
+        "port": "value"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "CountInput",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ResetInput",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "BatchDone",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_count": {
+        "x": 60,
+        "y": 60
+      },
+      "in_reset": {
+        "x": 60,
+        "y": 180
+      },
+      "cnt": {
+        "x": 300,
+        "y": 120
+      },
+      "out_done": {
+        "x": 540,
+        "y": 120
+      }
+    }
+  }
+}

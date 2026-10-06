@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "project": "single-counter",
+  "bindings": {
+    "linux-x64": {
+      "BatchDone": "gpio22",
+      "CountInput": "gpio17",
+      "ResetInput": "gpio18"
+    },
+    "opta": {
+      "BatchDone": "RELAY1",
+      "CountInput": "I1",
+      "ResetInput": "I2"
+    },
+    "rp2040-pico": {
+      "BatchDone": "GP25",
+      "CountInput": "GP16",
+      "ResetInput": "GP15"
+    }
+  }
+}

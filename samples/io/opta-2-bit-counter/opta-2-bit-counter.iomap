@@ -1,0 +1,22 @@
+{
+  "formatVersion": 1,
+  "project": "opta-2-bit-counter",
+  "bindings": {
+    "linux-x64": {
+      "UserButton": "gpio17",
+      "ResetButton": "gpio18",
+      "Relay1": "gpio22",
+      "Relay2": "gpio23",
+      "Relay3": "gpio24",
+      "Relay4": "gpio25"
+    },
+    "opta": {
+      "UserButton": "BTN_USER",
+      "ResetButton": "I1",
+      "Relay1": "RELAY1",
+      "Relay2": "RELAY2",
+      "Relay3": "RELAY3",
+      "Relay4": "RELAY4"
+    }
+  }
+}

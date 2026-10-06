@@ -1,0 +1,160 @@
+test "all relays off at boot"
+
+Given:
+    UserButton = true
+    ResetButton = false
+
+When:
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == false
+    Relay3 == false
+    Relay4 == false
+
+test "first press energizes relay 1"
+
+Given:
+    UserButton = true
+    ResetButton = false
+
+When:
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+
+Then:
+    Relay1 == true
+    Relay2 == false
+    Relay3 == false
+    Relay4 == false
+
+test "second press energizes relay 2"
+
+Given:
+    UserButton = true
+    ResetButton = false
+
+When:
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == true
+    Relay3 == false
+    Relay4 == false
+
+test "third press energizes relay 3"
+
+Given:
+    UserButton = true
+    ResetButton = false
+
+When:
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == false
+    Relay3 == true
+    Relay4 == false
+
+test "fourth press energizes relay 4"
+
+Given:
+    UserButton = true
+    ResetButton = false
+
+When:
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == false
+    Relay3 == false
+    Relay4 == true
+
+test "fifth press cycles back to relay 1"
+
+Given:
+    UserButton = true
+    ResetButton = false
+
+When:
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+
+Then:
+    Relay1 == true
+    Relay2 == false
+    Relay3 == false
+    Relay4 == false
+
+test "reset button turns off all relays"
+
+Given:
+    UserButton = true
+    ResetButton = false
+
+When:
+    execute 1 cycle
+    UserButton = false
+    execute 1 cycle
+    UserButton = true
+    execute 1 cycle
+    ResetButton = true
+    execute 1 cycle
+
+Then:
+    Relay1 == false
+    Relay2 == false
+    Relay3 == false
+    Relay4 == false
