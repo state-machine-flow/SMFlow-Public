@@ -1,0 +1,30 @@
+{
+  "formatVersion": 1,
+  "project": "wiper-controller",
+  "bindings": {
+    "rp2040-pico": {
+      "FaultIndicator": "GP26",
+      "High": "GP17",
+      "Ignition": "GP14",
+      "Intermittent": "GP18",
+      "Low": "GP16",
+      "ParkSwitch": "GP15",
+      "Washer": "GP19",
+      "WasherPump": "GP22",
+      "WiperMotorHigh": "GP21",
+      "WiperMotorLow": "GP20"
+    },
+    "simulator": {
+      "FaultIndicator": "virtual.FaultIndicator",
+      "High": "virtual.High",
+      "Ignition": "virtual.Ignition",
+      "Intermittent": "virtual.Intermittent",
+      "Low": "virtual.Low",
+      "ParkSwitch": "virtual.ParkSwitch",
+      "Washer": "virtual.Washer",
+      "WasherPump": "virtual.WasherPump",
+      "WiperMotorHigh": "virtual.WiperMotorHigh",
+      "WiperMotorLow": "virtual.WiperMotorLow"
+    }
+  }
+}

@@ -1,0 +1,367 @@
+test "all outputs de-energized with ignition off"
+
+Given:
+    Ignition = false
+    SeatOccupied = false
+    CoolMode = false
+    LevelSetting = 0.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.0
+    HeatIndicator == false
+    CoolIndicator == false
+    FaultIndicator == false
+
+test "unoccupied seat inhibits heating despite ignition on and high level selected"
+
+Given:
+    Ignition = true
+    SeatOccupied = false
+    CoolMode = false
+    LevelSetting = 3.0
+    SeatTemp = 18.0
+
+When:
+    execute 1 cycle
+    advance 1000 ms
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.0
+    HeatIndicator == false
+    CoolIndicator == false
+    FaultIndicator == false
+
+test "heating level 1 initiates soft-start duty"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 1.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.25
+    FanPwm == 0.0
+    HeatIndicator == true
+    CoolIndicator == false
+    FaultIndicator == false
+
+test "heating level 1 transitions to low power duty after soft-start delay"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 1.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.35
+    FanPwm == 0.0
+    HeatIndicator == true
+    CoolIndicator == false
+    FaultIndicator == false
+
+test "heating level 2 transitions to medium duty after soft-start"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 2.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.65
+    FanPwm == 0.0
+    HeatIndicator == true
+    FaultIndicator == false
+
+test "heating level 3 transitions to high duty after soft-start"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 3.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.95
+    FanPwm == 0.0
+    HeatIndicator == true
+    FaultIndicator == false
+
+test "thermostatic cutoff de-energizes heater when seat reaches target temperature"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 1.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+    SeatTemp = 32.5
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    HeatIndicator == false
+    FaultIndicator == false
+
+test "cooling mode level 1 drives low fan duty with no heater output"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = true
+    LevelSetting = 1.0
+    SeatTemp = 28.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.35
+    HeatIndicator == false
+    CoolIndicator == true
+    FaultIndicator == false
+
+test "cooling mode level 2 drives medium fan duty"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = true
+    LevelSetting = 2.0
+    SeatTemp = 28.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.65
+    CoolIndicator == true
+
+test "cooling mode level 3 drives high fan duty"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = true
+    LevelSetting = 3.0
+    SeatTemp = 28.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 1.00
+    CoolIndicator == true
+
+test "level 0 setting stops both heating and ventilation"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 0.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.0
+    HeatIndicator == false
+    CoolIndicator == false
+
+test "over-temperature cutoff latches fault and kills all actuators"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 3.0
+    SeatTemp = 46.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.0
+    HeatIndicator == false
+    FaultIndicator == true
+
+test "sensor short circuit latches fault"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 3.0
+    SeatTemp = -2.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.0
+    FaultIndicator == true
+
+test "sensor open circuit latches fault"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 3.0
+    SeatTemp = 85.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.0
+    FaultIndicator == true
+
+test "latched fault persists even if temperature returns to normal"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 3.0
+    SeatTemp = 47.0
+
+When:
+    execute 1 cycle
+    SeatTemp = 25.0
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FaultIndicator == true
+
+test "cycling ignition clears latched fault and restores normal operation"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 3.0
+    SeatTemp = 47.0
+
+When:
+    execute 1 cycle
+    SeatTemp = 25.0
+    Ignition = false
+    execute 1 cycle
+    Ignition = true
+    execute 1 cycle
+
+Then:
+    FaultIndicator == false
+    HeatIndicator == true
+    HeaterPwm == 0.25
+
+test "operation sustained during ignition-off rundown timeout"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 1.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+    Ignition = false
+    advance 5000 ms
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.35
+    HeatIndicator == true
+
+test "rundown timeout expiry shuts down all power after ignition off"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 1.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+    Ignition = false
+    advance 10001 ms
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    FanPwm == 0.0
+    HeatIndicator == false
+    CoolIndicator == false
+
+test "passenger leaving seat immediately de-energizes heater"
+
+Given:
+    Ignition = true
+    SeatOccupied = true
+    CoolMode = false
+    LevelSetting = 1.0
+    SeatTemp = 20.0
+
+When:
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+    SeatOccupied = false
+    execute 1 cycle
+
+Then:
+    HeaterPwm == 0.0
+    HeatIndicator == false

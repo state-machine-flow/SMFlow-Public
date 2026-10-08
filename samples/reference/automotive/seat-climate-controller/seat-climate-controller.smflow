@@ -1,0 +1,1302 @@
+{
+  "formatVersion": 5,
+  "name": "seat-climate-controller",
+  "targets": [
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_ign",
+      "type": "digital-input",
+      "name": "Ignition",
+      "comment": "Switched +12V vehicle ignition / accessory (ACC/RUN) line level-shifted to 3.3V logic. True indicates vehicle is switched ON."
+    },
+    {
+      "id": "in_occ",
+      "type": "digital-input",
+      "name": "SeatOccupied",
+      "comment": "Seat occupancy sensor pad switch embedded in lower cushion. True indicates an occupant is seated."
+    },
+    {
+      "id": "in_cool_mode",
+      "type": "digital-input",
+      "name": "CoolMode",
+      "comment": "Cockpit climate selector switch: false = Heating Mode, true = Ventilation / Cooling Mode."
+    },
+    {
+      "id": "in_level",
+      "type": "analog-input",
+      "name": "LevelSetting",
+      "comment": "Cockpit rotary dial or multi-step switch setting (0.0 = OFF, 1.0 = Low, 2.0 = Medium, 3.0 = High)."
+    },
+    {
+      "id": "in_temp",
+      "type": "analog-input",
+      "name": "SeatTemp",
+      "comment": "Seat cushion NTC thermistor / analog temperature reading in °C (-10.0°C to 85.0°C)."
+    },
+    {
+      "id": "rd_sensor_min",
+      "type": "variable-read",
+      "name": "SensorMinLimit",
+      "comment": "Lower limit of plausible sensor temperature (0.0°C). Values below this indicate short-circuit or pinched wire."
+    },
+    {
+      "id": "rd_sensor_max",
+      "type": "variable-read",
+      "name": "SensorMaxLimit",
+      "comment": "Upper limit of plausible sensor temperature (80.0°C). Values above this indicate open-circuit or unplugged harness."
+    },
+    {
+      "id": "rd_temp_cutoff",
+      "type": "variable-read",
+      "name": "TempCutoffLimit",
+      "comment": "Critical over-temperature safety threshold (45.0°C) triggering emergency shutdown to prevent burns and leather damage."
+    },
+    {
+      "id": "rd_lvl1_thresh",
+      "type": "variable-read",
+      "name": "Level1Threshold",
+      "comment": "Threshold to detect Level 1 (Low) mode (0.5)."
+    },
+    {
+      "id": "rd_lvl2_thresh",
+      "type": "variable-read",
+      "name": "Level2Threshold",
+      "comment": "Threshold to detect Level 2 (Medium) mode (1.5)."
+    },
+    {
+      "id": "rd_lvl3_thresh",
+      "type": "variable-read",
+      "name": "Level3Threshold",
+      "comment": "Threshold to detect Level 3 (High) mode (2.5)."
+    },
+    {
+      "id": "rd_target_low",
+      "type": "variable-read",
+      "name": "TargetTempLow",
+      "comment": "Target temperature setpoint for Level 1 heating (32.0°C)."
+    },
+    {
+      "id": "rd_target_med",
+      "type": "variable-read",
+      "name": "TargetTempMed",
+      "comment": "Target temperature setpoint for Level 2 heating (37.0°C)."
+    },
+    {
+      "id": "rd_target_high",
+      "type": "variable-read",
+      "name": "TargetTempHigh",
+      "comment": "Target temperature setpoint for Level 3 heating (42.0°C)."
+    },
+    {
+      "id": "rd_heat_duty_low",
+      "type": "variable-read",
+      "name": "DutyHeatLow",
+      "comment": "Normal PWM duty cycle for Level 1 heating (0.35 = 35%)."
+    },
+    {
+      "id": "rd_heat_duty_med",
+      "type": "variable-read",
+      "name": "DutyHeatMed",
+      "comment": "Normal PWM duty cycle for Level 2 heating (0.65 = 65%)."
+    },
+    {
+      "id": "rd_heat_duty_high",
+      "type": "variable-read",
+      "name": "DutyHeatHigh",
+      "comment": "Normal PWM duty cycle for Level 3 heating (0.95 = 95%)."
+    },
+    {
+      "id": "rd_duty_soft",
+      "type": "variable-read",
+      "name": "DutySoftStart",
+      "comment": "Soft-start heater PWM duty cycle (0.25 = 25%) applied during initial 3.0s warmup to limit inrush current."
+    },
+    {
+      "id": "rd_fan_duty_low",
+      "type": "variable-read",
+      "name": "DutyFanLow",
+      "comment": "Low ventilation fan PWM duty cycle for Level 1 (0.35 = 35% whisper quiet airflow)."
+    },
+    {
+      "id": "rd_fan_duty_med",
+      "type": "variable-read",
+      "name": "DutyFanMed",
+      "comment": "Medium ventilation fan PWM duty cycle for Level 2 (0.65 = 65% balanced airflow)."
+    },
+    {
+      "id": "rd_fan_duty_high",
+      "type": "variable-read",
+      "name": "DutyFanHigh",
+      "comment": "High ventilation fan PWM duty cycle for Level 3 (1.00 = 100% max cooling airflow)."
+    },
+    {
+      "id": "rd_duty_zero",
+      "type": "variable-read",
+      "name": "DutyZero",
+      "comment": "Zero PWM duty cycle (0.00 = 0%) for de-energized actuators."
+    },
+    {
+      "id": "timer_ign_timeout",
+      "type": "tof",
+      "properties": {
+        "presetTime": "10000"
+      },
+      "comment": "Ignition-off rundown timer (10.0s). Preserves seat operation during accessory off before shutting down to prevent battery drain."
+    },
+    {
+      "id": "gate_power_enable",
+      "type": "and",
+      "comment": "Requires both valid ignition power window AND seat occupied to permit climate actuation."
+    },
+    {
+      "id": "cmp_sensor_short",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      },
+      "comment": "Detects sensor short-to-ground or pinched wire (< 0.0°C)."
+    },
+    {
+      "id": "cmp_sensor_open",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      },
+      "comment": "Detects sensor open-circuit or unplugged harness (> 80.0°C)."
+    },
+    {
+      "id": "cmp_overtemp",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      },
+      "comment": "Detects unsafe seat surface over-temperature condition (> 45.0°C)."
+    },
+    {
+      "id": "gate_sensor_fault",
+      "type": "or",
+      "comment": "Combines sensor short-circuit or open-circuit detection."
+    },
+    {
+      "id": "gate_fault_trip",
+      "type": "or",
+      "comment": "Combines sensor wiring faults and over-temperature into emergency safety trip."
+    },
+    {
+      "id": "not_ign",
+      "type": "not",
+      "comment": "Inverts ignition input to reset latched fault when vehicle ignition key is cycled OFF."
+    },
+    {
+      "id": "latch_fault",
+      "type": "set-reset",
+      "comment": "Safety fault latch: locks system into shutdown until key is cycled."
+    },
+    {
+      "id": "not_fault",
+      "type": "not",
+      "comment": "Inverts fault status for healthy run interlock."
+    },
+    {
+      "id": "gate_run_enable",
+      "type": "and",
+      "comment": "Master enable: true only when power and occupancy valid AND no safety fault latched."
+    },
+    {
+      "id": "cmp_lvl1",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if LevelSetting >= 0.5 (Level 1 Low or higher)."
+    },
+    {
+      "id": "cmp_lvl2",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if LevelSetting >= 1.5 (Level 2 Medium or higher)."
+    },
+    {
+      "id": "cmp_lvl3",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if LevelSetting >= 2.5 (Level 3 High)."
+    },
+    {
+      "id": "sel_target_med",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects TargetTempMed (37.0°C) if Level >= 2, else TargetTempLow (32.0°C)."
+    },
+    {
+      "id": "sel_target_temp",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects TargetTempHigh (42.0°C) if Level >= 3, else result of Level 1/2 target selection."
+    },
+    {
+      "id": "sel_heat_duty_med",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects DutyHeatMed (0.65) if Level >= 2, else DutyHeatLow (0.35)."
+    },
+    {
+      "id": "sel_heat_duty_high",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects DutyHeatHigh (0.95) if Level >= 3, else result of Level 1/2 heat duty selection."
+    },
+    {
+      "id": "sel_fan_duty_med",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects DutyFanMed (0.65) if Level >= 2, else DutyFanLow (0.35)."
+    },
+    {
+      "id": "sel_fan_duty_high",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects DutyFanHigh (1.00) if Level >= 3, else result of Level 1/2 fan duty selection."
+    },
+    {
+      "id": "not_cool_mode",
+      "type": "not",
+      "comment": "Inverts CoolMode switch: true when heating mode is active."
+    },
+    {
+      "id": "gate_heat_selected",
+      "type": "and",
+      "comment": "True when heating mode is selected AND setting is Level 1 or higher."
+    },
+    {
+      "id": "gate_heat_allowed",
+      "type": "and",
+      "comment": "True when heating is selected AND master run enable is active."
+    },
+    {
+      "id": "cmp_temp_satisfied",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      },
+      "comment": "Compares SeatTemp < TargetTemp. True when seat is below setpoint and requires heating."
+    },
+    {
+      "id": "gate_heater_active",
+      "type": "and",
+      "comment": "True when heating is allowed AND seat temperature is below target setpoint."
+    },
+    {
+      "id": "timer_soft_start",
+      "type": "ton",
+      "properties": {
+        "presetTime": "3000"
+      },
+      "comment": "Soft-start timer (3.0s). Clamps heater PWM to 25% during element warmup, then releases to full duty."
+    },
+    {
+      "id": "sel_soft_start",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects full commanded heat duty when soft-start delay completes, else DutySoftStart (0.25)."
+    },
+    {
+      "id": "sel_heater_final",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Routes active heating duty when heater is energizing, else 0.00."
+    },
+    {
+      "id": "gate_cool_selected",
+      "type": "and",
+      "comment": "True when cooling mode is selected AND setting is Level 1 or higher."
+    },
+    {
+      "id": "gate_fan_active",
+      "type": "and",
+      "comment": "True when cooling is selected AND master run enable is active."
+    },
+    {
+      "id": "sel_fan_final",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Routes active ventilation duty when fan is active, else 0.00."
+    },
+    {
+      "id": "out_heater_pwm",
+      "type": "pwm-output",
+      "name": "HeaterPwm",
+      "comment": "PWM output driving the high-side MOSFET heating element driver (0.00 = 0% to 1.00 = 100%)."
+    },
+    {
+      "id": "out_fan_pwm",
+      "type": "pwm-output",
+      "name": "FanPwm",
+      "comment": "PWM output driving brushless cushion/backrest ventilation blower fan speed (0.00 = 0% to 1.00 = 100%)."
+    },
+    {
+      "id": "out_heat_indicator",
+      "type": "digital-output",
+      "name": "HeatIndicator",
+      "comment": "Cockpit button amber/red LED indicating heating element is actively energizing."
+    },
+    {
+      "id": "out_cool_indicator",
+      "type": "digital-output",
+      "name": "CoolIndicator",
+      "comment": "Cockpit button blue LED indicating ventilation fan is actively blowing."
+    },
+    {
+      "id": "out_fault_indicator",
+      "type": "digital-output",
+      "name": "FaultIndicator",
+      "comment": "Cockpit diagnostic MIL / red warning LED indicating latched sensor fault or thermal trip."
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "timer_ign_timeout",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "not_ign",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_ign_timeout",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_power_enable",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "in_occ",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_power_enable",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_sensor_short",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_sensor_min",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_sensor_short",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_sensor_open",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_sensor_max",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_sensor_open",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_overtemp",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_temp_cutoff",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_overtemp",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_sensor_short",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_sensor_fault",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_sensor_open",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_sensor_fault",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_sensor_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fault_trip",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_overtemp",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fault_trip",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fault_trip",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_fault",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "not_ign",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_fault",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_fault",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not_fault",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_fault",
+        "port": "Q"
+      },
+      "to": {
+        "node": "out_fault_indicator",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_power_enable",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_run_enable",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_run_enable",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_level",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_lvl1",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_lvl1_thresh",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_lvl1",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_level",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_lvl2",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_lvl2_thresh",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_lvl2",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_level",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_lvl3",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_lvl3_thresh",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_lvl3",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_lvl2",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_target_med",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_target_med",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_target_med",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_target_low",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_target_med",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_lvl3",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_target_temp",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_target_high",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_target_temp",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_target_med",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_target_temp",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_lvl2",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_heat_duty_med",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_heat_duty_med",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_heat_duty_med",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_heat_duty_low",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_heat_duty_med",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_lvl3",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_heat_duty_high",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_heat_duty_high",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_heat_duty_high",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_heat_duty_med",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_heat_duty_high",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_lvl2",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_fan_duty_med",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_fan_duty_med",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_fan_duty_med",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_fan_duty_low",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_fan_duty_med",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_lvl3",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_fan_duty_high",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_fan_duty_high",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_fan_duty_high",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_fan_duty_med",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_fan_duty_high",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "in_cool_mode",
+        "port": "value"
+      },
+      "to": {
+        "node": "not_cool_mode",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "not_cool_mode",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_heat_selected",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_lvl1",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_heat_selected",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_run_enable",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_heat_allowed",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_heat_selected",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_heat_allowed",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_temp_satisfied",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_target_temp",
+        "port": "out"
+      },
+      "to": {
+        "node": "cmp_temp_satisfied",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_heat_allowed",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_heater_active",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_temp_satisfied",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_heater_active",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_heater_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_soft_start",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_soft_start",
+        "port": "Q"
+      },
+      "to": {
+        "node": "sel_soft_start",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_heat_duty_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_soft_start",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_duty_soft",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_soft_start",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_heater_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_heater_final",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_soft_start",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_heater_final",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_duty_zero",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_heater_final",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_heater_final",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_heater_pwm",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_heater_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_heat_indicator",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "in_cool_mode",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_cool_selected",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_lvl1",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_cool_selected",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_run_enable",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan_active",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_cool_selected",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan_active",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_fan_final",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_fan_duty_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_fan_final",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_duty_zero",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_fan_final",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_fan_final",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_fan_pwm",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_cool_indicator",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "SensorMinLimit",
+      "type": "float32",
+      "initial": "0.0"
+    },
+    {
+      "name": "SensorMaxLimit",
+      "type": "float32",
+      "initial": "80.0"
+    },
+    {
+      "name": "TempCutoffLimit",
+      "type": "float32",
+      "initial": "45.0"
+    },
+    {
+      "name": "Level1Threshold",
+      "type": "float32",
+      "initial": "0.5"
+    },
+    {
+      "name": "Level2Threshold",
+      "type": "float32",
+      "initial": "1.5"
+    },
+    {
+      "name": "Level3Threshold",
+      "type": "float32",
+      "initial": "2.5"
+    },
+    {
+      "name": "TargetTempLow",
+      "type": "float32",
+      "initial": "32.0"
+    },
+    {
+      "name": "TargetTempMed",
+      "type": "float32",
+      "initial": "37.0"
+    },
+    {
+      "name": "TargetTempHigh",
+      "type": "float32",
+      "initial": "42.0"
+    },
+    {
+      "name": "DutyHeatLow",
+      "type": "float32",
+      "initial": "0.35"
+    },
+    {
+      "name": "DutyHeatMed",
+      "type": "float32",
+      "initial": "0.65"
+    },
+    {
+      "name": "DutyHeatHigh",
+      "type": "float32",
+      "initial": "0.95"
+    },
+    {
+      "name": "DutySoftStart",
+      "type": "float32",
+      "initial": "0.25"
+    },
+    {
+      "name": "DutyFanLow",
+      "type": "float32",
+      "initial": "0.35"
+    },
+    {
+      "name": "DutyFanMed",
+      "type": "float32",
+      "initial": "0.65"
+    },
+    {
+      "name": "DutyFanHigh",
+      "type": "float32",
+      "initial": "1.00"
+    },
+    {
+      "name": "DutyZero",
+      "type": "float32",
+      "initial": "0.00"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Ignition",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "SeatOccupied",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "CoolMode",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "LevelSetting",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "SeatTemp",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "HeaterPwm",
+      "direction": "output",
+      "type": "float32",
+      "channel": "pwm"
+    },
+    {
+      "logical": "FanPwm",
+      "direction": "output",
+      "type": "float32",
+      "channel": "pwm"
+    },
+    {
+      "logical": "HeatIndicator",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "CoolIndicator",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "FaultIndicator",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_ign": { "x": 40, "y": 40 },
+      "in_occ": { "x": 40, "y": 140 },
+      "in_cool_mode": { "x": 40, "y": 240 },
+      "in_level": { "x": 40, "y": 340 },
+      "in_temp": { "x": 40, "y": 460 },
+      "rd_sensor_min": { "x": 40, "y": 560 },
+      "rd_sensor_max": { "x": 40, "y": 640 },
+      "rd_temp_cutoff": { "x": 40, "y": 720 },
+      "rd_lvl1_thresh": { "x": 40, "y": 800 },
+      "rd_lvl2_thresh": { "x": 40, "y": 880 },
+      "rd_lvl3_thresh": { "x": 40, "y": 960 },
+      "rd_target_low": { "x": 40, "y": 1040 },
+      "rd_target_med": { "x": 40, "y": 1120 },
+      "rd_target_high": { "x": 40, "y": 1200 },
+      "rd_heat_duty_low": { "x": 40, "y": 1280 },
+      "rd_heat_duty_med": { "x": 40, "y": 1360 },
+      "rd_heat_duty_high": { "x": 40, "y": 1440 },
+      "rd_duty_soft": { "x": 40, "y": 1520 },
+      "rd_fan_duty_low": { "x": 40, "y": 1600 },
+      "rd_fan_duty_med": { "x": 40, "y": 1680 },
+      "rd_fan_duty_high": { "x": 40, "y": 1760 },
+      "rd_duty_zero": { "x": 40, "y": 1840 },
+      "timer_ign_timeout": { "x": 240, "y": 40 },
+      "gate_power_enable": { "x": 420, "y": 80 },
+      "not_ign": { "x": 240, "y": 140 },
+      "cmp_sensor_short": { "x": 240, "y": 500 },
+      "cmp_sensor_open": { "x": 240, "y": 600 },
+      "cmp_overtemp": { "x": 240, "y": 700 },
+      "gate_sensor_fault": { "x": 420, "y": 550 },
+      "gate_fault_trip": { "x": 600, "y": 620 },
+      "latch_fault": { "x": 760, "y": 620 },
+      "not_fault": { "x": 920, "y": 620 },
+      "out_fault_indicator": { "x": 1100, "y": 620 },
+      "gate_run_enable": { "x": 1080, "y": 120 },
+      "cmp_lvl1": { "x": 240, "y": 300 },
+      "cmp_lvl2": { "x": 240, "y": 380 },
+      "cmp_lvl3": { "x": 240, "y": 460 },
+      "sel_target_med": { "x": 420, "y": 1080 },
+      "sel_target_temp": { "x": 600, "y": 1140 },
+      "sel_heat_duty_med": { "x": 420, "y": 1320 },
+      "sel_heat_duty_high": { "x": 600, "y": 1380 },
+      "sel_fan_duty_med": { "x": 420, "y": 1640 },
+      "sel_fan_duty_high": { "x": 600, "y": 1700 },
+      "not_cool_mode": { "x": 240, "y": 240 },
+      "gate_heat_selected": { "x": 420, "y": 240 },
+      "gate_heat_allowed": { "x": 1260, "y": 180 },
+      "cmp_temp_satisfied": { "x": 800, "y": 1080 },
+      "gate_heater_active": { "x": 960, "y": 1080 },
+      "timer_soft_start": { "x": 1120, "y": 1080 },
+      "sel_soft_start": { "x": 1280, "y": 1140 },
+      "sel_heater_final": { "x": 1440, "y": 1140 },
+      "out_heater_pwm": { "x": 1620, "y": 1140 },
+      "out_heat_indicator": { "x": 1620, "y": 1020 },
+      "gate_cool_selected": { "x": 420, "y": 320 },
+      "gate_fan_active": { "x": 1260, "y": 300 },
+      "sel_fan_final": { "x": 1440, "y": 1660 },
+      "out_fan_pwm": { "x": 1620, "y": 1660 },
+      "out_cool_indicator": { "x": 1620, "y": 300 }
+    }
+  }
+}

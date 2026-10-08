@@ -1,0 +1,1358 @@
+{
+  "formatVersion": 5,
+  "name": "cooling-fan-controller",
+  "targets": [
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_ign",
+      "type": "digital-input",
+      "name": "Ignition",
+      "comment": "Switched +12V vehicle ignition RUN/ACC line level-shifted to 3.3V logic. True indicates vehicle ignition is ON."
+    },
+    {
+      "id": "in_eng",
+      "type": "digital-input",
+      "name": "EngineRun",
+      "comment": "Engine run signal from tachometer, alternator stator, or fuel pump relay. True indicates engine is running above cranking RPM."
+    },
+    {
+      "id": "in_ac",
+      "type": "digital-input",
+      "name": "AcRequest",
+      "comment": "Cockpit air conditioning compressor request / trinary pressure switch line (level-shifted to 3.3V). True indicates A/C cooling demand."
+    },
+    {
+      "id": "in_temp",
+      "type": "analog-input",
+      "name": "CoolantTemp",
+      "comment": "Engine coolant temperature in °C sensed via GM Delphi NTC thermistor circuit."
+    },
+    {
+      "id": "in_speed",
+      "type": "analog-input",
+      "name": "VehicleSpeed",
+      "comment": "Vehicle ground speed in km/h from transmission Vehicle Speed Sensor (VSS) or pulse converter."
+    },
+    {
+      "id": "rd_temp_s1_on",
+      "type": "variable-read",
+      "name": "TempStage1On",
+      "comment": "Primary fan cut-in setpoint (88.0°C / 190°F) where Stage 1 cooling is initiated."
+    },
+    {
+      "id": "rd_temp_s1_off",
+      "type": "variable-read",
+      "name": "TempStage1Off",
+      "comment": "Primary fan cut-out setpoint (83.0°C / 181°F) providing 5.0°C hysteresis deadband."
+    },
+    {
+      "id": "rd_temp_s2_on",
+      "type": "variable-read",
+      "name": "TempStage2On",
+      "comment": "Secondary fan cut-in setpoint (96.0°C / 205°F) where Stage 2 high cooling is initiated."
+    },
+    {
+      "id": "rd_temp_s2_off",
+      "type": "variable-read",
+      "name": "TempStage2Off",
+      "comment": "Secondary fan cut-out setpoint (91.0°C / 196°F) providing 5.0°C hysteresis deadband."
+    },
+    {
+      "id": "rd_temp_emerg",
+      "type": "variable-read",
+      "name": "TempEmergency",
+      "comment": "Emergency overheat threshold (106.0°C / 223°F) forcing both fans to full speed."
+    },
+    {
+      "id": "rd_temp_crit",
+      "type": "variable-read",
+      "name": "TempCritical",
+      "comment": "Critical temperature alarm threshold (110.0°C / 230°F) for fan failure trip."
+    },
+    {
+      "id": "rd_temp_after_run",
+      "type": "variable-read",
+      "name": "TempAfterRunThresh",
+      "comment": "Minimum coolant temperature threshold (92.0°C / 198°F) required to initiate post-shutdown after-run cooling."
+    },
+    {
+      "id": "rd_sensor_min",
+      "type": "variable-read",
+      "name": "TempSensorMin",
+      "comment": "Lower plausibility limit (0.0°C). Readings below indicate shorted NTC circuit."
+    },
+    {
+      "id": "rd_sensor_max",
+      "type": "variable-read",
+      "name": "TempSensorMax",
+      "comment": "Upper plausibility limit (130.0°C). Readings above indicate open circuit or unplugged harness."
+    },
+    {
+      "id": "rd_speed_cutoff",
+      "type": "variable-read",
+      "name": "SpeedCutoff",
+      "comment": "Highway ram-air speed threshold (70.0 km/h / 44 mph) where forward motion supplies radiator airflow."
+    },
+    {
+      "id": "rd_duty_low",
+      "type": "variable-read",
+      "name": "DutyLow",
+      "comment": "Stage 1 / A/C / After-run low-noise PWM duty cycle (0.50 = 50%)."
+    },
+    {
+      "id": "rd_duty_high",
+      "type": "variable-read",
+      "name": "DutyHigh",
+      "comment": "Stage 2 / Emergency high-power PWM duty cycle (1.00 = 100%)."
+    },
+    {
+      "id": "rd_duty_off",
+      "type": "variable-read",
+      "name": "DutyOff",
+      "comment": "Zero PWM duty cycle (0.00 = 0%) for stopped fan."
+    },
+    {
+      "id": "cmp_sensor_short",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      },
+      "comment": "Checks if CoolantTemp < TempSensorMin (0.0°C) indicating sensor short-to-ground fault."
+    },
+    {
+      "id": "cmp_sensor_open",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      },
+      "comment": "Checks if CoolantTemp > TempSensorMax (130.0°C) indicating open sensor harness fault."
+    },
+    {
+      "id": "gate_sensor_fault",
+      "type": "or",
+      "comment": "Detects any sensor plausibility fault (shorted or open circuit)."
+    },
+    {
+      "id": "cmp_emerg",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if CoolantTemp >= TempEmergency (106.0°C) for emergency cooling."
+    },
+    {
+      "id": "gate_emergency",
+      "type": "or",
+      "comment": "True if either emergency overheat or sensor circuit failure is present."
+    },
+    {
+      "id": "gate_emerg_active",
+      "type": "and",
+      "comment": "Emergency mode enabled while ignition is active, forcing fail-safe cooling."
+    },
+    {
+      "id": "cmp_speed_high",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if VehicleSpeed >= SpeedCutoff (70.0 km/h) for highway ram-air suppression."
+    },
+    {
+      "id": "not_speed_high",
+      "type": "not",
+      "comment": "Inverts highway speed flag; true when vehicle is stopped or driving below ram-air cutoff."
+    },
+    {
+      "id": "cmp_s1_on",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if CoolantTemp >= TempStage1On (88.0°C) to set Stage 1 cooling latch."
+    },
+    {
+      "id": "cmp_s1_off",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      },
+      "comment": "Checks if CoolantTemp < TempStage1Off (83.0°C) to reset Stage 1 cooling latch."
+    },
+    {
+      "id": "latch_stage1",
+      "type": "set-reset",
+      "comment": "Hysteresis latch for Stage 1 primary cooling (Set at 88°C, Reset below 83°C)."
+    },
+    {
+      "id": "cmp_s2_on",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if CoolantTemp >= TempStage2On (96.0°C) to set Stage 2 cooling latch."
+    },
+    {
+      "id": "cmp_s2_off",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      },
+      "comment": "Checks if CoolantTemp < TempStage2Off (91.0°C) to reset Stage 2 cooling latch."
+    },
+    {
+      "id": "latch_stage2",
+      "type": "set-reset",
+      "comment": "Hysteresis latch for Stage 2 secondary cooling (Set at 96°C, Reset below 91°C)."
+    },
+    {
+      "id": "gate_engine_running",
+      "type": "and",
+      "comment": "Requires both ignition ON and engine running signal to allow normal cooling operation."
+    },
+    {
+      "id": "gate_s1_or_ac",
+      "type": "or",
+      "comment": "Combines Stage 1 coolant temperature demand and A/C compressor request."
+    },
+    {
+      "id": "gate_stage1_ram_gated",
+      "type": "and",
+      "comment": "Suppresses Stage 1 and A/C fan requests when vehicle speed provides sufficient ram-air cooling."
+    },
+    {
+      "id": "gate_run_stage1",
+      "type": "and",
+      "comment": "Active Stage 1 cooling request during normal engine operation."
+    },
+    {
+      "id": "gate_run_stage2",
+      "type": "and",
+      "comment": "Active Stage 2 cooling request during normal engine operation."
+    },
+    {
+      "id": "cmp_after_run_temp",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if CoolantTemp >= TempAfterRunThresh (92.0°C) qualifying hot engine for after-run cooling."
+    },
+    {
+      "id": "gate_after_run_in",
+      "type": "and",
+      "comment": "Charges after-run timer while vehicle is operating with hot coolant."
+    },
+    {
+      "id": "timer_after_run",
+      "type": "tof",
+      "properties": {
+        "presetTime": "30000"
+      },
+      "comment": "Post-shutdown cooldown off-delay timer (30.0s). Preserves cooling after key-off."
+    },
+    {
+      "id": "not_ign",
+      "type": "not",
+      "comment": "Inverts ignition signal; true when key is switched OFF."
+    },
+    {
+      "id": "gate_after_run_active",
+      "type": "and",
+      "comment": "True during post-shutdown cooldown window (key OFF and after-run timer timing)."
+    },
+    {
+      "id": "not_s1_off",
+      "type": "not",
+      "comment": "Inverts Stage 1 reset condition; true while coolant remains at or above 83.0°C."
+    },
+    {
+      "id": "gate_after_run_cool",
+      "type": "and",
+      "comment": "Enables after-run fan operation only while coolant remains hot enough to warrant cooling, protecting battery."
+    },
+    {
+      "id": "cmp_crit",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if CoolantTemp >= TempCritical (110.0°C) indicating extreme heat or cooling loss."
+    },
+    {
+      "id": "gate_fan_fail_trip",
+      "type": "and",
+      "comment": "Detects fan failure: coolant exceeds 110°C despite Stage 2 cooling commanded active."
+    },
+    {
+      "id": "latch_fan_fail",
+      "type": "set-reset",
+      "comment": "Latches fan failure alarm until key is cycled OFF."
+    },
+    {
+      "id": "gate_fan2_demand",
+      "type": "or",
+      "comment": "Demands secondary fan if emergency mode or normal Stage 2 is active."
+    },
+    {
+      "id": "gate_fan2_active",
+      "type": "and",
+      "comment": "Energizes secondary fan relay only when ignition is ON and demand is present."
+    },
+    {
+      "id": "out_fan2_relay",
+      "type": "digital-output",
+      "name": "Fan2Relay",
+      "comment": "Secondary fan relay output."
+    },
+    {
+      "id": "gate_fan1_high",
+      "type": "or",
+      "comment": "Demands high speed (100% PWM) on Fan 1 during emergency mode or Stage 2."
+    },
+    {
+      "id": "gate_fan1_low",
+      "type": "or",
+      "comment": "Demands low speed (50% PWM) on Fan 1 during Stage 1 or after-run cooling."
+    },
+    {
+      "id": "gate_fan1_run",
+      "type": "or",
+      "comment": "True when Fan 1 should run at either high or low speed."
+    },
+    {
+      "id": "sel_speed",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects DutyHigh (1.00) when high demand active, else DutyLow (0.50)."
+    },
+    {
+      "id": "sel_fan1_final",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects commanded speed when run requested, else DutyOff (0.00)."
+    },
+    {
+      "id": "out_fan1_pwm",
+      "type": "pwm-output",
+      "name": "Fan1Pwm",
+      "comment": "Primary fan PWM duty cycle output."
+    },
+    {
+      "id": "not_eng",
+      "type": "not",
+      "comment": "Inverts engine run signal; true when engine is stopped."
+    },
+    {
+      "id": "gate_bulb_check",
+      "type": "and",
+      "comment": "Illuminates warning light for cluster bulb check when key is ON but engine has not started."
+    },
+    {
+      "id": "gate_warn_or_fault",
+      "type": "or",
+      "comment": "Combines emergency active state with latched fan failure alarm."
+    },
+    {
+      "id": "gate_warn_final",
+      "type": "or",
+      "comment": "Drives warning output during bulb check, emergency mode, or fan failure."
+    },
+    {
+      "id": "out_warn",
+      "type": "digital-output",
+      "name": "WarningOutput",
+      "comment": "Instrument cluster / dash overheat and fault warning indicator."
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_sensor_short",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_sensor_min",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_sensor_short",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_sensor_open",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_sensor_max",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_sensor_open",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_sensor_short",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_sensor_fault",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_sensor_open",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_sensor_fault",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_emerg",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_temp_emerg",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_emerg",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_sensor_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_emergency",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_emerg",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_emergency",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_emerg_active",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_emergency",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_emerg_active",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_speed",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_speed_high",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_speed_cutoff",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_speed_high",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_speed_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_speed_high",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_s1_on",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_temp_s1_on",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_s1_on",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_s1_off",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_temp_s1_off",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_s1_off",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_s1_on",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_stage1",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_s1_off",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_stage1",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_s2_on",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_temp_s2_on",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_s2_on",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_s2_off",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_temp_s2_off",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_s2_off",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_s2_on",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_stage2",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_s2_off",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_stage2",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_engine_running",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "in_eng",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_engine_running",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_stage1",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_s1_or_ac",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ac",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_s1_or_ac",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_s1_or_ac",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_stage1_ram_gated",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_speed_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_stage1_ram_gated",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_engine_running",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_run_stage1",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_stage1_ram_gated",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_run_stage1",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_engine_running",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_run_stage2",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_stage2",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_run_stage2",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_after_run_temp",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_temp_after_run",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_after_run_temp",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_after_run_in",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_after_run_temp",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_after_run_in",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_after_run_in",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_after_run",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "not_ign",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "not_ign",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_after_run_active",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_after_run",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_after_run_active",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_s1_off",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_s1_off",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_after_run_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_after_run_cool",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_s1_off",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_after_run_cool",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_crit",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_temp_crit",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_crit",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_run_stage2",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan_fail_trip",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_crit",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan_fail_trip",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan_fail_trip",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_fan_fail",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "not_ign",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_fan_fail",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_emerg_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan2_demand",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_run_stage2",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan2_demand",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_fan2_active",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan2_demand",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan2_active",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan2_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_fan2_relay",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_emerg_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan1_high",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_run_stage2",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan1_high",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_run_stage1",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan1_low",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_after_run_cool",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan1_low",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan1_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan1_run",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan1_low",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fan1_run",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan1_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_speed",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_duty_high",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_speed",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_duty_low",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_speed",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fan1_run",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_fan1_final",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_speed",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_fan1_final",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_duty_off",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_fan1_final",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_fan1_final",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_fan1_pwm",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "in_eng",
+        "port": "value"
+      },
+      "to": {
+        "node": "not_eng",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_bulb_check",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_eng",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_bulb_check",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_emerg_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_warn_or_fault",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_fan_fail",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_warn_or_fault",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_bulb_check",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_warn_final",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_warn_or_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_warn_final",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_warn_final",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_warn",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "TempStage1On",
+      "type": "float32",
+      "initial": "88.0"
+    },
+    {
+      "name": "TempStage1Off",
+      "type": "float32",
+      "initial": "83.0"
+    },
+    {
+      "name": "TempStage2On",
+      "type": "float32",
+      "initial": "96.0"
+    },
+    {
+      "name": "TempStage2Off",
+      "type": "float32",
+      "initial": "91.0"
+    },
+    {
+      "name": "TempEmergency",
+      "type": "float32",
+      "initial": "106.0"
+    },
+    {
+      "name": "TempCritical",
+      "type": "float32",
+      "initial": "110.0"
+    },
+    {
+      "name": "TempAfterRunThresh",
+      "type": "float32",
+      "initial": "92.0"
+    },
+    {
+      "name": "TempSensorMin",
+      "type": "float32",
+      "initial": "0.0"
+    },
+    {
+      "name": "TempSensorMax",
+      "type": "float32",
+      "initial": "130.0"
+    },
+    {
+      "name": "SpeedCutoff",
+      "type": "float32",
+      "initial": "70.0"
+    },
+    {
+      "name": "DutyLow",
+      "type": "float32",
+      "initial": "0.50"
+    },
+    {
+      "name": "DutyHigh",
+      "type": "float32",
+      "initial": "1.00"
+    },
+    {
+      "name": "DutyOff",
+      "type": "float32",
+      "initial": "0.00"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Ignition",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "EngineRun",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "AcRequest",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "CoolantTemp",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "VehicleSpeed",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "Fan1Pwm",
+      "direction": "output",
+      "type": "float32",
+      "channel": "pwm"
+    },
+    {
+      "logical": "Fan2Relay",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "WarningOutput",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_ign": { "x": 40, "y": 40 },
+      "in_eng": { "x": 40, "y": 120 },
+      "in_ac": { "x": 40, "y": 200 },
+      "in_temp": { "x": 40, "y": 280 },
+      "in_speed": { "x": 40, "y": 360 },
+      "rd_temp_s1_on": { "x": 40, "y": 440 },
+      "rd_temp_s1_off": { "x": 40, "y": 520 },
+      "rd_temp_s2_on": { "x": 40, "y": 600 },
+      "rd_temp_s2_off": { "x": 40, "y": 680 },
+      "rd_temp_emerg": { "x": 40, "y": 760 },
+      "rd_temp_crit": { "x": 40, "y": 840 },
+      "rd_temp_after_run": { "x": 40, "y": 920 },
+      "rd_sensor_min": { "x": 40, "y": 1000 },
+      "rd_sensor_max": { "x": 40, "y": 1080 },
+      "rd_speed_cutoff": { "x": 40, "y": 1160 },
+      "rd_duty_low": { "x": 40, "y": 1240 },
+      "rd_duty_high": { "x": 40, "y": 1320 },
+      "rd_duty_off": { "x": 40, "y": 1400 },
+      "cmp_sensor_short": { "x": 260, "y": 1000 },
+      "cmp_sensor_open": { "x": 260, "y": 1080 },
+      "gate_sensor_fault": { "x": 440, "y": 1040 },
+      "cmp_emerg": { "x": 260, "y": 760 },
+      "gate_emergency": { "x": 620, "y": 760 },
+      "gate_emerg_active": { "x": 800, "y": 760 },
+      "cmp_speed_high": { "x": 260, "y": 360 },
+      "not_speed_high": { "x": 440, "y": 360 },
+      "cmp_s1_on": { "x": 260, "y": 440 },
+      "cmp_s1_off": { "x": 260, "y": 520 },
+      "latch_stage1": { "x": 440, "y": 480 },
+      "cmp_s2_on": { "x": 260, "y": 600 },
+      "cmp_s2_off": { "x": 260, "y": 680 },
+      "latch_stage2": { "x": 440, "y": 640 },
+      "gate_engine_running": { "x": 260, "y": 80 },
+      "gate_s1_or_ac": { "x": 620, "y": 200 },
+      "gate_stage1_ram_gated": { "x": 800, "y": 200 },
+      "gate_run_stage1": { "x": 980, "y": 200 },
+      "gate_run_stage2": { "x": 980, "y": 640 },
+      "cmp_after_run_temp": { "x": 260, "y": 920 },
+      "gate_after_run_in": { "x": 440, "y": 920 },
+      "timer_after_run": { "x": 620, "y": 920 },
+      "not_ign": { "x": 260, "y": 40 },
+      "gate_after_run_active": { "x": 800, "y": 920 },
+      "not_s1_off": { "x": 440, "y": 540 },
+      "gate_after_run_cool": { "x": 980, "y": 920 },
+      "cmp_crit": { "x": 260, "y": 840 },
+      "gate_fan_fail_trip": { "x": 1160, "y": 740 },
+      "latch_fan_fail": { "x": 1340, "y": 740 },
+      "gate_fan2_demand": { "x": 1160, "y": 640 },
+      "gate_fan2_active": { "x": 1340, "y": 640 },
+      "out_fan2_relay": { "x": 1520, "y": 640 },
+      "gate_fan1_high": { "x": 1160, "y": 480 },
+      "gate_fan1_low": { "x": 1160, "y": 300 },
+      "gate_fan1_run": { "x": 1340, "y": 390 },
+      "sel_speed": { "x": 1340, "y": 480 },
+      "sel_fan1_final": { "x": 1520, "y": 440 },
+      "out_fan1_pwm": { "x": 1700, "y": 440 },
+      "not_eng": { "x": 260, "y": 140 },
+      "gate_bulb_check": { "x": 440, "y": 140 },
+      "gate_warn_or_fault": { "x": 1520, "y": 760 },
+      "gate_warn_final": { "x": 1700, "y": 760 },
+      "out_warn": { "x": 1880, "y": 760 }
+    }
+  }
+}

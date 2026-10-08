@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "project": "power-window-controller",
+  "bindings": {
+    "rp2040-pico": {
+      "DoorOpen": "GP15",
+      "Down": "GP17",
+      "Ignition": "GP14",
+      "MotorCurrent": "GP26",
+      "MotorDown": "GP19",
+      "MotorUp": "GP18",
+      "PinchAlarm": "GP20",
+      "Up": "GP16"
+    },
+    "simulator": {
+      "DoorOpen": "virtual.DoorOpen",
+      "Down": "virtual.Down",
+      "Ignition": "virtual.Ignition",
+      "MotorCurrent": "virtual.MotorCurrent",
+      "MotorDown": "virtual.MotorDown",
+      "MotorUp": "virtual.MotorUp",
+      "PinchAlarm": "virtual.PinchAlarm",
+      "Up": "virtual.Up"
+    }
+  }
+}

@@ -1,0 +1,322 @@
+test "all outputs de-energized when ignition is off and doors are closed"
+
+Given:
+    Ignition = false
+    DoorOpen = false
+    Up = false
+    Down = false
+    MotorCurrent = 0.0
+
+When:
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == false
+    PinchAlarm == false
+
+test "momentary manual UP operation runs while held and stops upon release"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = true
+    Down = false
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+
+Then:
+    MotorUp == true
+    MotorDown == false
+    PinchAlarm == false
+
+When:
+    advance 400 ms
+    execute 1 cycle
+
+Then:
+    MotorUp == true
+
+When:
+    Up = false
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == false
+
+test "momentary manual DOWN operation runs while held and stops upon release"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = false
+    Down = true
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == true
+    PinchAlarm == false
+
+When:
+    advance 400 ms
+    execute 1 cycle
+
+Then:
+    MotorDown == true
+
+When:
+    Down = false
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == false
+
+test "quick tap on UP switch activates One-Touch Express UP"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = true
+    Down = false
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+    Up = false
+    execute 1 cycle
+
+Then:
+    MotorUp == true
+    MotorDown == false
+    PinchAlarm == false
+
+test "quick tap on DOWN switch activates One-Touch Express DOWN"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = false
+    Down = true
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+    Down = false
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == true
+    PinchAlarm == false
+
+test "tapping opposite switch cancels active Express DOWN motion"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = false
+    Down = true
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+    Down = false
+    execute 1 cycle
+
+Then:
+    MotorDown == true
+
+When:
+    Up = true
+    execute 1 cycle
+
+Then:
+    MotorDown == false
+
+test "mechanical end-stop stall current terminates UP motion"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = true
+    Down = false
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+    MotorCurrent = 11.5
+    advance 150 ms
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == false
+    PinchAlarm == false
+
+test "anti-pinch obstruction during UP triggers immediate downward safety reversal"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = true
+    Down = false
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+
+Then:
+    MotorUp == true
+    MotorDown == false
+
+When:
+    MotorCurrent = 7.5
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == true
+    PinchAlarm == true
+
+test "anti-pinch safety reversal completes 1.0s downward travel and stops"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = true
+    Down = false
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+    MotorCurrent = 7.5
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == true
+    PinchAlarm == true
+
+When:
+    MotorCurrent = 3.0
+    advance 1100 ms
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == false
+    PinchAlarm == false
+
+test "retained accessory power maintains window operation after ignition key off"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = false
+    Down = false
+    MotorCurrent = 0.0
+
+When:
+    execute 1 cycle
+    Ignition = false
+    execute 1 cycle
+    Down = true
+    MotorCurrent = 3.0
+    execute 1 cycle
+
+Then:
+    MotorDown == true
+    MotorUp == false
+
+test "retained accessory power expires after 30 seconds"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = false
+    Down = false
+    MotorCurrent = 0.0
+
+When:
+    execute 1 cycle
+    Ignition = false
+    execute 1 cycle
+    advance 31000 ms
+    execute 1 cycle
+    Down = true
+    MotorCurrent = 3.0
+    execute 1 cycle
+
+Then:
+    MotorDown == false
+    MotorUp == false
+
+test "opening door cancels retained accessory power immediately"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = false
+    Down = false
+    MotorCurrent = 0.0
+
+When:
+    execute 1 cycle
+    Ignition = false
+    execute 1 cycle
+    DoorOpen = true
+    execute 1 cycle
+    Down = true
+    MotorCurrent = 3.0
+    execute 1 cycle
+
+Then:
+    MotorDown == false
+    MotorUp == false
+
+test "electrical interlock prevents simultaneous UP and DOWN energization"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = true
+    Down = true
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == true
+
+test "continuous run exceeding 8.0s trips maximum travel safety watchdog"
+
+Given:
+    Ignition = true
+    DoorOpen = false
+    Up = true
+    Down = false
+    MotorCurrent = 3.0
+
+When:
+    execute 1 cycle
+
+Then:
+    MotorUp == true
+
+When:
+    advance 8100 ms
+    execute 1 cycle
+
+Then:
+    MotorUp == false
+    MotorDown == false

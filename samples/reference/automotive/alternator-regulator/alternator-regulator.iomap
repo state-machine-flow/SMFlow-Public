@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "project": "alternator-regulator",
+  "bindings": {
+    "rp2040-pico": {
+      "AlternatorTemp": "GP27",
+      "BatterySense": "GP26",
+      "ChargeWarning": "GP17",
+      "EngineRun": "GP15",
+      "FaultIndicator": "GP18",
+      "FieldPwm": "GP16",
+      "Ignition": "GP14"
+    },
+    "simulator": {
+      "AlternatorTemp": "virtual.AlternatorTemp",
+      "BatterySense": "virtual.BatterySense",
+      "ChargeWarning": "virtual.ChargeWarning",
+      "EngineRun": "virtual.EngineRun",
+      "FaultIndicator": "virtual.FaultIndicator",
+      "FieldPwm": "virtual.FieldPwm",
+      "Ignition": "virtual.Ignition"
+    }
+  }
+}

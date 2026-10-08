@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "project": "cooling-fan-controller",
+  "bindings": {
+    "rp2040-pico": {
+      "AcRequest": "GP13",
+      "CoolantTemp": "GP26",
+      "EngineRun": "GP15",
+      "Fan1Pwm": "GP16",
+      "Fan2Relay": "GP17",
+      "Ignition": "GP14",
+      "VehicleSpeed": "GP27",
+      "WarningOutput": "GP18"
+    },
+    "simulator": {
+      "AcRequest": "virtual.AcRequest",
+      "CoolantTemp": "virtual.CoolantTemp",
+      "EngineRun": "virtual.EngineRun",
+      "Fan1Pwm": "virtual.Fan1Pwm",
+      "Fan2Relay": "virtual.Fan2Relay",
+      "Ignition": "virtual.Ignition",
+      "VehicleSpeed": "virtual.VehicleSpeed",
+      "WarningOutput": "virtual.WarningOutput"
+    }
+  }
+}

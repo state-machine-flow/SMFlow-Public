@@ -1,0 +1,376 @@
+test "all outputs de-energized when ignition is off and engine is cold"
+
+Given:
+    Ignition = false
+    EngineRun = false
+    AcRequest = false
+    CoolantTemp = 25.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == false
+
+test "key on with engine stopped performs instrument cluster bulb check without running fans"
+
+Given:
+    Ignition = true
+    EngineRun = false
+    AcRequest = false
+    CoolantTemp = 75.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == true
+
+test "engine running with normal coolant temp keeps all fans off"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 80.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == false
+
+test "coolant temp reaching Stage 1 cut-in triggers Fan 1 at 50% PWM"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 88.5
+    VehicleSpeed = 25.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.50
+    Fan2Relay == false
+    WarningOutput == false
+
+test "Stage 1 hysteresis maintains 50% PWM as coolant cools between 88C and 83C"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 88.5
+    VehicleSpeed = 25.0
+
+When:
+    execute 1 cycle
+    CoolantTemp = 85.0
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.50
+    Fan2Relay == false
+    WarningOutput == false
+
+test "Stage 1 cut-out turns Fan 1 off when coolant drops below 83C"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 88.5
+    VehicleSpeed = 25.0
+
+When:
+    execute 1 cycle
+    CoolantTemp = 82.5
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == false
+
+test "coolant temp reaching Stage 2 cut-in triggers Fan 1 at 100% and Fan 2 relay on"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 96.5
+    VehicleSpeed = 30.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 1.00
+    Fan2Relay == true
+    WarningOutput == false
+
+test "Stage 2 hysteresis maintains Fan 1 at 100% and Fan 2 on between 96C and 91C"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 96.5
+    VehicleSpeed = 30.0
+
+When:
+    execute 1 cycle
+    CoolantTemp = 93.0
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 1.00
+    Fan2Relay == true
+    WarningOutput == false
+
+test "Stage 2 drops back to Stage 1 below 91C"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 96.5
+    VehicleSpeed = 30.0
+
+When:
+    execute 1 cycle
+    CoolantTemp = 90.0
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.50
+    Fan2Relay == false
+    WarningOutput == false
+
+test "AC request engages Stage 1 cooling below highway cutoff speed"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = true
+    CoolantTemp = 78.0
+    VehicleSpeed = 20.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.50
+    Fan2Relay == false
+    WarningOutput == false
+
+test "highway speed above 70 kmh suppresses Stage 1 cooling and AC fan request"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = true
+    CoolantTemp = 85.0
+    VehicleSpeed = 75.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == false
+
+test "emergency overheat at 106C overrides highway speed cutoff and illuminates warning"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 106.5
+    VehicleSpeed = 85.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 1.00
+    Fan2Relay == true
+    WarningOutput == true
+
+test "sensor open circuit fault triggers emergency cooling and warning output"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 135.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 1.00
+    Fan2Relay == true
+    WarningOutput == true
+
+test "sensor short to ground fault triggers emergency cooling and warning output"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = -5.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 1.00
+    Fan2Relay == true
+    WarningOutput == true
+
+test "severe overheat during Stage 2 latches fan failure alarm and illuminates warning"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 96.5
+    VehicleSpeed = 20.0
+
+When:
+    execute 1 cycle
+    CoolantTemp = 110.5
+    execute 1 cycle
+    CoolantTemp = 98.0
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 1.00
+    Fan2Relay == true
+    WarningOutput == true
+
+test "cycling ignition clears latched fan failure alarm"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 96.5
+    VehicleSpeed = 20.0
+
+When:
+    execute 1 cycle
+    CoolantTemp = 110.5
+    execute 1 cycle
+    Ignition = false
+    EngineRun = false
+    CoolantTemp = 80.0
+    execute 1 cycle
+    Ignition = true
+    EngineRun = true
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == false
+
+test "hot engine shutdown initiates 30s after-run cooldown on Fan 1"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 94.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+    Ignition = false
+    EngineRun = false
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.50
+    Fan2Relay == false
+    WarningOutput == false
+
+test "after-run timer expiration terminates cooldown and de-energizes fan"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 94.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+    Ignition = false
+    EngineRun = false
+    execute 1 cycle
+    advance 31000 ms
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == false
+
+test "coolant dropping below 83C during after-run terminates fan early to protect battery"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 94.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+    Ignition = false
+    EngineRun = false
+    execute 1 cycle
+    CoolantTemp = 82.0
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == false
+
+test "cool engine key-off does not trigger after-run cooling"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    AcRequest = false
+    CoolantTemp = 85.0
+    VehicleSpeed = 0.0
+
+When:
+    execute 1 cycle
+    Ignition = false
+    EngineRun = false
+    execute 1 cycle
+
+Then:
+    Fan1Pwm == 0.0
+    Fan2Relay == false
+    WarningOutput == false

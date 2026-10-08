@@ -1,0 +1,30 @@
+{
+  "formatVersion": 1,
+  "project": "seat-climate-controller",
+  "bindings": {
+    "rp2040-pico": {
+      "CoolIndicator": "GP19",
+      "CoolMode": "GP13",
+      "FanPwm": "GP17",
+      "FaultIndicator": "GP20",
+      "HeatIndicator": "GP18",
+      "HeaterPwm": "GP16",
+      "Ignition": "GP14",
+      "LevelSetting": "GP26",
+      "SeatOccupied": "GP15",
+      "SeatTemp": "GP27"
+    },
+    "simulator": {
+      "CoolIndicator": "virtual.CoolIndicator",
+      "CoolMode": "virtual.CoolMode",
+      "FanPwm": "virtual.FanPwm",
+      "FaultIndicator": "virtual.FaultIndicator",
+      "HeatIndicator": "virtual.HeatIndicator",
+      "HeaterPwm": "virtual.HeaterPwm",
+      "Ignition": "virtual.Ignition",
+      "LevelSetting": "virtual.LevelSetting",
+      "SeatOccupied": "virtual.SeatOccupied",
+      "SeatTemp": "virtual.SeatTemp"
+    }
+  }
+}

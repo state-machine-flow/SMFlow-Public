@@ -1,0 +1,1058 @@
+{
+  "formatVersion": 5,
+  "name": "wiper-controller",
+  "targets": [
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_ign",
+      "type": "digital-input",
+      "name": "Ignition",
+      "comment": "Switched +12V vehicle ignition RUN/ACC line level-shifted to 3.3V logic. True indicates vehicle ignition is ON."
+    },
+    {
+      "id": "in_park",
+      "type": "digital-input",
+      "name": "ParkSwitch",
+      "comment": "Wiper motor gearbox internal mechanical cam switch. True indicates wiper blades are resting in park position at the bottom of the windshield."
+    },
+    {
+      "id": "in_low",
+      "type": "digital-input",
+      "name": "Low",
+      "comment": "Driver steering column stalk switch in continuous Low speed position."
+    },
+    {
+      "id": "in_high",
+      "type": "digital-input",
+      "name": "High",
+      "comment": "Driver steering column stalk switch in continuous High speed position."
+    },
+    {
+      "id": "in_int",
+      "type": "digital-input",
+      "name": "Intermittent",
+      "comment": "Driver steering column stalk switch in Intermittent wiping position."
+    },
+    {
+      "id": "in_washer",
+      "type": "digital-input",
+      "name": "Washer",
+      "comment": "Driver steering column washer fluid spray switch (momentary pull to mist/spray)."
+    },
+    {
+      "id": "not_ign",
+      "type": "not",
+      "comment": "Inverts ignition input; true when vehicle ignition switch is turned OFF."
+    },
+    {
+      "id": "timer_ign_rundown",
+      "type": "tof",
+      "properties": {
+        "presetTime": "5000"
+      },
+      "comment": "Off-delay timer providing 5.0 seconds of post-shutdown power to allow in-flight wiper blades to complete their sweep and park."
+    },
+    {
+      "id": "not_parked",
+      "type": "not",
+      "comment": "Inverts ParkSwitch input; true when wiper blades are in motion or stopped anywhere outside park position."
+    },
+    {
+      "id": "edge_park_rise",
+      "type": "rising-edge",
+      "comment": "Generates a single-cycle pulse when wiper blades reach mechanical park rest position."
+    },
+    {
+      "id": "gate_high_req",
+      "type": "and",
+      "comment": "Enables High-speed wiper request when High switch is active and ignition is ON."
+    },
+    {
+      "id": "not_high",
+      "type": "not",
+      "comment": "Inverts High-speed request to provide electrical interlock preventing simultaneous Low and High winding energization."
+    },
+    {
+      "id": "gate_low_req",
+      "type": "and",
+      "comment": "Enables Low-speed stalk input when Low switch is active and ignition is ON."
+    },
+    {
+      "id": "gate_low_cmd",
+      "type": "and",
+      "comment": "Gates Low-speed switch with High-speed interlock; Low is suppressed whenever High mode is active."
+    },
+    {
+      "id": "gate_continuous",
+      "type": "or",
+      "comment": "Detects continuous wiping demand from either manual Low or High stalk positions."
+    },
+    {
+      "id": "not_continuous",
+      "type": "not",
+      "comment": "Inverts continuous wiping demand; true when neither Low nor High speed is commanded."
+    },
+    {
+      "id": "gate_washer_req",
+      "type": "and",
+      "comment": "Enables washer demand when washer switch is pulled and ignition is ON."
+    },
+    {
+      "id": "timer_wash_drip",
+      "type": "tof",
+      "properties": {
+        "presetTime": "3000"
+      },
+      "comment": "Off-delay timer extending wiper operation for 3.0s after washer stalk release for post-wash drip wipe cycles."
+    },
+    {
+      "id": "gate_wash_wipe",
+      "type": "and",
+      "comment": "Drives low-speed wipe during washer spraying and post-wash drip clearing (locked out if High mode active)."
+    },
+    {
+      "id": "gate_int_req",
+      "type": "and",
+      "comment": "Enables intermittent stalk input when Intermittent switch is active and ignition is ON."
+    },
+    {
+      "id": "gate_int_active",
+      "type": "and",
+      "comment": "Enables Intermittent mode when selected and not overridden by continuous Low or High modes."
+    },
+    {
+      "id": "edge_int_start",
+      "type": "rising-edge",
+      "comment": "Detects transition into Intermittent mode, triggering an immediate initial wipe cycle."
+    },
+    {
+      "id": "gate_int_timer_en",
+      "type": "and",
+      "comment": "Enables intermittent pause timer while wiper blades are resting in park position in Intermittent mode."
+    },
+    {
+      "id": "timer_int_delay",
+      "type": "ton",
+      "properties": {
+        "presetTime": "4000"
+      },
+      "comment": "On-delay timer timing the 4.0-second pause interval between consecutive intermittent wipes."
+    },
+    {
+      "id": "edge_int_timer",
+      "type": "rising-edge",
+      "comment": "Detects expiration of 4.0-second pause interval to trigger next intermittent wipe cycle."
+    },
+    {
+      "id": "gate_int_wipe_trig",
+      "type": "or",
+      "comment": "Combines mode entry edge and delay timer expiration to trigger an intermittent wipe cycle."
+    },
+    {
+      "id": "latch_int_wipe",
+      "type": "set-reset",
+      "comment": "Intermittent wipe cycle latch: set to start a wipe cycle, reset when blades reach park."
+    },
+    {
+      "id": "gate_int_wipe_cmd",
+      "type": "and",
+      "comment": "Commands intermittent wiping while latch is set and intermittent mode remains selected."
+    },
+    {
+      "id": "gate_low_wash",
+      "type": "or",
+      "comment": "Combines continuous Low command and washer drip wipe request."
+    },
+    {
+      "id": "gate_low_user",
+      "type": "or",
+      "comment": "Combines manual Low/washer requests with intermittent wipe cycle command."
+    },
+    {
+      "id": "gate_park_rundown",
+      "type": "and",
+      "comment": "Auto-park rundown command: keeps motor energized in Low speed whenever blades are not parked."
+    },
+    {
+      "id": "gate_low_combined",
+      "type": "or",
+      "comment": "Combines all user low-speed requests with auto-park rundown command."
+    },
+    {
+      "id": "gate_low_interlocked",
+      "type": "and",
+      "comment": "Ensures low-speed motor command is locked out whenever High speed is active."
+    },
+    {
+      "id": "gate_cmd_any",
+      "type": "or",
+      "comment": "Detects any active motor demand (Low or High) to monitor for stall conditions."
+    },
+    {
+      "id": "gate_stall_running",
+      "type": "and",
+      "comment": "Detects motor commanded to run while blades are out of park for running stall watchdog."
+    },
+    {
+      "id": "gate_stall_at_park",
+      "type": "and",
+      "comment": "Detects motor commanded to run while blades remain stuck at park for park stall watchdog."
+    },
+    {
+      "id": "timer_run_stall",
+      "type": "ton",
+      "properties": {
+        "presetTime": "10000"
+      },
+      "comment": "Watchdog stall timer detecting motor powered out of park for > 10.0s without reaching park (jammed/frozen blades)."
+    },
+    {
+      "id": "timer_park_stall",
+      "type": "ton",
+      "properties": {
+        "presetTime": "5000"
+      },
+      "comment": "Watchdog stall timer detecting motor powered at park for > 5.0s without leaving park (blades frozen to glass)."
+    },
+    {
+      "id": "gate_fault_trip",
+      "type": "or",
+      "comment": "Trips safety fault latch if either running stall or park stall watchdog expires."
+    },
+    {
+      "id": "latch_fault",
+      "type": "set-reset",
+      "comment": "Safety fault latch: set on stall timeout; reset when vehicle ignition is switched OFF."
+    },
+    {
+      "id": "not_fault",
+      "type": "not",
+      "comment": "Inverts latched fault status; true when wiper system is healthy and operational."
+    },
+    {
+      "id": "gate_motor_low",
+      "type": "and",
+      "comment": "Final low-speed motor command gated by system health."
+    },
+    {
+      "id": "gate_motor_high",
+      "type": "and",
+      "comment": "Final high-speed motor command gated by system health."
+    },
+    {
+      "id": "gate_washer_pump",
+      "type": "and",
+      "comment": "Washer pump output gated by system health."
+    },
+    {
+      "id": "out_motor_low",
+      "type": "digital-output",
+      "name": "WiperMotorLow",
+      "comment": "Low-speed motor winding output driving relay or high-side solid-state switch."
+    },
+    {
+      "id": "out_motor_high",
+      "type": "digital-output",
+      "name": "WiperMotorHigh",
+      "comment": "High-speed motor winding output driving relay or high-side solid-state switch."
+    },
+    {
+      "id": "out_washer_pump",
+      "type": "digital-output",
+      "name": "WasherPump",
+      "comment": "Washer pump output driving washer reservoir pump motor relay."
+    },
+    {
+      "id": "out_fault",
+      "type": "digital-output",
+      "name": "FaultIndicator",
+      "comment": "Diagnostic MIL output illuminating instrument cluster wiper fault warning lamp."
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "not_ign",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "timer_ign_rundown",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_high_req",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_low_req",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_int_req",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_washer_req",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_park",
+        "port": "value"
+      },
+      "to": {
+        "node": "not_parked",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "in_park",
+        "port": "value"
+      },
+      "to": {
+        "node": "edge_park_rise",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_park",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_int_timer_en",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_park",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_stall_at_park",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_high",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_high_req",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "in_low",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_low_req",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "in_int",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_int_req",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "in_washer",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_washer_req",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_high_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_high",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_high_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_continuous",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_high_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_motor_high",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_low_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_cmd",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_low_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_continuous",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "not_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_cmd",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_continuous",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_continuous",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_washer_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_wash_drip",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_washer_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_washer_pump",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_wash_drip",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_wash_wipe",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_wash_wipe",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_int_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_int_active",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_continuous",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_int_active",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_int_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "edge_int_start",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_int_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_int_timer_en",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_int_active",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_int_wipe_cmd",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_int_timer_en",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_int_delay",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_int_delay",
+        "port": "Q"
+      },
+      "to": {
+        "node": "edge_int_timer",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_int_start",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_int_wipe_trig",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_int_timer",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_int_wipe_trig",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_int_wipe_trig",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_int_wipe",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_park_rise",
+        "port": "Q"
+      },
+      "to": {
+        "node": "latch_int_wipe",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_int_wipe",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_int_wipe_cmd",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_low_cmd",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_wash",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_wash_wipe",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_wash",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_low_wash",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_user",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_int_wipe_cmd",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_user",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "not_parked",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_park_rundown",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_ign_rundown",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_park_rundown",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_low_user",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_combined",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_park_rundown",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_combined",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_low_combined",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_interlocked",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_low_interlocked",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_low_interlocked",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_cmd_any",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_high_req",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_cmd_any",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_cmd_any",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_stall_running",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_parked",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_stall_running",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_cmd_any",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_stall_at_park",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_stall_running",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_run_stall",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_stall_at_park",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_park_stall",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_run_stall",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_fault_trip",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_park_stall",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_fault_trip",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fault_trip",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_fault",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "not_ign",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_fault",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_fault",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not_fault",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_fault",
+        "port": "Q"
+      },
+      "to": {
+        "node": "out_fault",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_low_interlocked",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_motor_low",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_motor_low",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "not_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_motor_high",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "not_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_washer_pump",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_motor_low",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_motor_low",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_motor_high",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_motor_high",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_washer_pump",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_washer_pump",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [],
+  "hardware": [
+    {
+      "logical": "Ignition",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ParkSwitch",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Low",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "High",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Intermittent",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Washer",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "WiperMotorLow",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "WiperMotorHigh",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "WasherPump",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "FaultIndicator",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_ign": { "x": 40, "y": 100 },
+      "in_park": { "x": 40, "y": 300 },
+      "in_low": { "x": 40, "y": 500 },
+      "in_high": { "x": 40, "y": 650 },
+      "in_int": { "x": 40, "y": 800 },
+      "in_washer": { "x": 40, "y": 950 },
+      "not_ign": { "x": 220, "y": 60 },
+      "timer_ign_rundown": { "x": 220, "y": 140 },
+      "not_parked": { "x": 220, "y": 260 },
+      "edge_park_rise": { "x": 220, "y": 340 },
+      "gate_low_req": { "x": 220, "y": 500 },
+      "gate_high_req": { "x": 220, "y": 650 },
+      "gate_int_req": { "x": 220, "y": 800 },
+      "gate_washer_req": { "x": 220, "y": 950 },
+      "gate_low_cmd": { "x": 400, "y": 500 },
+      "not_high": { "x": 400, "y": 600 },
+      "gate_continuous": { "x": 400, "y": 680 },
+      "timer_wash_drip": { "x": 400, "y": 950 },
+      "not_continuous": { "x": 580, "y": 680 },
+      "gate_int_active": { "x": 580, "y": 760 },
+      "gate_wash_wipe": { "x": 580, "y": 880 },
+      "gate_low_wash": { "x": 760, "y": 540 },
+      "edge_int_start": { "x": 760, "y": 720 },
+      "gate_int_timer_en": { "x": 760, "y": 800 },
+      "timer_int_delay": { "x": 940, "y": 800 },
+      "gate_park_rundown": { "x": 1120, "y": 200 },
+      "edge_int_timer": { "x": 1120, "y": 800 },
+      "gate_int_wipe_trig": { "x": 1300, "y": 760 },
+      "latch_int_wipe": { "x": 1480, "y": 760 },
+      "gate_int_wipe_cmd": { "x": 1660, "y": 760 },
+      "gate_low_user": { "x": 1840, "y": 560 },
+      "gate_low_combined": { "x": 2020, "y": 520 },
+      "gate_low_interlocked": { "x": 2200, "y": 520 },
+      "gate_cmd_any": { "x": 2380, "y": 580 },
+      "gate_stall_running": { "x": 2560, "y": 520 },
+      "gate_stall_at_park": { "x": 2560, "y": 640 },
+      "timer_run_stall": { "x": 2740, "y": 520 },
+      "timer_park_stall": { "x": 2740, "y": 640 },
+      "gate_fault_trip": { "x": 2920, "y": 580 },
+      "latch_fault": { "x": 3100, "y": 580 },
+      "not_fault": { "x": 3280, "y": 580 },
+      "out_fault": { "x": 3280, "y": 700 },
+      "gate_motor_low": { "x": 3460, "y": 500 },
+      "gate_motor_high": { "x": 3460, "y": 620 },
+      "gate_washer_pump": { "x": 3460, "y": 950 },
+      "out_motor_low": { "x": 3660, "y": 500 },
+      "out_motor_high": { "x": 3660, "y": 620 },
+      "out_washer_pump": { "x": 3660, "y": 950 }
+    }
+  }
+}

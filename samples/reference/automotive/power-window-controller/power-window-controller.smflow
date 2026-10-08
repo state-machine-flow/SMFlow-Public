@@ -1,0 +1,1254 @@
+{
+  "formatVersion": 5,
+  "name": "power-window-controller",
+  "targets": [
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_ign",
+      "type": "digital-input",
+      "name": "Ignition",
+      "comment": "Switched +12V vehicle ignition RUN/ACC line level-shifted to 3.3V logic. True indicates vehicle ignition is ON."
+    },
+    {
+      "id": "in_door",
+      "type": "digital-input",
+      "name": "DoorOpen",
+      "comment": "Vehicle door frame courtesy / ajar switch. True indicates vehicle door is open; false indicates all doors closed."
+    },
+    {
+      "id": "in_up",
+      "type": "digital-input",
+      "name": "Up",
+      "comment": "Window control switch UP contact. True indicates switch is pushed toward the UP/CLOSE position."
+    },
+    {
+      "id": "in_down",
+      "type": "digital-input",
+      "name": "Down",
+      "comment": "Window control switch DOWN contact. True indicates switch is pushed toward the DOWN/OPEN position."
+    },
+    {
+      "id": "in_current",
+      "type": "analog-input",
+      "name": "MotorCurrent",
+      "comment": "Window regulator DC motor shunt current sensor in Amperes (0.0 A to 15.0 A)."
+    },
+    {
+      "id": "rd_thresh_pinch",
+      "type": "variable-read",
+      "name": "PinchCurrentThreshold",
+      "comment": "Anti-pinch obstruction current threshold (6.5 A). Sensed currents between 6.5A and 10.0A indicate an obstruction."
+    },
+    {
+      "id": "rd_thresh_stall",
+      "type": "variable-read",
+      "name": "StallCurrentThreshold",
+      "comment": "Mechanical end-stop locked-rotor stall current threshold (10.0 A). Currents >= 10.0A indicate full travel stop."
+    },
+    {
+      "id": "not_ign",
+      "type": "not",
+      "comment": "Inverts Ignition input; true when vehicle ignition switch is turned OFF."
+    },
+    {
+      "id": "timer_rap",
+      "type": "tof",
+      "properties": {
+        "presetTime": "30000"
+      },
+      "comment": "Retained Accessory Power (RAP) off-delay timer maintaining 30.0 seconds of auxiliary power after key-off."
+    },
+    {
+      "id": "gate_rap_raw",
+      "type": "or",
+      "comment": "Auxiliary power available if ignition is ON or within 30-second RAP grace period."
+    },
+    {
+      "id": "gate_door_trip",
+      "type": "and",
+      "comment": "Detects door opened while ignition is OFF, triggering immediate RAP cancellation."
+    },
+    {
+      "id": "latch_rap_kill",
+      "type": "set-reset",
+      "comment": "RAP cancellation latch. Set when door opens with key off; reset when ignition key is turned back ON."
+    },
+    {
+      "id": "not_rap_kill",
+      "type": "not",
+      "comment": "Inverts RAP cancellation status; true when auxiliary power remains authorized."
+    },
+    {
+      "id": "gate_power_ok",
+      "type": "and",
+      "comment": "Master power enable: true when ignition is ON or RAP is active without door opening."
+    },
+    {
+      "id": "not_power_ok",
+      "type": "not",
+      "comment": "Inverts master power enable for resetting express latches when power is lost."
+    },
+    {
+      "id": "cmp_pinch_curr",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if MotorCurrent >= PinchCurrentThreshold (6.5 A)."
+    },
+    {
+      "id": "cmp_stall_curr",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if MotorCurrent >= StallCurrentThreshold (10.0 A)."
+    },
+    {
+      "id": "not_stall_curr",
+      "type": "not",
+      "comment": "Inverts stall comparison; true when current is below mechanical end-stop stall threshold."
+    },
+    {
+      "id": "gate_pinch_zone",
+      "type": "and",
+      "comment": "Detects current in anti-pinch obstruction range (6.5 A <= MotorCurrent < 10.0 A)."
+    },
+    {
+      "id": "edge_up_press",
+      "type": "rising-edge",
+      "comment": "Detects rising edge of Up switch press."
+    },
+    {
+      "id": "edge_up_release",
+      "type": "falling-edge",
+      "comment": "Detects falling edge of Up switch release."
+    },
+    {
+      "id": "timer_hold_up",
+      "type": "ton",
+      "properties": {
+        "presetTime": "350"
+      },
+      "comment": "On-delay timer measuring 350 ms hold duration to distinguish manual hold from quick tap."
+    },
+    {
+      "id": "not_hold_up",
+      "type": "not",
+      "comment": "True during the first 350 ms of Up switch press (tap duration window)."
+    },
+    {
+      "id": "gate_tap_up",
+      "type": "and",
+      "comment": "Fires for 1 scan when Up switch is released within 350 ms, triggering Express UP."
+    },
+    {
+      "id": "edge_down_press",
+      "type": "rising-edge",
+      "comment": "Detects rising edge of Down switch press."
+    },
+    {
+      "id": "edge_down_release",
+      "type": "falling-edge",
+      "comment": "Detects falling edge of Down switch release."
+    },
+    {
+      "id": "timer_hold_down",
+      "type": "ton",
+      "properties": {
+        "presetTime": "350"
+      },
+      "comment": "On-delay timer measuring 350 ms hold duration to distinguish manual hold from quick tap."
+    },
+    {
+      "id": "not_hold_down",
+      "type": "not",
+      "comment": "True during the first 350 ms of Down switch press (tap duration window)."
+    },
+    {
+      "id": "gate_tap_down",
+      "type": "and",
+      "comment": "Fires for 1 scan when Down switch is released within 350 ms, triggering Express DOWN."
+    },
+    {
+      "id": "gate_reset_exp_up",
+      "type": "or",
+      "comment": "Resets Express UP on opposite switch press or power loss."
+    },
+    {
+      "id": "latch_express_up",
+      "type": "set-reset",
+      "comment": "Express UP latch: set on quick tap of Up switch (< 350 ms); reset by Down switch or power loss."
+    },
+    {
+      "id": "gate_reset_exp_down",
+      "type": "or",
+      "comment": "Resets Express DOWN on opposite switch press or power loss."
+    },
+    {
+      "id": "latch_express_down",
+      "type": "set-reset",
+      "comment": "Express DOWN latch: set on quick tap of Down switch (< 350 ms); reset by Up switch or power loss."
+    },
+    {
+      "id": "gate_up_commanded",
+      "type": "or",
+      "comment": "True when either manual Up switch is held or Express UP latch is active."
+    },
+    {
+      "id": "gate_pinch_detected",
+      "type": "and",
+      "comment": "Asserted when window is commanded UP and motor current enters the obstruction range."
+    },
+    {
+      "id": "edge_pinch",
+      "type": "rising-edge",
+      "comment": "Generates single-cycle trip pulse upon detecting an obstruction during upward travel."
+    },
+    {
+      "id": "timer_reversal",
+      "type": "tof",
+      "properties": {
+        "presetTime": "1000"
+      },
+      "comment": "Anti-pinch safety reversal timer: forces window DOWN for 1.0 second to release obstruction."
+    },
+    {
+      "id": "not_reversal",
+      "type": "not",
+      "comment": "Inverts safety reversal status; true when no safety reversal is active."
+    },
+    {
+      "id": "latch_pinch_hold",
+      "type": "set-reset",
+      "comment": "Latches anti-pinch event to inhibit further upward motion until driver intentionally operates Down switch."
+    },
+    {
+      "id": "not_pinch_hold",
+      "type": "not",
+      "comment": "Inverts pinch hold latch; true when upward travel is permitted."
+    },
+    {
+      "id": "timer_stall_filter",
+      "type": "ton",
+      "properties": {
+        "presetTime": "100"
+      },
+      "comment": "100 ms de-glitch filter confirming true mechanical end-stop stall without tripping on inrush."
+    },
+    {
+      "id": "gate_down_sources",
+      "type": "or",
+      "comment": "Combines manual Down switch input and Express DOWN latch."
+    },
+    {
+      "id": "gate_down_sources_all",
+      "type": "or",
+      "comment": "Combines user Down commands with anti-pinch 1.0s safety reversal command."
+    },
+    {
+      "id": "gate_up_effective",
+      "type": "and",
+      "comment": "Effective UP motion command: requires UP request with no active pinch lockout."
+    },
+    {
+      "id": "gate_any_motion",
+      "type": "or",
+      "comment": "Detects any intended motion to drive the maximum continuous travel watchdog timer."
+    },
+    {
+      "id": "timer_max_travel",
+      "type": "ton",
+      "properties": {
+        "presetTime": "8000"
+      },
+      "comment": "8.0s safety watchdog preventing continuous motor energization in case of regulator binding or sensor fault."
+    },
+    {
+      "id": "gate_stall_trip",
+      "type": "or",
+      "comment": "Trip signal active when end-stop stall is confirmed or maximum travel timeout expires."
+    },
+    {
+      "id": "not_stall",
+      "type": "not",
+      "comment": "Inverts stall trip; true when regulator travel is clear and un-stalled."
+    },
+    {
+      "id": "gate_up_pwr",
+      "type": "and",
+      "comment": "UP motion gated by master power authorization."
+    },
+    {
+      "id": "gate_down_pwr",
+      "type": "and",
+      "comment": "DOWN motion gated by master power authorization."
+    },
+    {
+      "id": "not_down_pwr",
+      "type": "not",
+      "comment": "Inverts Down command for H-bridge electrical interlock."
+    },
+    {
+      "id": "gate_up_interlocked",
+      "type": "and",
+      "comment": "UP motion interlocked against Down request to prevent H-bridge cross-conduction."
+    },
+    {
+      "id": "gate_up_final",
+      "type": "and",
+      "comment": "Final UP motor drive: enabled only when powered, interlocked, and not stalled."
+    },
+    {
+      "id": "not_up_final",
+      "type": "not",
+      "comment": "Inverts final UP drive for H-bridge electrical interlock."
+    },
+    {
+      "id": "gate_down_interlocked",
+      "type": "and",
+      "comment": "DOWN motion interlocked against active UP drive to prevent H-bridge cross-conduction."
+    },
+    {
+      "id": "gate_down_final",
+      "type": "and",
+      "comment": "Final DOWN motor drive: enabled only when powered, interlocked, and not stalled."
+    },
+    {
+      "id": "out_motor_up",
+      "type": "digital-output",
+      "name": "MotorUp",
+      "comment": "Digital output driving window motor UP H-bridge high-side driver or 30A Form-C relay."
+    },
+    {
+      "id": "out_motor_down",
+      "type": "digital-output",
+      "name": "MotorDown",
+      "comment": "Digital output driving window motor DOWN H-bridge high-side driver or 30A Form-C relay."
+    },
+    {
+      "id": "out_pinch_alarm",
+      "type": "digital-output",
+      "name": "PinchAlarm",
+      "comment": "Diagnostic MIL output illuminating cluster window warning lamp or sounding chime during anti-pinch event."
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "not_ign",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "timer_rap",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_rap_raw",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_rap",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_rap_raw",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "not_ign",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_door_trip",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "in_door",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_door_trip",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_door_trip",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_rap_kill",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "latch_rap_kill",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_rap_kill",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not_rap_kill",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_rap_raw",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_power_ok",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_rap_kill",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_power_ok",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_power_ok",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_power_ok",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "in_current",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_pinch_curr",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_thresh_pinch",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_pinch_curr",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_current",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_stall_curr",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_thresh_stall",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_stall_curr",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_stall_curr",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_stall_curr",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_pinch_curr",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_pinch_zone",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_stall_curr",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_pinch_zone",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_stall_curr",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_stall_filter",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_up",
+        "port": "value"
+      },
+      "to": {
+        "node": "edge_up_press",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_up",
+        "port": "value"
+      },
+      "to": {
+        "node": "edge_up_release",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_up",
+        "port": "value"
+      },
+      "to": {
+        "node": "timer_hold_up",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_hold_up",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not_hold_up",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_up_release",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_tap_up",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_hold_up",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_tap_up",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_down",
+        "port": "value"
+      },
+      "to": {
+        "node": "edge_down_press",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_down",
+        "port": "value"
+      },
+      "to": {
+        "node": "edge_down_release",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_down",
+        "port": "value"
+      },
+      "to": {
+        "node": "timer_hold_down",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_hold_down",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not_hold_down",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_down_release",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_tap_down",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_hold_down",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_tap_down",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_tap_up",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_express_up",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_down_press",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_reset_exp_up",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_power_ok",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_reset_exp_up",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_reset_exp_up",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_express_up",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_tap_down",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_express_down",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_up_press",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_reset_exp_down",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_power_ok",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_reset_exp_down",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_reset_exp_down",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_express_down",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "in_up",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_up_commanded",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_express_up",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_up_commanded",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_up_commanded",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_pinch_detected",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_pinch_zone",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_pinch_detected",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_pinch_detected",
+        "port": "out"
+      },
+      "to": {
+        "node": "edge_pinch",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_pinch",
+        "port": "Q"
+      },
+      "to": {
+        "node": "timer_reversal",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_reversal",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not_reversal",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_reversal",
+        "port": "Q"
+      },
+      "to": {
+        "node": "out_pinch_alarm",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_pinch",
+        "port": "Q"
+      },
+      "to": {
+        "node": "latch_pinch_hold",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "edge_down_press",
+        "port": "Q"
+      },
+      "to": {
+        "node": "latch_pinch_hold",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_pinch_hold",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not_pinch_hold",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "in_down",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_down_sources",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_express_down",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_down_sources",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_down_sources",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_down_sources_all",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_reversal",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_down_sources_all",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_up_commanded",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_up_effective",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_pinch_hold",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_up_effective",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_up_effective",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_any_motion",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_down_sources_all",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_any_motion",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_any_motion",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_max_travel",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_stall_filter",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_stall_trip",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_max_travel",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_stall_trip",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_stall_trip",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_stall",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_up_effective",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_up_pwr",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_power_ok",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_up_pwr",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_down_sources_all",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_down_pwr",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_power_ok",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_down_pwr",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_down_pwr",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_down_pwr",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_up_pwr",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_up_interlocked",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_down_pwr",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_up_interlocked",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_up_interlocked",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_up_final",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_stall",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_up_final",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_up_final",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_motor_up",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_up_final",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_up_final",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_down_pwr",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_down_interlocked",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_up_final",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_down_interlocked",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_down_interlocked",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_down_final",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_stall",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_down_final",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_down_final",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_motor_down",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "PinchCurrentThreshold",
+      "type": "float32",
+      "initial": "6.5"
+    },
+    {
+      "name": "StallCurrentThreshold",
+      "type": "float32",
+      "initial": "10.0"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Ignition",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "DoorOpen",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Up",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "Down",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "MotorCurrent",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "MotorUp",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "MotorDown",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "PinchAlarm",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_ign": { "x": 40, "y": 100 },
+      "in_door": { "x": 40, "y": 220 },
+      "in_up": { "x": 40, "y": 400 },
+      "in_down": { "x": 40, "y": 600 },
+      "in_current": { "x": 40, "y": 800 },
+      "rd_thresh_pinch": { "x": 40, "y": 920 },
+      "rd_thresh_stall": { "x": 40, "y": 1020 },
+      "not_ign": { "x": 220, "y": 60 },
+      "timer_rap": { "x": 220, "y": 140 },
+      "cmp_pinch_curr": { "x": 220, "y": 860 },
+      "cmp_stall_curr": { "x": 220, "y": 980 },
+      "edge_up_press": { "x": 220, "y": 340 },
+      "edge_up_release": { "x": 220, "y": 420 },
+      "timer_hold_up": { "x": 220, "y": 500 },
+      "edge_down_press": { "x": 220, "y": 580 },
+      "edge_down_release": { "x": 220, "y": 660 },
+      "timer_hold_down": { "x": 220, "y": 740 },
+      "gate_rap_raw": { "x": 400, "y": 100 },
+      "gate_door_trip": { "x": 400, "y": 180 },
+      "not_stall_curr": { "x": 400, "y": 980 },
+      "not_hold_up": { "x": 400, "y": 500 },
+      "not_hold_down": { "x": 400, "y": 740 },
+      "timer_stall_filter": { "x": 400, "y": 1080 },
+      "latch_rap_kill": { "x": 580, "y": 180 },
+      "gate_pinch_zone": { "x": 580, "y": 920 },
+      "gate_tap_up": { "x": 580, "y": 460 },
+      "gate_tap_down": { "x": 580, "y": 700 },
+      "not_rap_kill": { "x": 760, "y": 180 },
+      "gate_reset_exp_up": { "x": 760, "y": 380 },
+      "gate_reset_exp_down": { "x": 760, "y": 620 },
+      "gate_power_ok": { "x": 940, "y": 140 },
+      "latch_express_up": { "x": 940, "y": 420 },
+      "latch_express_down": { "x": 940, "y": 660 },
+      "not_power_ok": { "x": 1120, "y": 140 },
+      "gate_up_commanded": { "x": 1120, "y": 420 },
+      "gate_down_sources": { "x": 1120, "y": 660 },
+      "gate_pinch_detected": { "x": 1300, "y": 520 },
+      "edge_pinch": { "x": 1480, "y": 520 },
+      "timer_reversal": { "x": 1660, "y": 520 },
+      "latch_pinch_hold": { "x": 1660, "y": 620 },
+      "not_reversal": { "x": 1840, "y": 520 },
+      "not_pinch_hold": { "x": 1840, "y": 620 },
+      "out_pinch_alarm": { "x": 1840, "y": 420 },
+      "gate_down_sources_all": { "x": 1840, "y": 720 },
+      "gate_up_effective": { "x": 2020, "y": 480 },
+      "gate_any_motion": { "x": 2020, "y": 780 },
+      "gate_up_pwr": { "x": 2200, "y": 480 },
+      "gate_down_pwr": { "x": 2200, "y": 640 },
+      "timer_max_travel": { "x": 2200, "y": 780 },
+      "not_down_pwr": { "x": 2380, "y": 640 },
+      "gate_stall_trip": { "x": 2380, "y": 900 },
+      "gate_up_interlocked": { "x": 2560, "y": 480 },
+      "not_stall": { "x": 2560, "y": 900 },
+      "gate_up_final": { "x": 2740, "y": 480 },
+      "not_up_final": { "x": 2920, "y": 540 },
+      "out_motor_up": { "x": 2920, "y": 440 },
+      "gate_down_interlocked": { "x": 3100, "y": 640 },
+      "gate_down_final": { "x": 3280, "y": 640 },
+      "out_motor_down": { "x": 3460, "y": 640 }
+    }
+  }
+}

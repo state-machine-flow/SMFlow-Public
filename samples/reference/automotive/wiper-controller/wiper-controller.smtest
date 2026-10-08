@@ -1,0 +1,361 @@
+test "all outputs de-energized when ignition is off and wipers are at rest"
+
+Given:
+    Ignition = false
+    ParkSwitch = true
+    Low = false
+    High = false
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    WiperMotorHigh == false
+    WasherPump == false
+    FaultIndicator == false
+
+test "continuous low mode energizes low-speed motor winding"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = true
+    High = false
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == true
+    WiperMotorHigh == false
+    WasherPump == false
+    FaultIndicator == false
+
+test "continuous high mode energizes high-speed motor winding and disables low"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = false
+    High = true
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    WiperMotorHigh == true
+    WasherPump == false
+    FaultIndicator == false
+
+test "high speed command overrides low speed switch with electrical interlock"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = true
+    High = true
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    WiperMotorHigh == true
+    WasherPump == false
+    FaultIndicator == false
+
+test "intermittent mode triggers immediate initial wipe cycle"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = false
+    High = false
+    Intermittent = true
+    Washer = false
+
+When:
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == true
+    WiperMotorHigh == false
+    WasherPump == false
+    FaultIndicator == false
+
+test "intermittent wipe pauses when blades return to park"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = false
+    High = false
+    Intermittent = true
+    Washer = false
+
+When:
+    execute 1 cycle
+    ParkSwitch = false
+    execute 1 cycle
+    ParkSwitch = true
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    WiperMotorHigh == false
+    WasherPump == false
+    FaultIndicator == false
+
+test "intermittent pause holds motor off until delay expires"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = false
+    High = false
+    Intermittent = true
+    Washer = false
+
+When:
+    execute 1 cycle
+    ParkSwitch = false
+    execute 1 cycle
+    ParkSwitch = true
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    WiperMotorHigh == false
+
+test "intermittent mode triggers next wipe cycle after 4s pause expires"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = false
+    High = false
+    Intermittent = true
+    Washer = false
+
+When:
+    execute 1 cycle
+    ParkSwitch = false
+    execute 1 cycle
+    ParkSwitch = true
+    execute 1 cycle
+    advance 4100 ms
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == true
+    WiperMotorHigh == false
+
+test "washer stalk pull energizes washer pump and low-speed wipers"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = false
+    High = false
+    Intermittent = false
+    Washer = true
+
+When:
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == true
+    WiperMotorHigh == false
+    WasherPump == true
+    FaultIndicator == false
+
+test "releasing washer stops pump immediately while maintaining 3s post-wash drip wipe"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = false
+    High = false
+    Intermittent = false
+    Washer = true
+
+When:
+    execute 1 cycle
+    Washer = false
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == true
+    WasherPump == false
+
+test "post-wash drip wipe completes and parks after 3s timer expires"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = false
+    High = false
+    Intermittent = false
+    Washer = true
+
+When:
+    execute 1 cycle
+    Washer = false
+    execute 1 cycle
+    advance 3100 ms
+    execute 1 cycle
+    ParkSwitch = true
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    WasherPump == false
+
+test "turning wiper switch off mid-sweep continues running until park switch detected"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = true
+    High = false
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+    ParkSwitch = false
+    execute 1 cycle
+    Low = false
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == true
+
+When:
+    ParkSwitch = true
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+
+test "ignition key off mid-sweep completes automatic park rundown"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = true
+    High = false
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+    ParkSwitch = false
+    execute 1 cycle
+    Ignition = false
+    Low = false
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == true
+
+When:
+    ParkSwitch = true
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+
+test "key off while already parked keeps all outputs de-energized"
+
+Given:
+    Ignition = false
+    ParkSwitch = true
+    Low = true
+    High = false
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    WiperMotorHigh == false
+    WasherPump == false
+
+test "wipers jammed out of park for 10s trips running stall watchdog and shuts down"
+
+Given:
+    Ignition = true
+    ParkSwitch = false
+    Low = true
+    High = false
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+    advance 10100 ms
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    WiperMotorHigh == false
+    FaultIndicator == true
+
+test "cycling ignition key clears latched stall fault"
+
+Given:
+    Ignition = true
+    ParkSwitch = false
+    Low = true
+    High = false
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+    advance 10100 ms
+    execute 1 cycle
+    Ignition = false
+    Low = false
+    ParkSwitch = true
+    execute 1 cycle
+    Ignition = true
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    FaultIndicator == false
+
+test "wipers frozen at park for 5s trips park stall watchdog and shuts down"
+
+Given:
+    Ignition = true
+    ParkSwitch = true
+    Low = true
+    High = false
+    Intermittent = false
+    Washer = false
+
+When:
+    execute 1 cycle
+    advance 5100 ms
+    execute 1 cycle
+
+Then:
+    WiperMotorLow == false
+    FaultIndicator == true

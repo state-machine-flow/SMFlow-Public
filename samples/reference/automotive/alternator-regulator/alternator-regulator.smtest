@@ -1,0 +1,347 @@
+test "all outputs de-energized with ignition off"
+
+Given:
+    Ignition = false
+    EngineRun = false
+    BatterySense = 12.60
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == false
+    FaultIndicator == false
+
+test "key on with engine stopped performs dash bulb check"
+
+Given:
+    Ignition = true
+    EngineRun = false
+    BatterySense = 12.40
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == true
+    FaultIndicator == false
+
+test "engine cranking holds field off during startup settling delay"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 11.50
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 1000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == true
+    FaultIndicator == false
+
+test "startup delay elapsed transitions to boost charging"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 12.60
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+    ChargeWarning == false
+    FaultIndicator == false
+
+test "voltage reaches upper threshold and switches to float"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 12.60
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+    BatterySense = 14.26
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.20
+    ChargeWarning == false
+    FaultIndicator == false
+
+test "hysteresis deadband holds float state as voltage fluctuates"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 12.60
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+    BatterySense = 14.26
+    execute 1 cycle
+    BatterySense = 14.20
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.20
+    ChargeWarning == false
+
+test "electrical load increase drops voltage below target recovering to boost"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 14.26
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+    BatterySense = 14.10
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+    ChargeWarning == false
+
+test "boundary thresholds around 14.14V and 14.15V"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 14.26
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+    BatterySense = 14.15
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.20
+
+When:
+    BatterySense = 14.14
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+
+test "thermal derating clamps field duty at 105C"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 13.80
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+
+When:
+    AlternatorTemp = 105.0
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.40
+    ChargeWarning == false
+    FaultIndicator == false
+
+test "thermal recovery restores normal full duty"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 13.80
+    AlternatorTemp = 105.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.40
+
+When:
+    AlternatorTemp = 95.0
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+
+test "overvoltage condition latches safety shutdown"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 13.80
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+
+When:
+    BatterySense = 15.65
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == true
+    FaultIndicator == true
+
+When:
+    BatterySense = 13.80
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == true
+    FaultIndicator == true
+
+test "critical overtemperature trips emergency thermal shutdown"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 13.80
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+
+When:
+    AlternatorTemp = 131.0
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == true
+    FaultIndicator == true
+
+test "cycling ignition switch clears latched fault"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 15.70
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    FaultIndicator == true
+
+When:
+    Ignition = false
+    BatterySense = 12.60
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == false
+    FaultIndicator == false
+
+When:
+    Ignition = true
+    BatterySense = 12.60
+    AlternatorTemp = 25.0
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+    ChargeWarning == false
+    FaultIndicator == false
+
+test "ignition removal during operation immediately kills field"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 13.00
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+
+When:
+    Ignition = false
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == false
+    FaultIndicator == false
+
+test "engine stall resets startup timer and de-energizes field"
+
+Given:
+    Ignition = true
+    EngineRun = true
+    BatterySense = 13.00
+    AlternatorTemp = 25.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.80
+
+When:
+    EngineRun = false
+    execute 1 cycle
+
+Then:
+    FieldPwm == 0.0
+    ChargeWarning == true

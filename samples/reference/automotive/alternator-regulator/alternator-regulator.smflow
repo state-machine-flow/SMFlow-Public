@@ -1,0 +1,734 @@
+{
+  "formatVersion": 5,
+  "name": "alternator-regulator",
+  "targets": [
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_ign",
+      "type": "digital-input",
+      "name": "Ignition",
+      "comment": "Switched +12V vehicle ignition RUN input (level-shifted to 3.3V). True indicates ignition is active."
+    },
+    {
+      "id": "in_eng",
+      "type": "digital-input",
+      "name": "EngineRun",
+      "comment": "Engine run indicator (from GM Duramax crank sensor or F-terminal 128 Hz feedback). True indicates engine running above stall speed."
+    },
+    {
+      "id": "in_vbatt",
+      "type": "analog-input",
+      "name": "BatterySense",
+      "comment": "Battery terminal voltage sensed via external precision voltage divider."
+    },
+    {
+      "id": "in_temp",
+      "type": "analog-input",
+      "name": "AlternatorTemp",
+      "comment": "Alternator housing / rectifier heatsink temperature in °C from NTC thermistor or analog sensor."
+    },
+    {
+      "id": "rd_vlow",
+      "type": "variable-read",
+      "name": "VTargetLow",
+      "comment": "Lower voltage regulation threshold (14.15V) for hysteresis band."
+    },
+    {
+      "id": "rd_vhigh",
+      "type": "variable-read",
+      "name": "VTargetHigh",
+      "comment": "Upper voltage regulation threshold (14.25V) for hysteresis band."
+    },
+    {
+      "id": "rd_vov",
+      "type": "variable-read",
+      "name": "VOvervoltageLimit",
+      "comment": "Critical overvoltage threshold (15.60V) for safety shutdown."
+    },
+    {
+      "id": "rd_tderate",
+      "type": "variable-read",
+      "name": "TempDerateLimit",
+      "comment": "Thermal derating threshold (105.0°C) triggering reduced excitation duty ceiling."
+    },
+    {
+      "id": "rd_tshutdown",
+      "type": "variable-read",
+      "name": "TempShutdownLimit",
+      "comment": "Critical thermal shutdown threshold (130.0°C) triggering emergency shutdown."
+    },
+    {
+      "id": "rd_dboost",
+      "type": "variable-read",
+      "name": "DutyBoost",
+      "comment": "Field excitation PWM duty (0.80 = 80%, commanding 14.94V per GM RVC spec) applied when voltage is below target."
+    },
+    {
+      "id": "rd_dfloat",
+      "type": "variable-read",
+      "name": "DutyFloat",
+      "comment": "Field excitation PWM duty (0.20 = 20%, commanding 11.56V per GM RVC spec) applied when voltage is at/above target."
+    },
+    {
+      "id": "rd_dderate",
+      "type": "variable-read",
+      "name": "DutyDerated",
+      "comment": "Field excitation PWM duty ceiling (0.40 = 40%, commanding 12.68V per GM RVC spec) applied under thermal derating."
+    },
+    {
+      "id": "rd_doff",
+      "type": "variable-read",
+      "name": "DutyOff",
+      "comment": "Zero field excitation PWM duty (0.00 = 0%) applied during shutdown, cranking, or fault (disables GM generator field)."
+    },
+    {
+      "id": "gate_crank_check",
+      "type": "and",
+      "comment": "Requires both ignition ON and engine running to initiate startup settling sequence."
+    },
+    {
+      "id": "timer_startup",
+      "type": "ton",
+      "properties": {
+        "presetTime": "2000"
+      },
+      "comment": "Soft-start on-delay timer (2.0s). Holds field OFF during cranking and allows engine idle speed to stabilize."
+    },
+    {
+      "id": "cmp_vlow",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      },
+      "comment": "Compares BatterySense < VTargetLow (14.15V) to trigger boost charging."
+    },
+    {
+      "id": "cmp_vhigh",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      },
+      "comment": "Compares BatterySense > VTargetHigh (14.25V) to switch to float regulating."
+    },
+    {
+      "id": "latch_boost",
+      "type": "set-reset",
+      "comment": "Regulation hysteresis latch: Set on V < 14.15V, Reset on V > 14.25V to prevent high-frequency chatter."
+    },
+    {
+      "id": "sel_reg_duty",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects DutyBoost (0.80) when boost latch is active, else DutyFloat (0.20)."
+    },
+    {
+      "id": "cmp_derate",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if AlternatorTemp >= TempDerateLimit (105.0°C) for thermal protection."
+    },
+    {
+      "id": "sel_thermal_duty",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Selects DutyDerated (0.40) when overheated, otherwise passes normal regulated duty."
+    },
+    {
+      "id": "cmp_tshutdown",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      },
+      "comment": "Detects severe overtemperature (> 130.0°C) triggering emergency shutdown."
+    },
+    {
+      "id": "cmp_ov",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      },
+      "comment": "Detects hazardous overvoltage (> 15.60V) to protect vehicle electrical systems."
+    },
+    {
+      "id": "gate_fault",
+      "type": "or",
+      "comment": "Combines overvoltage or severe overtemperature into safety fault trip signal."
+    },
+    {
+      "id": "not_ign",
+      "type": "not",
+      "comment": "Inverts ignition input to provide reset signal for fault latch when key is switched OFF."
+    },
+    {
+      "id": "latch_fault",
+      "type": "set-reset",
+      "comment": "Safety fault latch: holds fault state on trip until ignition key is cycled."
+    },
+    {
+      "id": "not_fault",
+      "type": "not",
+      "comment": "Inverts fault latch state for run interlock."
+    },
+    {
+      "id": "gate_healthy",
+      "type": "and",
+      "comment": "Master enable: true only when startup delay has completed AND no fault is latched."
+    },
+    {
+      "id": "sel_field_pwm",
+      "type": "select",
+      "properties": {
+        "type": "float32"
+      },
+      "comment": "Master excitation switch: routes active duty when healthy, 0.00 when stopped, cranking, or faulted."
+    },
+    {
+      "id": "out_pwm",
+      "type": "pwm-output",
+      "name": "FieldPwm",
+      "comment": "128 Hz PWM output driving the GM Duramax L-terminal (Generator Turn-On) duty cycle command (10% = 11.0V to 90% = 15.5V)."
+    },
+    {
+      "id": "not_healthy",
+      "type": "not",
+      "comment": "Inverts healthy state to drive charge warning lamp logic."
+    },
+    {
+      "id": "gate_warn_lamp",
+      "type": "and",
+      "comment": "Drives warning lamp: ON when ignition is ON but alternator is not actively regulating."
+    },
+    {
+      "id": "out_warn_lamp",
+      "type": "digital-output",
+      "name": "ChargeWarning",
+      "comment": "Dashboard battery/charge warning lamp (ALT/GEN indicator)."
+    },
+    {
+      "id": "out_fault_lamp",
+      "type": "digital-output",
+      "name": "FaultIndicator",
+      "comment": "Diagnostic fault MIL / LED indicating latched overvoltage or thermal shutdown."
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_crank_check",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "in_eng",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_crank_check",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_crank_check",
+        "port": "out"
+      },
+      "to": {
+        "node": "timer_startup",
+        "port": "IN"
+      }
+    },
+    {
+      "from": {
+        "node": "in_vbatt",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_vlow",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_vlow",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_vlow",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_vbatt",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_vhigh",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_vhigh",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_vhigh",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_vlow",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_boost",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_vhigh",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_boost",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_boost",
+        "port": "Q"
+      },
+      "to": {
+        "node": "sel_reg_duty",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_dboost",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_reg_duty",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_dfloat",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_reg_duty",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_derate",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_tderate",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_derate",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_derate",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_thermal_duty",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_dderate",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_thermal_duty",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_reg_duty",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_thermal_duty",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "in_vbatt",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_ov",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_vov",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_ov",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_temp",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_tshutdown",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_tshutdown",
+        "port": "value"
+      },
+      "to": {
+        "node": "cmp_tshutdown",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_ov",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fault",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "cmp_tshutdown",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_fault",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "not_ign",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_fault",
+        "port": "S"
+      }
+    },
+    {
+      "from": {
+        "node": "not_ign",
+        "port": "out"
+      },
+      "to": {
+        "node": "latch_fault",
+        "port": "R"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_fault",
+        "port": "Q"
+      },
+      "to": {
+        "node": "not_fault",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "timer_startup",
+        "port": "Q"
+      },
+      "to": {
+        "node": "gate_healthy",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_fault",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_healthy",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_healthy",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_field_pwm",
+        "port": "cond"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_thermal_duty",
+        "port": "out"
+      },
+      "to": {
+        "node": "sel_field_pwm",
+        "port": "whenTrue"
+      }
+    },
+    {
+      "from": {
+        "node": "rd_doff",
+        "port": "value"
+      },
+      "to": {
+        "node": "sel_field_pwm",
+        "port": "whenFalse"
+      }
+    },
+    {
+      "from": {
+        "node": "sel_field_pwm",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_pwm",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_healthy",
+        "port": "out"
+      },
+      "to": {
+        "node": "not_healthy",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "in_ign",
+        "port": "value"
+      },
+      "to": {
+        "node": "gate_warn_lamp",
+        "port": "a"
+      }
+    },
+    {
+      "from": {
+        "node": "not_healthy",
+        "port": "out"
+      },
+      "to": {
+        "node": "gate_warn_lamp",
+        "port": "b"
+      }
+    },
+    {
+      "from": {
+        "node": "gate_warn_lamp",
+        "port": "out"
+      },
+      "to": {
+        "node": "out_warn_lamp",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "latch_fault",
+        "port": "Q"
+      },
+      "to": {
+        "node": "out_fault_lamp",
+        "port": "value"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "VTargetLow",
+      "type": "float32",
+      "initial": "14.15"
+    },
+    {
+      "name": "VTargetHigh",
+      "type": "float32",
+      "initial": "14.25"
+    },
+    {
+      "name": "VOvervoltageLimit",
+      "type": "float32",
+      "initial": "15.60"
+    },
+    {
+      "name": "TempDerateLimit",
+      "type": "float32",
+      "initial": "105.0"
+    },
+    {
+      "name": "TempShutdownLimit",
+      "type": "float32",
+      "initial": "130.0"
+    },
+    {
+      "name": "DutyBoost",
+      "type": "float32",
+      "initial": "0.80"
+    },
+    {
+      "name": "DutyFloat",
+      "type": "float32",
+      "initial": "0.20"
+    },
+    {
+      "name": "DutyDerated",
+      "type": "float32",
+      "initial": "0.40"
+    },
+    {
+      "name": "DutyOff",
+      "type": "float32",
+      "initial": "0.00"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "Ignition",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "EngineRun",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "BatterySense",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "AlternatorTemp",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "FieldPwm",
+      "direction": "output",
+      "type": "float32",
+      "channel": "pwm"
+    },
+    {
+      "logical": "ChargeWarning",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "FaultIndicator",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_ign": { "x": 40, "y": 40 },
+      "in_eng": { "x": 40, "y": 140 },
+      "in_vbatt": { "x": 40, "y": 240 },
+      "in_temp": { "x": 40, "y": 380 },
+      "rd_vlow": { "x": 40, "y": 480 },
+      "rd_vhigh": { "x": 40, "y": 560 },
+      "rd_vov": { "x": 40, "y": 640 },
+      "rd_tderate": { "x": 40, "y": 720 },
+      "rd_tshutdown": { "x": 40, "y": 800 },
+      "rd_dboost": { "x": 240, "y": 480 },
+      "rd_dfloat": { "x": 240, "y": 560 },
+      "rd_dderate": { "x": 240, "y": 640 },
+      "rd_doff": { "x": 240, "y": 720 },
+      "gate_crank_check": { "x": 240, "y": 80 },
+      "timer_startup": { "x": 420, "y": 80 },
+      "cmp_vlow": { "x": 240, "y": 240 },
+      "cmp_vhigh": { "x": 240, "y": 340 },
+      "latch_boost": { "x": 420, "y": 280 },
+      "sel_reg_duty": { "x": 600, "y": 280 },
+      "cmp_derate": { "x": 240, "y": 420 },
+      "sel_thermal_duty": { "x": 760, "y": 320 },
+      "cmp_ov": { "x": 420, "y": 640 },
+      "cmp_tshutdown": { "x": 420, "y": 740 },
+      "gate_fault": { "x": 600, "y": 680 },
+      "not_ign": { "x": 420, "y": 540 },
+      "latch_fault": { "x": 760, "y": 600 },
+      "not_fault": { "x": 920, "y": 600 },
+      "gate_healthy": { "x": 920, "y": 140 },
+      "sel_field_pwm": { "x": 1080, "y": 240 },
+      "out_pwm": { "x": 1260, "y": 240 },
+      "not_healthy": { "x": 1080, "y": 80 },
+      "gate_warn_lamp": { "x": 1260, "y": 80 },
+      "out_warn_lamp": { "x": 1420, "y": 80 },
+      "out_fault_lamp": { "x": 1420, "y": 600 }
+    }
+  }
+}

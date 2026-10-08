@@ -58,6 +58,15 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 | `modbus-analog` | atmega2560-mega | Four analog channels served as Modbus TCP input registers, and a fallback when the client goes away |
 | `modbus-diagnostic` | atmega2560-mega | The same server with its status counters on a 20x4 LCD — a commissioning tool for when a client gets nothing back |
 
+### reference/ — industry reference architectures and retrofits
+| Sample | Targets | Shows |
+|---|---|---|
+| `automotive/alternator-regulator` | rp2040-pico, simulator | Standalone ECU replacement for 2020 GM Duramax alternator (84143541 / 23298275) with 128 Hz PWM RVC regulation, soft-start, thermal derating, and overvoltage latching |
+| `automotive/cooling-fan-controller` | rp2040-pico, simulator | Standalone dual electric cooling fan controller (EF-ECU) with staged PWM, 5°C hysteresis, A/C override, highway ram-air lockout, after-run rundown cooling, and fail-safe diagnostics |
+| `automotive/seat-climate-controller` | rp2040-pico, simulator | Retrofit heated and cooled seat controller (CCSM) with 3-level thermostatic regulation, PWM fan control, soft-start, open/short sensor detection, and ignition rundown timeout |
+| `automotive/wiper-controller` | rp2040-pico, simulator | Standalone windshield wiper control module (WCM) with multi-speed interlocked wiping, immediate first-wipe intermittent timing, washer drip cycles, auto-park detection, ignition-off rundown, and dual watchdog stall timeouts |
+| `automotive/power-window-controller` | rp2040-pico, simulator | Standalone power window controller module (WCM) with momentary/express travel, FMVSS 118 anti-pinch reversal, end-stop stall cutoff, and 30s Retained Accessory Power with door cancel |
+
 ## What a sample folder contains
 
 ```
