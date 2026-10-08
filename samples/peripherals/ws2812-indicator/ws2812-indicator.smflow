@@ -1,0 +1,147 @@
+{
+  "formatVersion": 4,
+  "name": "ws2812-indicator",
+  "target": "rp2040-pico",
+  "targets": [
+    "rp2040-pico",
+    "esp32-s3",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 20
+    }
+  ],
+  "nodes": [
+    {
+      "id": "btn_alert",
+      "type": "digital-input",
+      "name": "AlertButton",
+      "comment": "Reads the alarm trigger push button (active HIGH)."
+    },
+    {
+      "id": "inv_alert",
+      "type": "not",
+      "comment": "Inverts the alert condition to detect normal operating state."
+    },
+    {
+      "id": "out_relay",
+      "type": "digital-output",
+      "name": "AlarmRelay",
+      "comment": "Energizes an auxiliary alarm beacon relay when in alert mode."
+    },
+    {
+      "id": "strip_normal",
+      "type": "ws2812-fill",
+      "name": "StatusStrip",
+      "properties": {
+        "red": "0",
+        "green": "255",
+        "blue": "0"
+      },
+      "comment": "Fills all WS2812 LEDs with green during normal operation."
+    },
+    {
+      "id": "strip_alert",
+      "type": "ws2812-fill",
+      "name": "StatusStrip",
+      "properties": {
+        "red": "255",
+        "green": "0",
+        "blue": "0"
+      },
+      "comment": "Fills all WS2812 LEDs with red when an alert condition is triggered."
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "btn_alert",
+        "port": "value"
+      },
+      "to": {
+        "node": "inv_alert",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "node": "btn_alert",
+        "port": "value"
+      },
+      "to": {
+        "node": "out_relay",
+        "port": "value"
+      }
+    },
+    {
+      "from": {
+        "node": "inv_alert",
+        "port": "out"
+      },
+      "to": {
+        "node": "strip_normal",
+        "port": "enable"
+      }
+    },
+    {
+      "from": {
+        "node": "btn_alert",
+        "port": "value"
+      },
+      "to": {
+        "node": "strip_alert",
+        "port": "enable"
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "AlertButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "AlarmRelay",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "peripherals": [
+    {
+      "name": "StatusStrip",
+      "type": "worldsemi:ws2812",
+      "config": {
+        "ledCount": "8",
+        "colorOrder": "GRB",
+        "autoShow": "true",
+        "brightness": "128"
+      }
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "btn_alert": {
+        "x": 60,
+        "y": 140
+      },
+      "inv_alert": {
+        "x": 240,
+        "y": 80
+      },
+      "out_relay": {
+        "x": 240,
+        "y": 240
+      },
+      "strip_normal": {
+        "x": 440,
+        "y": 80
+      },
+      "strip_alert": {
+        "x": 440,
+        "y": 180
+      }
+    }
+  }
+}

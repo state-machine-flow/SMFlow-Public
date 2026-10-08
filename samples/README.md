@@ -49,6 +49,7 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 | Sample | Targets | Shows |
 |---|---|---|
 | `ssd1306-text` | rp2040-pico, esp32-s3, simulator | Text and counters on an I²C OLED |
+| `ws2812-indicator` | rp2040-pico, esp32-s3, simulator | Addressable RGB LED strip status indicator over SPI MOSI |
 
 ### applications/ — end-to-end, closer to a real product
 | Sample | Targets | Shows |

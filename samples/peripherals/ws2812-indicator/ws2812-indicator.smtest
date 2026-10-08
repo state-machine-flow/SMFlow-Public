@@ -1,0 +1,32 @@
+test "defaults to normal state when button not pressed"
+
+Given:
+    AlertButton = false
+
+When:
+    execute 1 cycle
+
+Then:
+    AlarmRelay == false
+
+test "asserts alarm relay when alert button pressed"
+
+Given:
+    AlertButton = true
+
+When:
+    execute 1 cycle
+
+Then:
+    AlarmRelay == true
+
+test "returns to normal state after releasing button"
+
+Given:
+    AlertButton = false
+
+When:
+    execute 1 cycle
+
+Then:
+    AlarmRelay == false

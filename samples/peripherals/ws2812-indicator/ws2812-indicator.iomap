@@ -1,0 +1,38 @@
+{
+  "formatVersion": 1,
+  "project": "ws2812-indicator",
+  "bindings": {
+    "rp2040-pico": {
+      "AlertButton": {
+        "pin": "GP16",
+        "resistor": "pullDown"
+      },
+      "AlarmRelay": "GP17"
+    },
+    "esp32-s3": {
+      "AlertButton": "GPIO7",
+      "AlarmRelay": "GPIO8"
+    },
+    "simulator": {
+      "AlertButton": "virtual.AlertButton",
+      "AlarmRelay": "virtual.AlarmRelay"
+    }
+  },
+  "peripherals": {
+    "rp2040-pico": {
+      "StatusStrip": {
+        "bus": "spi0"
+      }
+    },
+    "esp32-s3": {
+      "StatusStrip": {
+        "bus": "fspi"
+      }
+    },
+    "simulator": {
+      "StatusStrip": {
+        "bus": "virtual.spi0"
+      }
+    }
+  }
+}
