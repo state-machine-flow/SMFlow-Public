@@ -1,0 +1,389 @@
+test "all outputs de-energized when HOA switch is in OFF position"
+
+Given:
+    AutoSwitch = false
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 20.0
+
+When:
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    AlarmOutput == false
+    PumpRunningOutput == false
+    AutoModeOutput == false
+
+test "auto mode indicator illuminates when HOA is switched to AUTO"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 45.0
+
+When:
+    execute 1 cycle
+
+Then:
+    AutoModeOutput == true
+    PumpContactor == false
+    AlarmOutput == false
+
+test "invalid HOA contact conflict suppresses both auto and manual modes"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = true
+    ManualStart = true
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 20.0
+
+When:
+    execute 1 cycle
+
+Then:
+    AutoModeOutput == false
+    PumpContactor == false
+    AlarmOutput == false
+
+test "process variable dropping below cut-in threshold starts pump in auto mode"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+
+Then:
+    PumpContactor == true
+    PumpRunningOutput == true
+    AutoModeOutput == true
+    AlarmOutput == false
+
+test "hysteresis maintains pump running as pressure rises between cut-in and cut-out"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    ProcessVariable = 45.0
+    execute 1 cycle
+
+Then:
+    PumpContactor == true
+    PumpRunningOutput == true
+    AutoModeOutput == true
+    AlarmOutput == false
+
+test "minimum run time holds pump running even if cut-out pressure is reached early"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    ProcessVariable = 60.0
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    PumpContactor == true
+    PumpRunningOutput == true
+    AlarmOutput == false
+
+test "pump stops after minimum run timer elapses when process demand has cleared"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    ProcessVariable = 60.0
+    execute 1 cycle
+    advance 6000 ms
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    PumpRunningOutput == false
+    AlarmOutput == false
+
+test "minimum rest time prevents pump restart during anti-rapid-cycle window"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    advance 6000 ms
+    execute 1 cycle
+    ProcessVariable = 60.0
+    execute 1 cycle
+    ProcessVariable = 25.0
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    PumpRunningOutput == false
+    AlarmOutput == false
+
+test "pump restarts cleanly after minimum rest time elapses"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    advance 6000 ms
+    execute 1 cycle
+    ProcessVariable = 60.0
+    execute 1 cycle
+    ProcessVariable = 25.0
+    execute 1 cycle
+    advance 6000 ms
+    execute 1 cycle
+
+Then:
+    PumpContactor == true
+    PumpRunningOutput == true
+    AlarmOutput == false
+
+test "dry-run fault immediately cuts off pump overriding minimum run time and latches alarm"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    DryRunFault = true
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    PumpRunningOutput == false
+    AlarmOutput == true
+
+test "alarm remains latched after dry-run fault physically clears"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    DryRunFault = true
+    execute 1 cycle
+    DryRunFault = false
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    PumpRunningOutput == false
+    AlarmOutput == true
+
+test "reset button cannot clear alarm while fault condition remains active"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    OverloadFault = true
+    execute 1 cycle
+    AlarmReset = true
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    PumpRunningOutput == false
+    AlarmOutput == true
+
+test "operator reset clears latched alarm after fault is eliminated"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 30.0
+
+When:
+    execute 1 cycle
+    OverloadFault = true
+    execute 1 cycle
+    OverloadFault = false
+    execute 1 cycle
+    AlarmReset = true
+    execute 1 cycle
+    AlarmReset = false
+    execute 1 cycle
+
+Then:
+    AlarmOutput == false
+
+test "manual mode runs pump on manual start command"
+
+Given:
+    AutoSwitch = false
+    ManualSwitch = true
+    ManualStart = true
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 50.0
+
+When:
+    execute 1 cycle
+
+Then:
+    PumpContactor == true
+    PumpRunningOutput == true
+    AutoModeOutput == false
+    AlarmOutput == false
+
+test "manual start stops when manual start command is released"
+
+Given:
+    AutoSwitch = false
+    ManualSwitch = true
+    ManualStart = true
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 50.0
+
+When:
+    execute 1 cycle
+    advance 6000 ms
+    ManualStart = false
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    PumpRunningOutput == false
+
+test "overload fault cuts off pump in manual mode and latches alarm"
+
+Given:
+    AutoSwitch = false
+    ManualSwitch = true
+    ManualStart = true
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 50.0
+
+When:
+    execute 1 cycle
+    OverloadFault = true
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    PumpRunningOutput == false
+    AlarmOutput == true
+
+test "sensor lower plausibility violation trips alarm and inhibits pump"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = -5.0
+
+When:
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    AlarmOutput == true
+
+test "sensor upper plausibility violation trips alarm and inhibits pump"
+
+Given:
+    AutoSwitch = true
+    ManualSwitch = false
+    ManualStart = false
+    DryRunFault = false
+    OverloadFault = false
+    AlarmReset = false
+    ProcessVariable = 110.0
+
+When:
+    execute 1 cycle
+
+Then:
+    PumpContactor == false
+    AlarmOutput == true

@@ -1,0 +1,576 @@
+{
+  "formatVersion": 5,
+  "name": "pneumatic-cylinder-sequencer",
+  "targets": [
+    "opta",
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_start",
+      "type": "digital-input",
+      "name": "StartButton",
+      "comment": "Cycle start operator pushbutton. Initiates extend-dwell-retract sequence when cylinder is confirmed at home."
+    },
+    {
+      "id": "in_stop",
+      "type": "digital-input",
+      "name": "StopButton",
+      "comment": "Cycle stop operator pushbutton. Aborts active motion immediately and de-energizes all solenoids."
+    },
+    {
+      "id": "in_reset",
+      "type": "digital-input",
+      "name": "ResetButton",
+      "comment": "Alarm reset operator pushbutton. Clears latched jam or sensor fault once the physical condition is resolved."
+    },
+    {
+      "id": "in_retracted",
+      "type": "digital-input",
+      "name": "RetractedSensor",
+      "comment": "Home position end-switch / magnetic reed sensor. True when cylinder piston is fully retracted (0% stroke)."
+    },
+    {
+      "id": "in_extended",
+      "type": "digital-input",
+      "name": "ExtendedSensor",
+      "comment": "Work position end-switch / magnetic reed sensor. True when cylinder piston is fully extended (100% stroke)."
+    },
+    {
+      "id": "not_extended",
+      "type": "not",
+      "comment": "Inverts ExtendedSensor; true when cylinder is away from work position."
+    },
+    {
+      "id": "gate_at_home",
+      "type": "and",
+      "comment": "Home confirmation interlock: cylinder confirmed at home (RetractedSensor true and ExtendedSensor false)."
+    },
+    {
+      "id": "gate_start_trig",
+      "type": "and",
+      "comment": "Starts cycle only when StartButton is pressed and cylinder is verified at home position."
+    },
+    {
+      "id": "gate_reset_or_stop",
+      "type": "or",
+      "comment": "Combines StopButton and ResetButton to clear motion stages."
+    },
+    {
+      "id": "not_abort",
+      "type": "not",
+      "comment": "Inverts abort signal; true when neither Stop nor Reset is active."
+    },
+    {
+      "id": "gate_reset_extend",
+      "type": "or",
+      "comment": "Terminates Extend stage when ExtendedSensor is reached, Stop is pressed, or Reset is actuated."
+    },
+    {
+      "id": "latch_extend",
+      "type": "set-reset",
+      "comment": "Stage 1 Extend latch: holds extend command active until cylinder reaches work position."
+    },
+    {
+      "id": "timer_extend_timeout",
+      "type": "ton",
+      "properties": {
+        "presetTime": "2500"
+      },
+      "comment": "Extend watchdog timer (2.5s). Trips jam alarm if cylinder fails to reach ExtendedSensor in time."
+    },
+    {
+      "id": "not_retracted",
+      "type": "not",
+      "comment": "Inverts RetractedSensor; true when cylinder has traveled away from home position."
+    },
+    {
+      "id": "gate_dwell_in",
+      "type": "and",
+      "comment": "Enables dwell timer when cylinder arrives at ExtendedSensor and has left RetractedSensor."
+    },
+    {
+      "id": "timer_dwell",
+      "type": "ton",
+      "properties": {
+        "presetTime": "1500"
+      },
+      "comment": "Stage 2 Dwell timer (1.5s). Holds cylinder at work position for clamping, pressing, or ejection."
+    },
+    {
+      "id": "not_dwelled",
+      "type": "not",
+      "comment": "Inverts Dwell complete signal; true during the active 1.5s dwell duration window."
+    },
+    {
+      "id": "gate_dwell_raw",
+      "type": "and",
+      "comment": "Raw Dwell condition: cylinder at extended position and dwell timer actively timing."
+    },
+    {
+      "id": "gate_is_dwelling",
+      "type": "and",
+      "comment": "Active Dwell phase flag: cylinder dwelling and not aborted by Stop/Reset."
+    },
+    {
+      "id": "gate_extend_raw",
+      "type": "or",
+      "comment": "Combined extend demand: active during Extend stage and maintained throughout Dwell stage."
+    },
+    {
+      "id": "gate_reset_retract",
+      "type": "or",
+      "comment": "Terminates Retract stage when RetractedSensor (home) is confirmed, Stop is pressed, or Reset is actuated."
+    },
+    {
+      "id": "latch_retract",
+      "type": "set-reset",
+      "comment": "Stage 3 Retract latch: set upon dwell expiration, holds until cylinder safely reaches home position."
+    },
+    {
+      "id": "timer_retract_timeout",
+      "type": "ton",
+      "properties": {
+        "presetTime": "2500"
+      },
+      "comment": "Retract watchdog timer (2.5s). Trips jam alarm if cylinder fails to reach RetractedSensor in time."
+    },
+    {
+      "id": "cmp_sensor_conflict",
+      "type": "and",
+      "comment": "Sensor plausibility check: detects impossible state where both end sensors are active simultaneously."
+    },
+    {
+      "id": "gate_any_jam",
+      "type": "or",
+      "comment": "Detects either Extend or Retract travel timeout condition (mechanical jam / pressure loss)."
+    },
+    {
+      "id": "gate_any_fault",
+      "type": "or",
+      "comment": "Consolidates mechanical jam timeouts and sensor plausibility conflict faults."
+    },
+    {
+      "id": "latch_alarm",
+      "type": "set-reset",
+      "comment": "Master safety fault latch: trips on any fault, latches until operator presses ResetButton."
+    },
+    {
+      "id": "not_alarm",
+      "type": "not",
+      "comment": "Inverts alarm latch state; true when sequencer is free of latched faults."
+    },
+    {
+      "id": "not_any_fault",
+      "type": "not",
+      "comment": "Inverts active fault state; true when no physical fault condition is currently asserted."
+    },
+    {
+      "id": "gate_safety_ok",
+      "type": "and",
+      "comment": "Safety permissive: permits pneumatic valve motion only when alarms are clear and no faults are present."
+    },
+    {
+      "id": "not_retract_latch",
+      "type": "not",
+      "comment": "Inverts Retract latch for directional solenoid interlock."
+    },
+    {
+      "id": "not_extend_cmd",
+      "type": "not",
+      "comment": "Inverts Extend command for directional solenoid interlock."
+    },
+    {
+      "id": "gate_extend_interlocked",
+      "type": "and",
+      "comment": "Interlocked Extend command: prevented if Retract solenoid is commanded."
+    },
+    {
+      "id": "gate_extend_final",
+      "type": "and",
+      "comment": "Final Extend solenoid command: gated by safety permissive interlock."
+    },
+    {
+      "id": "gate_retract_interlocked",
+      "type": "and",
+      "comment": "Interlocked Retract command: prevented if Extend solenoid is commanded."
+    },
+    {
+      "id": "gate_retract_final",
+      "type": "and",
+      "comment": "Final Retract solenoid command: gated by safety permissive interlock."
+    },
+    {
+      "id": "gate_cycle_partial",
+      "type": "or",
+      "comment": "Combines Extend and Dwell stages for In-Cycle status indication."
+    },
+    {
+      "id": "gate_in_cycle",
+      "type": "or",
+      "comment": "Cycle in progress flag: true during Extend, Dwell, or Retract phases."
+    },
+    {
+      "id": "out_extend",
+      "type": "digital-output",
+      "name": "ExtendSolenoid",
+      "comment": "Drives 5/2 directional pneumatic valve advance solenoid coil (Opta RELAY1 / Pico GP20)."
+    },
+    {
+      "id": "out_retract",
+      "type": "digital-output",
+      "name": "RetractSolenoid",
+      "comment": "Drives 5/2 directional pneumatic valve return solenoid coil (Opta RELAY2 / Pico GP21)."
+    },
+    {
+      "id": "out_in_cycle",
+      "type": "digital-output",
+      "name": "InCycleOutput",
+      "comment": "Cycle active status indicator lamp / telemetry output (Opta RELAY3 / Pico GP22)."
+    },
+    {
+      "id": "out_alarm",
+      "type": "digital-output",
+      "name": "AlarmOutput",
+      "comment": "Safety alarm annunciator strobe / horn for jam or sensor failure (Opta RELAY4 / Pico GP27)."
+    }
+  ],
+  "connections": [
+    {
+      "from": { "node": "in_extended", "port": "value" },
+      "to": { "node": "not_extended", "port": "in" }
+    },
+    {
+      "from": { "node": "in_retracted", "port": "value" },
+      "to": { "node": "gate_at_home", "port": "a" }
+    },
+    {
+      "from": { "node": "not_extended", "port": "out" },
+      "to": { "node": "gate_at_home", "port": "b" }
+    },
+    {
+      "from": { "node": "in_start", "port": "value" },
+      "to": { "node": "gate_start_trig", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_at_home", "port": "out" },
+      "to": { "node": "gate_start_trig", "port": "b" }
+    },
+    {
+      "from": { "node": "in_stop", "port": "value" },
+      "to": { "node": "gate_reset_or_stop", "port": "a" }
+    },
+    {
+      "from": { "node": "in_reset", "port": "value" },
+      "to": { "node": "gate_reset_or_stop", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_reset_or_stop", "port": "out" },
+      "to": { "node": "not_abort", "port": "in" }
+    },
+    {
+      "from": { "node": "in_extended", "port": "value" },
+      "to": { "node": "gate_reset_extend", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_reset_or_stop", "port": "out" },
+      "to": { "node": "gate_reset_extend", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_start_trig", "port": "out" },
+      "to": { "node": "latch_extend", "port": "S" }
+    },
+    {
+      "from": { "node": "gate_reset_extend", "port": "out" },
+      "to": { "node": "latch_extend", "port": "R" }
+    },
+    {
+      "from": { "node": "latch_extend", "port": "Q" },
+      "to": { "node": "timer_extend_timeout", "port": "IN" }
+    },
+    {
+      "from": { "node": "in_retracted", "port": "value" },
+      "to": { "node": "not_retracted", "port": "in" }
+    },
+    {
+      "from": { "node": "in_extended", "port": "value" },
+      "to": { "node": "gate_dwell_in", "port": "a" }
+    },
+    {
+      "from": { "node": "not_retracted", "port": "out" },
+      "to": { "node": "gate_dwell_in", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_dwell_in", "port": "out" },
+      "to": { "node": "timer_dwell", "port": "IN" }
+    },
+    {
+      "from": { "node": "timer_dwell", "port": "Q" },
+      "to": { "node": "not_dwelled", "port": "in" }
+    },
+    {
+      "from": { "node": "in_extended", "port": "value" },
+      "to": { "node": "gate_dwell_raw", "port": "a" }
+    },
+    {
+      "from": { "node": "not_dwelled", "port": "out" },
+      "to": { "node": "gate_dwell_raw", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_dwell_raw", "port": "out" },
+      "to": { "node": "gate_is_dwelling", "port": "a" }
+    },
+    {
+      "from": { "node": "not_abort", "port": "out" },
+      "to": { "node": "gate_is_dwelling", "port": "b" }
+    },
+    {
+      "from": { "node": "latch_extend", "port": "Q" },
+      "to": { "node": "gate_extend_raw", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_is_dwelling", "port": "out" },
+      "to": { "node": "gate_extend_raw", "port": "b" }
+    },
+    {
+      "from": { "node": "in_retracted", "port": "value" },
+      "to": { "node": "gate_reset_retract", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_reset_or_stop", "port": "out" },
+      "to": { "node": "gate_reset_retract", "port": "b" }
+    },
+    {
+      "from": { "node": "timer_dwell", "port": "Q" },
+      "to": { "node": "latch_retract", "port": "S" }
+    },
+    {
+      "from": { "node": "gate_reset_retract", "port": "out" },
+      "to": { "node": "latch_retract", "port": "R" }
+    },
+    {
+      "from": { "node": "latch_retract", "port": "Q" },
+      "to": { "node": "timer_retract_timeout", "port": "IN" }
+    },
+    {
+      "from": { "node": "in_retracted", "port": "value" },
+      "to": { "node": "cmp_sensor_conflict", "port": "a" }
+    },
+    {
+      "from": { "node": "in_extended", "port": "value" },
+      "to": { "node": "cmp_sensor_conflict", "port": "b" }
+    },
+    {
+      "from": { "node": "timer_extend_timeout", "port": "Q" },
+      "to": { "node": "gate_any_jam", "port": "a" }
+    },
+    {
+      "from": { "node": "timer_retract_timeout", "port": "Q" },
+      "to": { "node": "gate_any_jam", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_any_jam", "port": "out" },
+      "to": { "node": "gate_any_fault", "port": "a" }
+    },
+    {
+      "from": { "node": "cmp_sensor_conflict", "port": "out" },
+      "to": { "node": "gate_any_fault", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_any_fault", "port": "out" },
+      "to": { "node": "latch_alarm", "port": "S" }
+    },
+    {
+      "from": { "node": "in_reset", "port": "value" },
+      "to": { "node": "latch_alarm", "port": "R" }
+    },
+    {
+      "from": { "node": "latch_alarm", "port": "Q" },
+      "to": { "node": "not_alarm", "port": "in" }
+    },
+    {
+      "from": { "node": "gate_any_fault", "port": "out" },
+      "to": { "node": "not_any_fault", "port": "in" }
+    },
+    {
+      "from": { "node": "not_alarm", "port": "out" },
+      "to": { "node": "gate_safety_ok", "port": "a" }
+    },
+    {
+      "from": { "node": "not_any_fault", "port": "out" },
+      "to": { "node": "gate_safety_ok", "port": "b" }
+    },
+    {
+      "from": { "node": "latch_retract", "port": "Q" },
+      "to": { "node": "not_retract_latch", "port": "in" }
+    },
+    {
+      "from": { "node": "gate_extend_raw", "port": "out" },
+      "to": { "node": "not_extend_cmd", "port": "in" }
+    },
+    {
+      "from": { "node": "gate_extend_raw", "port": "out" },
+      "to": { "node": "gate_extend_interlocked", "port": "a" }
+    },
+    {
+      "from": { "node": "not_retract_latch", "port": "out" },
+      "to": { "node": "gate_extend_interlocked", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_extend_interlocked", "port": "out" },
+      "to": { "node": "gate_extend_final", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_safety_ok", "port": "out" },
+      "to": { "node": "gate_extend_final", "port": "b" }
+    },
+    {
+      "from": { "node": "latch_retract", "port": "Q" },
+      "to": { "node": "gate_retract_interlocked", "port": "a" }
+    },
+    {
+      "from": { "node": "not_extend_cmd", "port": "out" },
+      "to": { "node": "gate_retract_interlocked", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_retract_interlocked", "port": "out" },
+      "to": { "node": "gate_retract_final", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_safety_ok", "port": "out" },
+      "to": { "node": "gate_retract_final", "port": "b" }
+    },
+    {
+      "from": { "node": "latch_extend", "port": "Q" },
+      "to": { "node": "gate_cycle_partial", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_is_dwelling", "port": "out" },
+      "to": { "node": "gate_cycle_partial", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_cycle_partial", "port": "out" },
+      "to": { "node": "gate_in_cycle", "port": "a" }
+    },
+    {
+      "from": { "node": "latch_retract", "port": "Q" },
+      "to": { "node": "gate_in_cycle", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_extend_final", "port": "out" },
+      "to": { "node": "out_extend", "port": "value" }
+    },
+    {
+      "from": { "node": "gate_retract_final", "port": "out" },
+      "to": { "node": "out_retract", "port": "value" }
+    },
+    {
+      "from": { "node": "gate_in_cycle", "port": "out" },
+      "to": { "node": "out_in_cycle", "port": "value" }
+    },
+    {
+      "from": { "node": "latch_alarm", "port": "Q" },
+      "to": { "node": "out_alarm", "port": "value" }
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "StartButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "StopButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ResetButton",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "RetractedSensor",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ExtendedSensor",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ExtendSolenoid",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "RetractSolenoid",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "InCycleOutput",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "AlarmOutput",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_start": { "x": 40, "y": 40 },
+      "in_stop": { "x": 40, "y": 120 },
+      "in_reset": { "x": 40, "y": 200 },
+      "in_retracted": { "x": 40, "y": 280 },
+      "in_extended": { "x": 40, "y": 360 },
+      "not_extended": { "x": 260, "y": 360 },
+      "not_retracted": { "x": 260, "y": 280 },
+      "gate_at_home": { "x": 480, "y": 280 },
+      "gate_start_trig": { "x": 700, "y": 120 },
+      "gate_reset_or_stop": { "x": 260, "y": 160 },
+      "not_abort": { "x": 480, "y": 160 },
+      "gate_reset_extend": { "x": 480, "y": 220 },
+      "latch_extend": { "x": 920, "y": 120 },
+      "timer_extend_timeout": { "x": 1140, "y": 120 },
+      "gate_dwell_in": { "x": 480, "y": 440 },
+      "timer_dwell": { "x": 700, "y": 440 },
+      "not_dwelled": { "x": 920, "y": 440 },
+      "gate_dwell_raw": { "x": 1140, "y": 440 },
+      "gate_is_dwelling": { "x": 1360, "y": 440 },
+      "gate_extend_raw": { "x": 1580, "y": 240 },
+      "gate_reset_retract": { "x": 480, "y": 560 },
+      "latch_retract": { "x": 920, "y": 560 },
+      "timer_retract_timeout": { "x": 1140, "y": 560 },
+      "cmp_sensor_conflict": { "x": 480, "y": 680 },
+      "gate_any_jam": { "x": 1360, "y": 560 },
+      "gate_any_fault": { "x": 1580, "y": 640 },
+      "latch_alarm": { "x": 1800, "y": 640 },
+      "not_alarm": { "x": 2020, "y": 640 },
+      "not_any_fault": { "x": 1800, "y": 720 },
+      "gate_safety_ok": { "x": 2240, "y": 680 },
+      "not_retract_latch": { "x": 1360, "y": 640 },
+      "not_extend_cmd": { "x": 1580, "y": 360 },
+      "gate_extend_interlocked": { "x": 1800, "y": 240 },
+      "gate_extend_final": { "x": 2460, "y": 240 },
+      "gate_retract_interlocked": { "x": 1800, "y": 480 },
+      "gate_retract_final": { "x": 2460, "y": 480 },
+      "gate_cycle_partial": { "x": 1800, "y": 120 },
+      "gate_in_cycle": { "x": 2020, "y": 120 },
+      "out_extend": { "x": 2680, "y": 240 },
+      "out_retract": { "x": 2680, "y": 480 },
+      "out_in_cycle": { "x": 2680, "y": 120 },
+      "out_alarm": { "x": 2680, "y": 640 }
+    }
+  }
+}

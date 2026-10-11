@@ -66,6 +66,9 @@ smflow build    samples/basics/not-gate/project.smflow --target linux-x64
 | `automotive/seat-climate-controller` | rp2040-pico, simulator | Retrofit heated and cooled seat controller (CCSM) with 3-level thermostatic regulation, PWM fan control, soft-start, open/short sensor detection, and ignition rundown timeout |
 | `automotive/wiper-controller` | rp2040-pico, simulator | Standalone windshield wiper control module (WCM) with multi-speed interlocked wiping, immediate first-wipe intermittent timing, washer drip cycles, auto-park detection, ignition-off rundown, and dual watchdog stall timeouts |
 | `automotive/power-window-controller` | rp2040-pico, simulator | Standalone power window controller module (WCM) with momentary/express travel, FMVSS 118 anti-pinch reversal, end-stop stall cutoff, and 30s Retained Accessory Power with door cancel |
+| `industrial-automation/pump-controller` | opta, rp2040-pico, simulator | Industrial pump controller with pressure/level hysteresis, anti-short-cycle minimum run time, anti-rapid-recycle minimum rest time, dry-run and overload fault inputs, 3-position HOA manual/automatic modes, and latched alarms |
+| `industrial-automation/pneumatic-cylinder-sequencer` | opta, rp2040-pico, simulator | Double-acting pneumatic cylinder sequencer with extend, dwell, and retract phases, dual watchdog travel jam detection, simultaneous-sensor conflict lockout, stop abort, and alarm reset |
+| `industrial-automation/temperature-controller` | opta, rp2040-pico, simulator | Dual-mode temperature controller with heating (58°C–60°C) and cooling (65°C–60°C) hysteresis, 3.0s startup delay, 5.0s post-heat exhaust cooldown, emergency over-temperature purge (90°C), open/short sensor fault detection, and set-dominant latched alarms |
 
 ## What a sample folder contains
 

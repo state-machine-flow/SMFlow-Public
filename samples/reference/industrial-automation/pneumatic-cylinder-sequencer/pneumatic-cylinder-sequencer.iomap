@@ -1,0 +1,39 @@
+{
+  "formatVersion": 1,
+  "project": "pneumatic-cylinder-sequencer",
+  "bindings": {
+    "opta": {
+      "StartButton": "I1",
+      "StopButton": "I2",
+      "ResetButton": "I3",
+      "RetractedSensor": "I4",
+      "ExtendedSensor": "I5",
+      "ExtendSolenoid": "RELAY1",
+      "RetractSolenoid": "RELAY2",
+      "InCycleOutput": "RELAY3",
+      "AlarmOutput": "RELAY4"
+    },
+    "rp2040-pico": {
+      "StartButton": "GP14",
+      "StopButton": "GP15",
+      "ResetButton": "GP16",
+      "RetractedSensor": "GP17",
+      "ExtendedSensor": "GP18",
+      "ExtendSolenoid": "GP20",
+      "RetractSolenoid": "GP21",
+      "InCycleOutput": "GP22",
+      "AlarmOutput": "GP27"
+    },
+    "simulator": {
+      "StartButton": "virtual.StartButton",
+      "StopButton": "virtual.StopButton",
+      "ResetButton": "virtual.ResetButton",
+      "RetractedSensor": "virtual.RetractedSensor",
+      "ExtendedSensor": "virtual.ExtendedSensor",
+      "ExtendSolenoid": "virtual.ExtendSolenoid",
+      "RetractSolenoid": "virtual.RetractSolenoid",
+      "InCycleOutput": "virtual.InCycleOutput",
+      "AlarmOutput": "virtual.AlarmOutput"
+    }
+  }
+}

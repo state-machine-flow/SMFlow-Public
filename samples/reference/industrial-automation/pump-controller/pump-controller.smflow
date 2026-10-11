@@ -1,0 +1,713 @@
+{
+  "formatVersion": 5,
+  "name": "pump-controller",
+  "targets": [
+    "opta",
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_pv",
+      "type": "analog-input",
+      "name": "ProcessVariable",
+      "comment": "Analog sensor reading (0.0 to 100.0 PSI, bar, or % level) from pressure transducer, hydrostatic level transmitter, or flow meter."
+    },
+    {
+      "id": "in_auto",
+      "type": "digital-input",
+      "name": "AutoSwitch",
+      "comment": "Hand-Off-Auto (HOA) selector switch in AUTO position. True enables automatic closed-loop hysteresis control."
+    },
+    {
+      "id": "in_manual",
+      "type": "digital-input",
+      "name": "ManualSwitch",
+      "comment": "Hand-Off-Auto (HOA) selector switch in HAND/MANUAL position. True enables local manual override control."
+    },
+    {
+      "id": "in_manual_start",
+      "type": "digital-input",
+      "name": "ManualStart",
+      "comment": "Manual pump start push-button or maintained contact. True commands pump start when in MANUAL mode."
+    },
+    {
+      "id": "in_dry_run",
+      "type": "digital-input",
+      "name": "DryRunFault",
+      "comment": "Suction low-level float switch, minimum pressure switch, or dry-well sensor probe. True indicates dry-run condition."
+    },
+    {
+      "id": "in_overload",
+      "type": "digital-input",
+      "name": "OverloadFault",
+      "comment": "Motor thermal overload protection relay contact (bimetallic or electronic relay or VFD fault contact). True indicates overload."
+    },
+    {
+      "id": "in_reset",
+      "type": "digital-input",
+      "name": "AlarmReset",
+      "comment": "Operator panel alarm reset push-button. True clears latched alarms once the physical fault has cleared."
+    },
+    {
+      "id": "rd_start_thresh",
+      "type": "variable-read",
+      "name": "StartThreshold",
+      "comment": "Process cut-in threshold (default 35.0 PSI / %). Triggers pump start demand in automatic mode."
+    },
+    {
+      "id": "rd_stop_thresh",
+      "type": "variable-read",
+      "name": "StopThreshold",
+      "comment": "Process cut-out threshold (default 55.0 PSI / %). Clears pump start demand in automatic mode."
+    },
+    {
+      "id": "rd_sensor_min",
+      "type": "variable-read",
+      "name": "SensorMin",
+      "comment": "Sensor plausibility lower floor (0.0). Readings below indicate broken loop wire or short-to-ground fault."
+    },
+    {
+      "id": "rd_sensor_max",
+      "type": "variable-read",
+      "name": "SensorMax",
+      "comment": "Sensor plausibility upper ceiling (100.0). Readings above indicate over-range or open-circuit transducer fault."
+    },
+    {
+      "id": "rd_mode_down",
+      "type": "variable-read",
+      "name": "PumpDownMode",
+      "comment": "Operating direction selector: false = Pump-Up (pressure tank booster / well fill), true = Pump-Down (sump pit / tank drainage)."
+    },
+    {
+      "id": "cmp_sensor_low",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      },
+      "comment": "Checks if ProcessVariable < SensorMin (0.0) indicating sensor loop failure."
+    },
+    {
+      "id": "cmp_sensor_high",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      },
+      "comment": "Checks if ProcessVariable > SensorMax (100.0) indicating sensor over-range fault."
+    },
+    {
+      "id": "gate_sensor_fault",
+      "type": "or",
+      "comment": "Combines sensor high and low out-of-range diagnostics into a general sensor fault."
+    },
+    {
+      "id": "not_sensor_fault",
+      "type": "not",
+      "comment": "True when process variable reading is within valid, plausible calibration range."
+    },
+    {
+      "id": "cmp_press_start",
+      "type": "compare",
+      "properties": {
+        "operator": "<="
+      },
+      "comment": "Pump-Up/Pressure mode: True when ProcessVariable <= StartThreshold (35.0 PSI)."
+    },
+    {
+      "id": "cmp_press_stop",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Pump-Up/Pressure mode: True when ProcessVariable >= StopThreshold (55.0 PSI)."
+    },
+    {
+      "id": "cmp_sump_start",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Pump-Down/Sump mode: True when ProcessVariable >= StartThreshold (high level trigger)."
+    },
+    {
+      "id": "cmp_sump_stop",
+      "type": "compare",
+      "properties": {
+        "operator": "<="
+      },
+      "comment": "Pump-Down/Sump mode: True when ProcessVariable <= StopThreshold (low level cutoff)."
+    },
+    {
+      "id": "sel_start_cond",
+      "type": "select",
+      "properties": {
+        "type": "bool"
+      },
+      "comment": "Selects start comparator based on PumpDownMode (true = sump high level, false = pressure low)."
+    },
+    {
+      "id": "sel_stop_cond",
+      "type": "select",
+      "properties": {
+        "type": "bool"
+      },
+      "comment": "Selects stop comparator based on PumpDownMode (true = sump low level, false = pressure high)."
+    },
+    {
+      "id": "gate_demand_set",
+      "type": "and",
+      "comment": "Sets process demand latch when start threshold is met and sensor is healthy."
+    },
+    {
+      "id": "gate_demand_reset",
+      "type": "or",
+      "comment": "Resets process demand latch when stop threshold is reached or sensor faults."
+    },
+    {
+      "id": "latch_process_demand",
+      "type": "set-reset",
+      "comment": "Hysteresis latch maintaining pump demand throughout the deadband without chatter."
+    },
+    {
+      "id": "cmp_mode_conflict",
+      "type": "and",
+      "comment": "Detects invalid HOA switch contact failure (both AUTO and MANUAL active)."
+    },
+    {
+      "id": "not_mode_conflict",
+      "type": "not",
+      "comment": "True when HOA selector switch contacts are consistent and valid."
+    },
+    {
+      "id": "gate_auto_valid",
+      "type": "and",
+      "comment": "True when system is legitimately in AUTO operating mode."
+    },
+    {
+      "id": "gate_manual_valid",
+      "type": "and",
+      "comment": "True when system is legitimately in MANUAL operating mode."
+    },
+    {
+      "id": "gate_auto_demand",
+      "type": "and",
+      "comment": "True when in AUTO mode AND process hysteresis demand is active."
+    },
+    {
+      "id": "gate_manual_run_cmd",
+      "type": "and",
+      "comment": "True when in MANUAL mode AND manual start command is energized."
+    },
+    {
+      "id": "gate_demand_active",
+      "type": "or",
+      "comment": "Master pump demand active (either from automatic closed loop or manual run)."
+    },
+    {
+      "id": "gate_raw_faults",
+      "type": "or",
+      "comment": "True if either dry-run or motor overload fault contact is tripped."
+    },
+    {
+      "id": "gate_any_fault",
+      "type": "or",
+      "comment": "Combines dry-run, overload, and sensor out-of-range faults."
+    },
+    {
+      "id": "latch_alarm",
+      "type": "set-reset",
+      "comment": "Latches critical alarm state upon any fault; requires operator reset button to clear."
+    },
+    {
+      "id": "not_alarm",
+      "type": "not",
+      "comment": "True when no latched alarm is present."
+    },
+    {
+      "id": "not_any_fault",
+      "type": "not",
+      "comment": "True when no active physical fault is currently asserted."
+    },
+    {
+      "id": "gate_safety_ok",
+      "type": "and",
+      "comment": "Safety interlock: Permissive true only when alarm is cleared AND no fault is present."
+    },
+    {
+      "id": "edge_demand_fall",
+      "type": "falling-edge",
+      "comment": "Detects falling edge of master demand when pump is commanded to stop."
+    },
+    {
+      "id": "timer_min_rest",
+      "type": "tof",
+      "properties": {
+        "presetTime": "5000"
+      },
+      "comment": "Anti-rapid-restart minimum rest off-delay timer (5.0s / 5000ms). Prevents starter wear and motor heat accumulation."
+    },
+    {
+      "id": "not_resting",
+      "type": "not",
+      "comment": "True when minimum rest time has satisfied, permitting a subsequent pump start."
+    },
+    {
+      "id": "gate_demand_permitted",
+      "type": "and",
+      "comment": "Demand gated by minimum rest timer. True when demand is active and pump is not resting."
+    },
+    {
+      "id": "edge_demand_rise",
+      "type": "rising-edge",
+      "comment": "Detects start transition to initiate minimum run timer window."
+    },
+    {
+      "id": "timer_min_run",
+      "type": "tof",
+      "properties": {
+        "presetTime": "5000"
+      },
+      "comment": "Minimum run time off-delay timer (5.0s / 5000ms). Extends short demand pulses to prevent short-cycling."
+    },
+    {
+      "id": "gate_run_active",
+      "type": "or",
+      "comment": "True while demand is permitted OR minimum run timer window is still elapsing."
+    },
+    {
+      "id": "gate_pump_final",
+      "type": "and",
+      "comment": "Final pump contactor command: Run active AND safety interlock OK (immediate fault cutoff)."
+    },
+    {
+      "id": "out_pump",
+      "type": "digital-output",
+      "name": "PumpContactor",
+      "comment": "Drives primary motor starter contactor relay (Opta RELAY1 / Pico GP20)."
+    },
+    {
+      "id": "out_alarm",
+      "type": "digital-output",
+      "name": "AlarmOutput",
+      "comment": "Drives general alarm strobe, buzzer, or annunciator (Opta RELAY2 / Pico GP21)."
+    },
+    {
+      "id": "out_running",
+      "type": "digital-output",
+      "name": "PumpRunningOutput",
+      "comment": "Drives pump running status indicator lamp (Opta RELAY3 / Pico GP22)."
+    },
+    {
+      "id": "out_auto",
+      "type": "digital-output",
+      "name": "AutoModeOutput",
+      "comment": "Drives automatic mode indicator lamp / telemetry (Opta RELAY4 / Pico GP27)."
+    }
+  ],
+  "connections": [
+    {
+      "from": { "node": "in_pv", "port": "value" },
+      "to": { "node": "cmp_sensor_low", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_sensor_min", "port": "value" },
+      "to": { "node": "cmp_sensor_low", "port": "b" }
+    },
+    {
+      "from": { "node": "in_pv", "port": "value" },
+      "to": { "node": "cmp_sensor_high", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_sensor_max", "port": "value" },
+      "to": { "node": "cmp_sensor_high", "port": "b" }
+    },
+    {
+      "from": { "node": "cmp_sensor_low", "port": "out" },
+      "to": { "node": "gate_sensor_fault", "port": "a" }
+    },
+    {
+      "from": { "node": "cmp_sensor_high", "port": "out" },
+      "to": { "node": "gate_sensor_fault", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_sensor_fault", "port": "out" },
+      "to": { "node": "not_sensor_fault", "port": "in" }
+    },
+    {
+      "from": { "node": "in_pv", "port": "value" },
+      "to": { "node": "cmp_press_start", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_start_thresh", "port": "value" },
+      "to": { "node": "cmp_press_start", "port": "b" }
+    },
+    {
+      "from": { "node": "in_pv", "port": "value" },
+      "to": { "node": "cmp_press_stop", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_stop_thresh", "port": "value" },
+      "to": { "node": "cmp_press_stop", "port": "b" }
+    },
+    {
+      "from": { "node": "in_pv", "port": "value" },
+      "to": { "node": "cmp_sump_start", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_start_thresh", "port": "value" },
+      "to": { "node": "cmp_sump_start", "port": "b" }
+    },
+    {
+      "from": { "node": "in_pv", "port": "value" },
+      "to": { "node": "cmp_sump_stop", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_stop_thresh", "port": "value" },
+      "to": { "node": "cmp_sump_stop", "port": "b" }
+    },
+    {
+      "from": { "node": "rd_mode_down", "port": "value" },
+      "to": { "node": "sel_start_cond", "port": "cond" }
+    },
+    {
+      "from": { "node": "cmp_sump_start", "port": "out" },
+      "to": { "node": "sel_start_cond", "port": "whenTrue" }
+    },
+    {
+      "from": { "node": "cmp_press_start", "port": "out" },
+      "to": { "node": "sel_start_cond", "port": "whenFalse" }
+    },
+    {
+      "from": { "node": "rd_mode_down", "port": "value" },
+      "to": { "node": "sel_stop_cond", "port": "cond" }
+    },
+    {
+      "from": { "node": "cmp_sump_stop", "port": "out" },
+      "to": { "node": "sel_stop_cond", "port": "whenTrue" }
+    },
+    {
+      "from": { "node": "cmp_press_stop", "port": "out" },
+      "to": { "node": "sel_stop_cond", "port": "whenFalse" }
+    },
+    {
+      "from": { "node": "sel_start_cond", "port": "out" },
+      "to": { "node": "gate_demand_set", "port": "a" }
+    },
+    {
+      "from": { "node": "not_sensor_fault", "port": "out" },
+      "to": { "node": "gate_demand_set", "port": "b" }
+    },
+    {
+      "from": { "node": "sel_stop_cond", "port": "out" },
+      "to": { "node": "gate_demand_reset", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_sensor_fault", "port": "out" },
+      "to": { "node": "gate_demand_reset", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_demand_set", "port": "out" },
+      "to": { "node": "latch_process_demand", "port": "S" }
+    },
+    {
+      "from": { "node": "gate_demand_reset", "port": "out" },
+      "to": { "node": "latch_process_demand", "port": "R" }
+    },
+    {
+      "from": { "node": "in_auto", "port": "value" },
+      "to": { "node": "cmp_mode_conflict", "port": "a" }
+    },
+    {
+      "from": { "node": "in_manual", "port": "value" },
+      "to": { "node": "cmp_mode_conflict", "port": "b" }
+    },
+    {
+      "from": { "node": "cmp_mode_conflict", "port": "out" },
+      "to": { "node": "not_mode_conflict", "port": "in" }
+    },
+    {
+      "from": { "node": "in_auto", "port": "value" },
+      "to": { "node": "gate_auto_valid", "port": "a" }
+    },
+    {
+      "from": { "node": "not_mode_conflict", "port": "out" },
+      "to": { "node": "gate_auto_valid", "port": "b" }
+    },
+    {
+      "from": { "node": "in_manual", "port": "value" },
+      "to": { "node": "gate_manual_valid", "port": "a" }
+    },
+    {
+      "from": { "node": "not_mode_conflict", "port": "out" },
+      "to": { "node": "gate_manual_valid", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_auto_valid", "port": "out" },
+      "to": { "node": "gate_auto_demand", "port": "a" }
+    },
+    {
+      "from": { "node": "latch_process_demand", "port": "Q" },
+      "to": { "node": "gate_auto_demand", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_manual_valid", "port": "out" },
+      "to": { "node": "gate_manual_run_cmd", "port": "a" }
+    },
+    {
+      "from": { "node": "in_manual_start", "port": "value" },
+      "to": { "node": "gate_manual_run_cmd", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_auto_demand", "port": "out" },
+      "to": { "node": "gate_demand_active", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_manual_run_cmd", "port": "out" },
+      "to": { "node": "gate_demand_active", "port": "b" }
+    },
+    {
+      "from": { "node": "in_dry_run", "port": "value" },
+      "to": { "node": "gate_raw_faults", "port": "a" }
+    },
+    {
+      "from": { "node": "in_overload", "port": "value" },
+      "to": { "node": "gate_raw_faults", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_raw_faults", "port": "out" },
+      "to": { "node": "gate_any_fault", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_sensor_fault", "port": "out" },
+      "to": { "node": "gate_any_fault", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_any_fault", "port": "out" },
+      "to": { "node": "latch_alarm", "port": "S" }
+    },
+    {
+      "from": { "node": "in_reset", "port": "value" },
+      "to": { "node": "latch_alarm", "port": "R" }
+    },
+    {
+      "from": { "node": "latch_alarm", "port": "Q" },
+      "to": { "node": "not_alarm", "port": "in" }
+    },
+    {
+      "from": { "node": "gate_any_fault", "port": "out" },
+      "to": { "node": "not_any_fault", "port": "in" }
+    },
+    {
+      "from": { "node": "not_alarm", "port": "out" },
+      "to": { "node": "gate_safety_ok", "port": "a" }
+    },
+    {
+      "from": { "node": "not_any_fault", "port": "out" },
+      "to": { "node": "gate_safety_ok", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_demand_active", "port": "out" },
+      "to": { "node": "edge_demand_fall", "port": "IN" }
+    },
+    {
+      "from": { "node": "edge_demand_fall", "port": "Q" },
+      "to": { "node": "timer_min_rest", "port": "IN" }
+    },
+    {
+      "from": { "node": "timer_min_rest", "port": "Q" },
+      "to": { "node": "not_resting", "port": "in" }
+    },
+    {
+      "from": { "node": "gate_demand_active", "port": "out" },
+      "to": { "node": "gate_demand_permitted", "port": "a" }
+    },
+    {
+      "from": { "node": "not_resting", "port": "out" },
+      "to": { "node": "gate_demand_permitted", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_demand_permitted", "port": "out" },
+      "to": { "node": "edge_demand_rise", "port": "IN" }
+    },
+    {
+      "from": { "node": "edge_demand_rise", "port": "Q" },
+      "to": { "node": "timer_min_run", "port": "IN" }
+    },
+    {
+      "from": { "node": "gate_demand_permitted", "port": "out" },
+      "to": { "node": "gate_run_active", "port": "a" }
+    },
+    {
+      "from": { "node": "timer_min_run", "port": "Q" },
+      "to": { "node": "gate_run_active", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_run_active", "port": "out" },
+      "to": { "node": "gate_pump_final", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_safety_ok", "port": "out" },
+      "to": { "node": "gate_pump_final", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_pump_final", "port": "out" },
+      "to": { "node": "out_pump", "port": "value" }
+    },
+    {
+      "from": { "node": "latch_alarm", "port": "Q" },
+      "to": { "node": "out_alarm", "port": "value" }
+    },
+    {
+      "from": { "node": "gate_pump_final", "port": "out" },
+      "to": { "node": "out_running", "port": "value" }
+    },
+    {
+      "from": { "node": "gate_auto_valid", "port": "out" },
+      "to": { "node": "out_auto", "port": "value" }
+    }
+  ],
+  "variables": [
+    {
+      "name": "StartThreshold",
+      "type": "float32",
+      "initial": "35.0"
+    },
+    {
+      "name": "StopThreshold",
+      "type": "float32",
+      "initial": "55.0"
+    },
+    {
+      "name": "SensorMin",
+      "type": "float32",
+      "initial": "0.0"
+    },
+    {
+      "name": "SensorMax",
+      "type": "float32",
+      "initial": "100.0"
+    },
+    {
+      "name": "PumpDownMode",
+      "type": "bool",
+      "initial": "false"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "ProcessVariable",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "AutoSwitch",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ManualSwitch",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "ManualStart",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "DryRunFault",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "OverloadFault",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "AlarmReset",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "PumpContactor",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "AlarmOutput",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "PumpRunningOutput",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "AutoModeOutput",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_pv": { "x": 40, "y": 40 },
+      "in_auto": { "x": 40, "y": 120 },
+      "in_manual": { "x": 40, "y": 200 },
+      "in_manual_start": { "x": 40, "y": 280 },
+      "in_dry_run": { "x": 40, "y": 360 },
+      "in_overload": { "x": 40, "y": 440 },
+      "in_reset": { "x": 40, "y": 520 },
+      "rd_start_thresh": { "x": 40, "y": 600 },
+      "rd_stop_thresh": { "x": 40, "y": 680 },
+      "rd_sensor_min": { "x": 40, "y": 760 },
+      "rd_sensor_max": { "x": 40, "y": 840 },
+      "rd_mode_down": { "x": 40, "y": 920 },
+      "cmp_sensor_low": { "x": 260, "y": 760 },
+      "cmp_sensor_high": { "x": 260, "y": 840 },
+      "gate_sensor_fault": { "x": 480, "y": 800 },
+      "not_sensor_fault": { "x": 700, "y": 800 },
+      "cmp_press_start": { "x": 260, "y": 600 },
+      "cmp_press_stop": { "x": 260, "y": 680 },
+      "cmp_sump_start": { "x": 260, "y": 480 },
+      "cmp_sump_stop": { "x": 260, "y": 560 },
+      "sel_start_cond": { "x": 480, "y": 540 },
+      "sel_stop_cond": { "x": 480, "y": 640 },
+      "gate_demand_set": { "x": 700, "y": 540 },
+      "gate_demand_reset": { "x": 700, "y": 640 },
+      "latch_process_demand": { "x": 920, "y": 590 },
+      "cmp_mode_conflict": { "x": 260, "y": 160 },
+      "not_mode_conflict": { "x": 480, "y": 160 },
+      "gate_auto_valid": { "x": 700, "y": 120 },
+      "gate_manual_valid": { "x": 700, "y": 200 },
+      "gate_auto_demand": { "x": 920, "y": 120 },
+      "gate_manual_run_cmd": { "x": 920, "y": 240 },
+      "gate_demand_active": { "x": 1140, "y": 180 },
+      "gate_raw_faults": { "x": 260, "y": 400 },
+      "gate_any_fault": { "x": 480, "y": 400 },
+      "latch_alarm": { "x": 700, "y": 400 },
+      "not_alarm": { "x": 920, "y": 400 },
+      "not_any_fault": { "x": 920, "y": 480 },
+      "gate_safety_ok": { "x": 1140, "y": 440 },
+      "edge_demand_fall": { "x": 1360, "y": 120 },
+      "timer_min_rest": { "x": 1580, "y": 120 },
+      "not_resting": { "x": 1800, "y": 120 },
+      "gate_demand_permitted": { "x": 1360, "y": 240 },
+      "edge_demand_rise": { "x": 1580, "y": 240 },
+      "timer_min_run": { "x": 1800, "y": 240 },
+      "gate_run_active": { "x": 2020, "y": 240 },
+      "gate_pump_final": { "x": 2240, "y": 340 },
+      "out_pump": { "x": 2460, "y": 340 },
+      "out_alarm": { "x": 2460, "y": 420 },
+      "out_running": { "x": 2460, "y": 500 },
+      "out_auto": { "x": 2460, "y": 580 }
+    }
+  }
+}

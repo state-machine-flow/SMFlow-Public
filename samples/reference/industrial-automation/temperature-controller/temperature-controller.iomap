@@ -1,0 +1,36 @@
+{
+  "formatVersion": 1,
+  "project": "temperature-controller",
+  "bindings": {
+    "opta": {
+      "ProcessTemperature": "I1",
+      "EnableSwitch": "I2",
+      "CoolingMode": "I3",
+      "AlarmReset": "I4",
+      "HeaterOutput": "RELAY1",
+      "CoolerOutput": "RELAY2",
+      "AlarmOutput": "RELAY3",
+      "ActiveOutput": "RELAY4"
+    },
+    "rp2040-pico": {
+      "ProcessTemperature": "GP26",
+      "EnableSwitch": "GP14",
+      "CoolingMode": "GP15",
+      "AlarmReset": "GP16",
+      "HeaterOutput": "GP20",
+      "CoolerOutput": "GP21",
+      "AlarmOutput": "GP22",
+      "ActiveOutput": "GP27"
+    },
+    "simulator": {
+      "ProcessTemperature": "virtual.ProcessTemperature",
+      "EnableSwitch": "virtual.EnableSwitch",
+      "CoolingMode": "virtual.CoolingMode",
+      "AlarmReset": "virtual.AlarmReset",
+      "HeaterOutput": "virtual.HeaterOutput",
+      "CoolerOutput": "virtual.CoolerOutput",
+      "AlarmOutput": "virtual.AlarmOutput",
+      "ActiveOutput": "virtual.ActiveOutput"
+    }
+  }
+}

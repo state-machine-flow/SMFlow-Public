@@ -1,0 +1,324 @@
+test "all outputs de-energized when enable switch is open"
+
+Given:
+    EnableSwitch = false
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 25.0
+
+When:
+    execute 1 cycle
+
+Then:
+    HeaterOutput == false
+    CoolerOutput == false
+    AlarmOutput == false
+    ActiveOutput == false
+
+test "startup delay holds thermal outputs off during 3-second stabilization window"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 50.0
+
+When:
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    ActiveOutput == false
+    HeaterOutput == false
+    CoolerOutput == false
+    AlarmOutput == false
+
+test "startup delay completes and arms controller after 3000ms"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 50.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+
+Then:
+    ActiveOutput == true
+    HeaterOutput == true
+    CoolerOutput == false
+    AlarmOutput == false
+
+test "heating mode cut-in energizes heater when temperature drops below 58C"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 55.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+
+Then:
+    HeaterOutput == true
+    CoolerOutput == false
+    ActiveOutput == true
+
+test "heating hysteresis holds heater on as temperature rises through 59C deadband"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 55.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 59.0
+    execute 1 cycle
+
+Then:
+    HeaterOutput == true
+    CoolerOutput == false
+
+test "heating cut-out turns heater off when reaching 60C setpoint"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 55.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 60.5
+    execute 1 cycle
+
+Then:
+    HeaterOutput == false
+
+test "post-heat cooldown sequence operates exhaust fan for 5 seconds after heater shuts off"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 55.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 60.5
+    execute 1 cycle
+
+Then:
+    HeaterOutput == false
+    CoolerOutput == true
+
+test "exhaust fan stops after 5-second cooldown delay expires"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 55.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 60.5
+    execute 1 cycle
+    advance 5100 ms
+    execute 1 cycle
+
+Then:
+    HeaterOutput == false
+    CoolerOutput == false
+
+test "cooling mode cut-in energizes cooler fan when temperature reaches 65C"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = true
+    AlarmReset = false
+    ProcessTemperature = 66.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+
+Then:
+    CoolerOutput == true
+    HeaterOutput == false
+    ActiveOutput == true
+
+test "cooling hysteresis holds cooler on as temperature drops through 62C deadband"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = true
+    AlarmReset = false
+    ProcessTemperature = 66.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 62.0
+    execute 1 cycle
+
+Then:
+    CoolerOutput == true
+    HeaterOutput == false
+
+test "cooling cut-out stops cooler fan when temperature reaches 60C setpoint"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = true
+    AlarmReset = false
+    ProcessTemperature = 66.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 59.5
+    execute 1 cycle
+
+Then:
+    CoolerOutput == false
+    HeaterOutput == false
+
+test "emergency over-temperature trips alarm, shuts heater off, and forces cooler fan on"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 55.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 92.0
+    execute 1 cycle
+
+Then:
+    AlarmOutput == true
+    HeaterOutput == false
+    CoolerOutput == true
+
+test "alarm remains latched after temperature drops back below over-temperature threshold"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 92.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 50.0
+    execute 1 cycle
+
+Then:
+    AlarmOutput == true
+    HeaterOutput == false
+
+test "alarm cannot be cleared while over-temperature condition persists (set-dominant)"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 92.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    AlarmReset = true
+    execute 1 cycle
+
+Then:
+    AlarmOutput == true
+    HeaterOutput == false
+
+test "alarm clears and heater resumes when reset button pressed after temperature normalizes"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 92.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    ProcessTemperature = 55.0
+    execute 1 cycle
+    AlarmReset = true
+    execute 1 cycle
+    AlarmReset = false
+    execute 1 cycle
+
+Then:
+    AlarmOutput == false
+    HeaterOutput == true
+
+test "sensor low plausibility fault trips alarm and prevents heater activation"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = -15.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+
+Then:
+    AlarmOutput == true
+    HeaterOutput == false
+    CoolerOutput == false
+
+test "sensor high plausibility fault trips alarm and shuts off heater"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 160.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+
+Then:
+    AlarmOutput == true
+    HeaterOutput == false
+
+test "opening enable switch de-energizes thermal outputs and clears armed indicator"
+
+Given:
+    EnableSwitch = true
+    CoolingMode = false
+    AlarmReset = false
+    ProcessTemperature = 55.0
+
+When:
+    advance 3100 ms
+    execute 1 cycle
+    EnableSwitch = false
+    execute 1 cycle
+
+Then:
+    ActiveOutput == false
+    HeaterOutput == false

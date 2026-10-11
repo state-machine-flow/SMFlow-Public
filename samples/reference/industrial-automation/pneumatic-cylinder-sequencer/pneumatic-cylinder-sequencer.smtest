@@ -1,0 +1,399 @@
+test "idle state at home: all solenoids de-energized, ready for start"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == false
+    InCycleOutput == false
+    AlarmOutput == false
+
+test "pressing start from home initiates extend phase"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == true
+    RetractSolenoid == false
+    InCycleOutput == true
+    AlarmOutput == false
+
+test "cylinder traveling away from home maintains extend phase"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == true
+    RetractSolenoid == false
+    InCycleOutput == true
+    AlarmOutput == false
+
+test "reaching extended sensor terminates extend stage and enters dwell phase"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    ExtendedSensor = true
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == true
+    RetractSolenoid == false
+    InCycleOutput == true
+    AlarmOutput == false
+
+test "dwell timer completion transitions to retract phase"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    ExtendedSensor = true
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == true
+    InCycleOutput == true
+    AlarmOutput == false
+
+test "cylinder retracting away from extended position maintains retract phase"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    ExtendedSensor = true
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+    ExtendedSensor = false
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == true
+    InCycleOutput == true
+    AlarmOutput == false
+
+test "reaching home sensor completes sequence and turns off all solenoids"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    ExtendedSensor = true
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+    ExtendedSensor = false
+    execute 1 cycle
+    RetractedSensor = true
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == false
+    InCycleOutput == false
+    AlarmOutput == false
+
+test "start button ignored if cylinder is not at home position"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = false
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == false
+    InCycleOutput == false
+    AlarmOutput == false
+
+test "extend timeout trips jam alarm and aborts motion"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == false
+    AlarmOutput == true
+
+test "retract timeout trips jam alarm and aborts motion"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    ExtendedSensor = true
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+    ExtendedSensor = false
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == false
+    AlarmOutput == true
+
+test "alarm remains latched until reset button is pressed"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+    RetractedSensor = true
+    execute 1 cycle
+
+Then:
+    AlarmOutput == true
+    ExtendSolenoid == false
+
+test "reset button clears latched jam alarm after problem is resolved"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    advance 3000 ms
+    execute 1 cycle
+    ResetButton = true
+    execute 1 cycle
+    ResetButton = false
+    RetractedSensor = true
+    execute 1 cycle
+
+Then:
+    AlarmOutput == false
+    ExtendSolenoid == false
+
+test "simultaneous sensor activation trips sensor conflict fault"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = true
+
+When:
+    execute 1 cycle
+
+Then:
+    AlarmOutput == true
+    ExtendSolenoid == false
+    RetractSolenoid == false
+
+test "reset button cannot clear alarm while sensor conflict remains active"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = true
+
+When:
+    execute 1 cycle
+    ResetButton = true
+    execute 1 cycle
+
+Then:
+    AlarmOutput == true
+
+test "stop button aborts extend phase immediately"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    StopButton = true
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == false
+    InCycleOutput == false
+
+test "stop button aborts dwell phase immediately"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    ExtendedSensor = true
+    execute 1 cycle
+    StopButton = true
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == false
+    InCycleOutput == false
+
+test "stop button aborts retract phase immediately"
+
+Given:
+    StartButton = false
+    StopButton = false
+    ResetButton = false
+    RetractedSensor = true
+    ExtendedSensor = false
+
+When:
+    StartButton = true
+    execute 1 cycle
+    StartButton = false
+    RetractedSensor = false
+    execute 1 cycle
+    ExtendedSensor = true
+    execute 1 cycle
+    advance 2000 ms
+    execute 1 cycle
+    ExtendedSensor = false
+    execute 1 cycle
+    StopButton = true
+    execute 1 cycle
+
+Then:
+    ExtendSolenoid == false
+    RetractSolenoid == false
+    InCycleOutput == false

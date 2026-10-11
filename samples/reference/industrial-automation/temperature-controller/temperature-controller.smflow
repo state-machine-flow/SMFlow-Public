@@ -1,0 +1,708 @@
+{
+  "formatVersion": 5,
+  "name": "temperature-controller",
+  "targets": [
+    "opta",
+    "rp2040-pico",
+    "simulator"
+  ],
+  "tasks": [
+    {
+      "name": "Main",
+      "periodMs": 10
+    }
+  ],
+  "nodes": [
+    {
+      "id": "in_temp",
+      "type": "analog-input",
+      "name": "ProcessTemperature",
+      "comment": "Process temperature in °C sensed via RTD (PT100/PT1000), thermocouple transmitter, or thermistor interface."
+    },
+    {
+      "id": "in_enable",
+      "type": "digital-input",
+      "name": "EnableSwitch",
+      "comment": "Master control enable switch. True activates thermal regulation after startup delay."
+    },
+    {
+      "id": "in_cool_mode",
+      "type": "digital-input",
+      "name": "CoolingMode",
+      "comment": "Mode selector switch: false = Heating Mode (heater active), true = Cooling Mode (cooler fan active)."
+    },
+    {
+      "id": "in_reset",
+      "type": "digital-input",
+      "name": "AlarmReset",
+      "comment": "Operator panel alarm reset pushbutton. True clears latched over-temperature or sensor fault alarms."
+    },
+    {
+      "id": "rd_heat_on",
+      "type": "variable-read",
+      "name": "HeatOnTemp",
+      "comment": "Heating cut-in threshold (58.0°C). Heater turns ON when temperature falls below this setpoint."
+    },
+    {
+      "id": "rd_heat_off",
+      "type": "variable-read",
+      "name": "HeatOffTemp",
+      "comment": "Heating cut-out threshold (60.0°C). Heater turns OFF when temperature reaches target (2.0°C deadband)."
+    },
+    {
+      "id": "rd_cool_on",
+      "type": "variable-read",
+      "name": "CoolOnTemp",
+      "comment": "Cooling cut-in threshold (65.0°C). Cooler/Fan turns ON when temperature exceeds this setpoint."
+    },
+    {
+      "id": "rd_cool_off",
+      "type": "variable-read",
+      "name": "CoolOffTemp",
+      "comment": "Cooling cut-out threshold (60.0°C). Cooler/Fan turns OFF when temperature reaches target (5.0°C deadband)."
+    },
+    {
+      "id": "rd_over_temp",
+      "type": "variable-read",
+      "name": "OverTempLimit",
+      "comment": "Critical high-temperature alarm limit (90.0°C). Trips safety alarm, kills heater, and forces cooler fan on."
+    },
+    {
+      "id": "rd_sensor_min",
+      "type": "variable-read",
+      "name": "SensorMin",
+      "comment": "Lower sensor plausibility limit (-10.0°C). Readings below indicate shorted sensor wiring."
+    },
+    {
+      "id": "rd_sensor_max",
+      "type": "variable-read",
+      "name": "SensorMax",
+      "comment": "Upper sensor plausibility limit (150.0°C). Readings above indicate open thermocouple / broken lead wire."
+    },
+    {
+      "id": "timer_startup",
+      "type": "ton",
+      "properties": {
+        "presetTime": "3000"
+      },
+      "comment": "Startup delay timer (3.0s). Stabilizes sensor readings and power supplies before arming thermal outputs."
+    },
+    {
+      "id": "gate_control_armed",
+      "type": "and",
+      "comment": "True when EnableSwitch is ON and the 3.0s startup delay window has completed."
+    },
+    {
+      "id": "cmp_sensor_low",
+      "type": "compare",
+      "properties": {
+        "operator": "<"
+      },
+      "comment": "Checks if ProcessTemperature < SensorMin (-10.0°C) indicating sensor short-circuit fault."
+    },
+    {
+      "id": "cmp_sensor_high",
+      "type": "compare",
+      "properties": {
+        "operator": ">"
+      },
+      "comment": "Checks if ProcessTemperature > SensorMax (150.0°C) indicating broken sensor lead wire."
+    },
+    {
+      "id": "gate_sensor_fault",
+      "type": "or",
+      "comment": "Combines sensor high and low plausibility faults into general sensor failure flag."
+    },
+    {
+      "id": "not_sensor_fault",
+      "type": "not",
+      "comment": "True when temperature sensor reading is valid and plausible."
+    },
+    {
+      "id": "cmp_over_temp",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Checks if ProcessTemperature >= OverTempLimit (90.0°C) for emergency over-temperature trip."
+    },
+    {
+      "id": "gate_any_fault",
+      "type": "or",
+      "comment": "Consolidates sensor plausibility failures and critical over-temperature condition."
+    },
+    {
+      "id": "latch_alarm",
+      "type": "set-reset",
+      "comment": "Master safety alarm latch: trips on any fault, latches until operator presses AlarmReset."
+    },
+    {
+      "id": "not_alarm",
+      "type": "not",
+      "comment": "True when no safety alarm is latched."
+    },
+    {
+      "id": "not_any_fault",
+      "type": "not",
+      "comment": "True when no physical fault condition is currently active."
+    },
+    {
+      "id": "gate_safety_ok",
+      "type": "and",
+      "comment": "Safety permissive: permits heater and normal thermal regulation only when system is healthy."
+    },
+    {
+      "id": "cmp_heat_on",
+      "type": "compare",
+      "properties": {
+        "operator": "<="
+      },
+      "comment": "Heating mode: True when ProcessTemperature <= HeatOnTemp (58.0°C) to set heating demand."
+    },
+    {
+      "id": "cmp_heat_off",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Heating mode: True when ProcessTemperature >= HeatOffTemp (60.0°C) to reset heating demand."
+    },
+    {
+      "id": "gate_heat_set",
+      "type": "and",
+      "comment": "Sets heating latch when temperature falls to cut-in and sensor is healthy."
+    },
+    {
+      "id": "gate_heat_reset",
+      "type": "or",
+      "comment": "Resets heating latch when temperature reaches cut-out or safety fault occurs."
+    },
+    {
+      "id": "latch_heat",
+      "type": "set-reset",
+      "comment": "Heating hysteresis latch: maintains heater demand throughout 58.0°C–60.0°C deadband without chatter."
+    },
+    {
+      "id": "cmp_cool_on",
+      "type": "compare",
+      "properties": {
+        "operator": ">="
+      },
+      "comment": "Cooling mode: True when ProcessTemperature >= CoolOnTemp (65.0°C) to set cooling demand."
+    },
+    {
+      "id": "cmp_cool_off",
+      "type": "compare",
+      "properties": {
+        "operator": "<="
+      },
+      "comment": "Cooling mode: True when ProcessTemperature <= CoolOffTemp (60.0°C) to reset cooling demand."
+    },
+    {
+      "id": "gate_cool_set",
+      "type": "and",
+      "comment": "Sets cooling latch when temperature rises to cut-in and sensor is healthy."
+    },
+    {
+      "id": "gate_cool_reset",
+      "type": "or",
+      "comment": "Resets cooling latch when temperature falls to cut-out or safety fault occurs."
+    },
+    {
+      "id": "latch_cool",
+      "type": "set-reset",
+      "comment": "Cooling hysteresis latch: maintains cooling fan demand throughout 65.0°C–60.0°C deadband without chatter."
+    },
+    {
+      "id": "not_cooling_mode",
+      "type": "not",
+      "comment": "Inverts CoolingMode switch; true when Heating Mode is active."
+    },
+    {
+      "id": "gate_heat_mode_demand",
+      "type": "and",
+      "comment": "Heating demand enabled when in Heating Mode."
+    },
+    {
+      "id": "gate_cool_mode_demand",
+      "type": "and",
+      "comment": "Cooling demand enabled when in Cooling Mode."
+    },
+    {
+      "id": "gate_heat_run",
+      "type": "and",
+      "comment": "Heater commanded to run: heating demand active and controller armed."
+    },
+    {
+      "id": "gate_cool_run",
+      "type": "and",
+      "comment": "Cooler commanded to run: cooling demand active and controller armed."
+    },
+    {
+      "id": "timer_cooldown",
+      "type": "tof",
+      "properties": {
+        "presetTime": "5000"
+      },
+      "comment": "Post-run cooldown off-delay timer (5.0s). Preserves exhaust fan operation to dissipate residual heater thermal mass."
+    },
+    {
+      "id": "not_heating",
+      "type": "not",
+      "comment": "True when heater run command is inactive."
+    },
+    {
+      "id": "gate_cooldown_active",
+      "type": "and",
+      "comment": "Cooldown sequence active: exhaust fan runs for 5.0s after heater turns off."
+    },
+    {
+      "id": "gate_heater_final",
+      "type": "and",
+      "comment": "Final heater command: gated by safety permissive interlock (immediate fault cutoff)."
+    },
+    {
+      "id": "gate_cool_or_cooldown",
+      "type": "or",
+      "comment": "Combines closed-loop cooling mode demand and post-heat cooldown exhaust sequence."
+    },
+    {
+      "id": "gate_cooler_total",
+      "type": "or",
+      "comment": "Combines normal cooling/cooldown with emergency over-temperature purge override."
+    },
+    {
+      "id": "not_heater",
+      "type": "not",
+      "comment": "Inverts heater command to ensure electrical interlock against simultaneous heating and cooling."
+    },
+    {
+      "id": "gate_cooler_final",
+      "type": "and",
+      "comment": "Final cooler fan command: interlocked to prevent energizing while heater is powered."
+    },
+    {
+      "id": "out_heater",
+      "type": "digital-output",
+      "name": "HeaterOutput",
+      "comment": "Drives heater SSR or power contactor relay (Opta RELAY1 / Pico GP20)."
+    },
+    {
+      "id": "out_cooler",
+      "type": "digital-output",
+      "name": "CoolerOutput",
+      "comment": "Drives cooling fan / chiller solenoid relay (Opta RELAY2 / Pico GP21)."
+    },
+    {
+      "id": "out_alarm",
+      "type": "digital-output",
+      "name": "AlarmOutput",
+      "comment": "Drives over-temperature / sensor fault alarm strobe or annunciator (Opta RELAY3 / Pico GP22)."
+    },
+    {
+      "id": "out_active",
+      "type": "digital-output",
+      "name": "ActiveOutput",
+      "comment": "Drives armed / running status indicator lamp (Opta RELAY4 / Pico GP27)."
+    }
+  ],
+  "connections": [
+    {
+      "from": { "node": "in_enable", "port": "value" },
+      "to": { "node": "timer_startup", "port": "IN" }
+    },
+    {
+      "from": { "node": "in_enable", "port": "value" },
+      "to": { "node": "gate_control_armed", "port": "a" }
+    },
+    {
+      "from": { "node": "timer_startup", "port": "Q" },
+      "to": { "node": "gate_control_armed", "port": "b" }
+    },
+    {
+      "from": { "node": "in_temp", "port": "value" },
+      "to": { "node": "cmp_sensor_low", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_sensor_min", "port": "value" },
+      "to": { "node": "cmp_sensor_low", "port": "b" }
+    },
+    {
+      "from": { "node": "in_temp", "port": "value" },
+      "to": { "node": "cmp_sensor_high", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_sensor_max", "port": "value" },
+      "to": { "node": "cmp_sensor_high", "port": "b" }
+    },
+    {
+      "from": { "node": "cmp_sensor_low", "port": "out" },
+      "to": { "node": "gate_sensor_fault", "port": "a" }
+    },
+    {
+      "from": { "node": "cmp_sensor_high", "port": "out" },
+      "to": { "node": "gate_sensor_fault", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_sensor_fault", "port": "out" },
+      "to": { "node": "not_sensor_fault", "port": "in" }
+    },
+    {
+      "from": { "node": "in_temp", "port": "value" },
+      "to": { "node": "cmp_over_temp", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_over_temp", "port": "value" },
+      "to": { "node": "cmp_over_temp", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_sensor_fault", "port": "out" },
+      "to": { "node": "gate_any_fault", "port": "a" }
+    },
+    {
+      "from": { "node": "cmp_over_temp", "port": "out" },
+      "to": { "node": "gate_any_fault", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_any_fault", "port": "out" },
+      "to": { "node": "latch_alarm", "port": "S" }
+    },
+    {
+      "from": { "node": "in_reset", "port": "value" },
+      "to": { "node": "latch_alarm", "port": "R" }
+    },
+    {
+      "from": { "node": "latch_alarm", "port": "Q" },
+      "to": { "node": "not_alarm", "port": "in" }
+    },
+    {
+      "from": { "node": "gate_any_fault", "port": "out" },
+      "to": { "node": "not_any_fault", "port": "in" }
+    },
+    {
+      "from": { "node": "not_alarm", "port": "out" },
+      "to": { "node": "gate_safety_ok", "port": "a" }
+    },
+    {
+      "from": { "node": "not_any_fault", "port": "out" },
+      "to": { "node": "gate_safety_ok", "port": "b" }
+    },
+    {
+      "from": { "node": "in_temp", "port": "value" },
+      "to": { "node": "cmp_heat_on", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_heat_on", "port": "value" },
+      "to": { "node": "cmp_heat_on", "port": "b" }
+    },
+    {
+      "from": { "node": "in_temp", "port": "value" },
+      "to": { "node": "cmp_heat_off", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_heat_off", "port": "value" },
+      "to": { "node": "cmp_heat_off", "port": "b" }
+    },
+    {
+      "from": { "node": "cmp_heat_on", "port": "out" },
+      "to": { "node": "gate_heat_set", "port": "a" }
+    },
+    {
+      "from": { "node": "not_sensor_fault", "port": "out" },
+      "to": { "node": "gate_heat_set", "port": "b" }
+    },
+    {
+      "from": { "node": "cmp_heat_off", "port": "out" },
+      "to": { "node": "gate_heat_reset", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_any_fault", "port": "out" },
+      "to": { "node": "gate_heat_reset", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_heat_set", "port": "out" },
+      "to": { "node": "latch_heat", "port": "S" }
+    },
+    {
+      "from": { "node": "gate_heat_reset", "port": "out" },
+      "to": { "node": "latch_heat", "port": "R" }
+    },
+    {
+      "from": { "node": "in_temp", "port": "value" },
+      "to": { "node": "cmp_cool_on", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_cool_on", "port": "value" },
+      "to": { "node": "cmp_cool_on", "port": "b" }
+    },
+    {
+      "from": { "node": "in_temp", "port": "value" },
+      "to": { "node": "cmp_cool_off", "port": "a" }
+    },
+    {
+      "from": { "node": "rd_cool_off", "port": "value" },
+      "to": { "node": "cmp_cool_off", "port": "b" }
+    },
+    {
+      "from": { "node": "cmp_cool_on", "port": "out" },
+      "to": { "node": "gate_cool_set", "port": "a" }
+    },
+    {
+      "from": { "node": "not_sensor_fault", "port": "out" },
+      "to": { "node": "gate_cool_set", "port": "b" }
+    },
+    {
+      "from": { "node": "cmp_cool_off", "port": "out" },
+      "to": { "node": "gate_cool_reset", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_any_fault", "port": "out" },
+      "to": { "node": "gate_cool_reset", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_cool_set", "port": "out" },
+      "to": { "node": "latch_cool", "port": "S" }
+    },
+    {
+      "from": { "node": "gate_cool_reset", "port": "out" },
+      "to": { "node": "latch_cool", "port": "R" }
+    },
+    {
+      "from": { "node": "in_cool_mode", "port": "value" },
+      "to": { "node": "not_cooling_mode", "port": "in" }
+    },
+    {
+      "from": { "node": "latch_heat", "port": "Q" },
+      "to": { "node": "gate_heat_mode_demand", "port": "a" }
+    },
+    {
+      "from": { "node": "not_cooling_mode", "port": "out" },
+      "to": { "node": "gate_heat_mode_demand", "port": "b" }
+    },
+    {
+      "from": { "node": "latch_cool", "port": "Q" },
+      "to": { "node": "gate_cool_mode_demand", "port": "a" }
+    },
+    {
+      "from": { "node": "in_cool_mode", "port": "value" },
+      "to": { "node": "gate_cool_mode_demand", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_heat_mode_demand", "port": "out" },
+      "to": { "node": "gate_heat_run", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_control_armed", "port": "out" },
+      "to": { "node": "gate_heat_run", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_cool_mode_demand", "port": "out" },
+      "to": { "node": "gate_cool_run", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_control_armed", "port": "out" },
+      "to": { "node": "gate_cool_run", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_heat_run", "port": "out" },
+      "to": { "node": "timer_cooldown", "port": "IN" }
+    },
+    {
+      "from": { "node": "gate_heat_run", "port": "out" },
+      "to": { "node": "not_heating", "port": "in" }
+    },
+    {
+      "from": { "node": "timer_cooldown", "port": "Q" },
+      "to": { "node": "gate_cooldown_active", "port": "a" }
+    },
+    {
+      "from": { "node": "not_heating", "port": "out" },
+      "to": { "node": "gate_cooldown_active", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_heat_run", "port": "out" },
+      "to": { "node": "gate_heater_final", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_safety_ok", "port": "out" },
+      "to": { "node": "gate_heater_final", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_cool_run", "port": "out" },
+      "to": { "node": "gate_cool_or_cooldown", "port": "a" }
+    },
+    {
+      "from": { "node": "gate_cooldown_active", "port": "out" },
+      "to": { "node": "gate_cool_or_cooldown", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_cool_or_cooldown", "port": "out" },
+      "to": { "node": "gate_cooler_total", "port": "a" }
+    },
+    {
+      "from": { "node": "cmp_over_temp", "port": "out" },
+      "to": { "node": "gate_cooler_total", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_heater_final", "port": "out" },
+      "to": { "node": "not_heater", "port": "in" }
+    },
+    {
+      "from": { "node": "gate_cooler_total", "port": "out" },
+      "to": { "node": "gate_cooler_final", "port": "a" }
+    },
+    {
+      "from": { "node": "not_heater", "port": "out" },
+      "to": { "node": "gate_cooler_final", "port": "b" }
+    },
+    {
+      "from": { "node": "gate_heater_final", "port": "out" },
+      "to": { "node": "out_heater", "port": "value" }
+    },
+    {
+      "from": { "node": "gate_cooler_final", "port": "out" },
+      "to": { "node": "out_cooler", "port": "value" }
+    },
+    {
+      "from": { "node": "latch_alarm", "port": "Q" },
+      "to": { "node": "out_alarm", "port": "value" }
+    },
+    {
+      "from": { "node": "gate_control_armed", "port": "out" },
+      "to": { "node": "out_active", "port": "value" }
+    }
+  ],
+  "variables": [
+    {
+      "name": "HeatOnTemp",
+      "type": "float32",
+      "initial": "58.0"
+    },
+    {
+      "name": "HeatOffTemp",
+      "type": "float32",
+      "initial": "60.0"
+    },
+    {
+      "name": "CoolOnTemp",
+      "type": "float32",
+      "initial": "65.0"
+    },
+    {
+      "name": "CoolOffTemp",
+      "type": "float32",
+      "initial": "60.0"
+    },
+    {
+      "name": "OverTempLimit",
+      "type": "float32",
+      "initial": "90.0"
+    },
+    {
+      "name": "SensorMin",
+      "type": "float32",
+      "initial": "-10.0"
+    },
+    {
+      "name": "SensorMax",
+      "type": "float32",
+      "initial": "150.0"
+    }
+  ],
+  "hardware": [
+    {
+      "logical": "ProcessTemperature",
+      "direction": "input",
+      "type": "float32"
+    },
+    {
+      "logical": "EnableSwitch",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "CoolingMode",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "AlarmReset",
+      "direction": "input",
+      "type": "bool"
+    },
+    {
+      "logical": "HeaterOutput",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "CoolerOutput",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "AlarmOutput",
+      "direction": "output",
+      "type": "bool"
+    },
+    {
+      "logical": "ActiveOutput",
+      "direction": "output",
+      "type": "bool"
+    }
+  ],
+  "ui": {
+    "nodes": {
+      "in_temp": { "x": 40, "y": 40 },
+      "in_enable": { "x": 40, "y": 120 },
+      "in_cool_mode": { "x": 40, "y": 200 },
+      "in_reset": { "x": 40, "y": 280 },
+      "rd_heat_on": { "x": 40, "y": 360 },
+      "rd_heat_off": { "x": 40, "y": 440 },
+      "rd_cool_on": { "x": 40, "y": 520 },
+      "rd_cool_off": { "x": 40, "y": 600 },
+      "rd_over_temp": { "x": 40, "y": 680 },
+      "rd_sensor_min": { "x": 40, "y": 760 },
+      "rd_sensor_max": { "x": 40, "y": 840 },
+      "timer_startup": { "x": 260, "y": 120 },
+      "gate_control_armed": { "x": 480, "y": 120 },
+      "cmp_sensor_low": { "x": 260, "y": 760 },
+      "cmp_sensor_high": { "x": 260, "y": 840 },
+      "gate_sensor_fault": { "x": 480, "y": 800 },
+      "not_sensor_fault": { "x": 700, "y": 800 },
+      "cmp_over_temp": { "x": 260, "y": 680 },
+      "gate_any_fault": { "x": 700, "y": 680 },
+      "latch_alarm": { "x": 920, "y": 680 },
+      "not_alarm": { "x": 1140, "y": 680 },
+      "not_any_fault": { "x": 920, "y": 760 },
+      "gate_safety_ok": { "x": 1360, "y": 720 },
+      "cmp_heat_on": { "x": 260, "y": 360 },
+      "cmp_heat_off": { "x": 260, "y": 440 },
+      "gate_heat_set": { "x": 480, "y": 360 },
+      "gate_heat_reset": { "x": 480, "y": 440 },
+      "latch_heat": { "x": 700, "y": 400 },
+      "cmp_cool_on": { "x": 260, "y": 520 },
+      "cmp_cool_off": { "x": 260, "y": 600 },
+      "gate_cool_set": { "x": 480, "y": 520 },
+      "gate_cool_reset": { "x": 480, "y": 600 },
+      "latch_cool": { "x": 700, "y": 560 },
+      "not_cooling_mode": { "x": 260, "y": 200 },
+      "gate_heat_mode_demand": { "x": 920, "y": 360 },
+      "gate_cool_mode_demand": { "x": 920, "y": 520 },
+      "gate_heat_run": { "x": 1140, "y": 240 },
+      "gate_cool_run": { "x": 1140, "y": 480 },
+      "timer_cooldown": { "x": 1360, "y": 140 },
+      "not_heating": { "x": 1360, "y": 240 },
+      "gate_cooldown_active": { "x": 1580, "y": 180 },
+      "gate_heater_final": { "x": 1580, "y": 320 },
+      "gate_cool_or_cooldown": { "x": 1800, "y": 440 },
+      "gate_cooler_total": { "x": 2020, "y": 480 },
+      "not_heater": { "x": 1800, "y": 320 },
+      "gate_cooler_final": { "x": 2240, "y": 480 },
+      "out_heater": { "x": 2460, "y": 320 },
+      "out_cooler": { "x": 2460, "y": 480 },
+      "out_alarm": { "x": 2460, "y": 680 },
+      "out_active": { "x": 2460, "y": 120 }
+    }
+  }
+}

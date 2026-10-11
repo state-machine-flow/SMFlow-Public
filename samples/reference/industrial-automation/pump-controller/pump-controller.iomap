@@ -1,0 +1,45 @@
+{
+  "formatVersion": 1,
+  "project": "pump-controller",
+  "bindings": {
+    "opta": {
+      "ProcessVariable": "I1",
+      "AutoSwitch": "I2",
+      "ManualSwitch": "I3",
+      "ManualStart": "I4",
+      "DryRunFault": "I5",
+      "OverloadFault": "I6",
+      "AlarmReset": "I7",
+      "PumpContactor": "RELAY1",
+      "AlarmOutput": "RELAY2",
+      "PumpRunningOutput": "RELAY3",
+      "AutoModeOutput": "RELAY4"
+    },
+    "rp2040-pico": {
+      "ProcessVariable": "GP26",
+      "AutoSwitch": "GP14",
+      "ManualSwitch": "GP15",
+      "ManualStart": "GP16",
+      "DryRunFault": "GP17",
+      "OverloadFault": "GP18",
+      "AlarmReset": "GP19",
+      "PumpContactor": "GP20",
+      "AlarmOutput": "GP21",
+      "PumpRunningOutput": "GP22",
+      "AutoModeOutput": "GP27"
+    },
+    "simulator": {
+      "ProcessVariable": "virtual.ProcessVariable",
+      "AutoSwitch": "virtual.AutoSwitch",
+      "ManualSwitch": "virtual.ManualSwitch",
+      "ManualStart": "virtual.ManualStart",
+      "DryRunFault": "virtual.DryRunFault",
+      "OverloadFault": "virtual.OverloadFault",
+      "AlarmReset": "virtual.AlarmReset",
+      "PumpContactor": "virtual.PumpContactor",
+      "AlarmOutput": "virtual.AlarmOutput",
+      "PumpRunningOutput": "virtual.PumpRunningOutput",
+      "AutoModeOutput": "virtual.AutoModeOutput"
+    }
+  }
+}
