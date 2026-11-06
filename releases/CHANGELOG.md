@@ -10,6 +10,31 @@ All notable changes to SMFlow are recorded here. The format follows
 ### Changed
 ### Fixed
 
+## [1.0.0] - 2026-11-05
+
+### Added
+
+- **Flow images.** `smflow render <project.smflow>` draws each task to a PNG that matches the editor
+  canvas, trimmed to the graph with a border — one image per task for a multi-task flow. `--out`,
+  `--border`, and `--scale` control the output.
+- **Servo output.** A new **Servo Output** node drives standard RC hobby servos with an angle in
+  degrees (0.0–180.0), backed by hardware-timer pulse generation on AVR and simulated in the
+  simulator.
+- **Tunable PWM output.** A new **Tunable PWM Output** node drives a pin with both a live duty cycle
+  and a live carrier frequency, on AVR, ESP32, and the Raspberry Pi Pico. A board that cannot tune
+  PWM frequency says so at build time instead of approximating.
+- **Float arithmetic nodes.** `add`, `subtract`, `multiply`, and `divide` nodes take two `float32`
+  inputs and produce a `float32` output, for calculating analog readings, setpoints, and scaled
+  variables directly on the canvas.
+- **Blink can be paused.** The Blink node has a new optional `pause` input: while true, the output
+  and phase freeze and resume mid-cycle. Left unconnected, Blink behaves exactly as before.
+
+### Fixed
+
+- **Pull-up buttons no longer glitch at power-on.** A digital input wired with a pull-up is now read
+  as pressed when LOW, matching active-low hardware and the simulator, so an edge-triggered node
+  downstream no longer sees a phantom press on the first scan at power-up.
+
 ## [0.9.12-beta1] - 2026-10-02
 
 ### Added
