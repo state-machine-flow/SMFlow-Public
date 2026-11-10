@@ -10,6 +10,17 @@ All notable changes to SMFlow are recorded here. The format follows
 ### Changed
 ### Fixed
 
+## [1.0.1] - 2026-11-10
+
+### Added
+
+- **Constants on node inputs.** A node input can now take a fixed value directly instead of only a
+  wire from another node. Give a Compare, Add, or similar node a constant on an input — such as
+  comparing a signal against `100` — without declaring a variable and reading it through a node. In
+  the editor, double-click an unconnected input port to type the value; it shows on the port
+  prefixed with `=`. A constant must already be the input's type, and an input cannot carry both a
+  constant and a wire.
+
 ## [1.0.0] - 2026-11-05
 
 ### Added
