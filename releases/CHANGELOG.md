@@ -10,6 +10,22 @@ All notable changes to SMFlow are recorded here. The format follows
 ### Changed
 ### Fixed
 
+## [1.1.0] - 2026-11-10
+
+### Added
+
+- **Typed Math and Compare nodes.** Add, Subtract, Multiply, and Divide now work in a chosen scalar
+  type — `float32`, `int32`, `uint32`, or `float64` — and Compare adds `duration` and `bool` on top
+  of those, instead of being fixed to `float32`. Pick the type in the node's property panel; it
+  shows on the node, and the node's ports retype to match so a wire of the wrong type is still
+  caught. Existing nodes default to `float32`, so older projects open unchanged.
+
+### Fixed
+
+- The editor no longer freezes while looking for attached controllers. Scanning for boards now runs
+  off the UI thread, so the window stays responsive when the "Deploy to" list opens, when Refresh is
+  pressed, and when the target is changed.
+
 ## [1.0.1] - 2026-11-10
 
 ### Added
