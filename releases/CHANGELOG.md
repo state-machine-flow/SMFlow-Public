@@ -10,6 +10,41 @@ All notable changes to SMFlow are recorded here. The format follows
 ### Changed
 ### Fixed
 
+## [1.2.0] - 2026-11-12
+
+### Added
+
+- **Run a task on a second CPU core.** A task can now be pinned to a core, so on a multi-core board
+  such as the Raspberry Pi Pico a second flow runs on core 1 while your main flow keeps running on
+  core 0 — splitting the work instead of making a fast control loop and a slow housekeeping loop
+  share one core. Tasks exchange data through shared variables, as they already do. Pinning a task to
+  a core the selected board does not have is reported as an error.
+- **Range Map node.** Turns an analog value into a discrete code by comparing it against an ascending
+  ladder of thresholds — handy for mapping a sensor reading into a state. You set the thresholds and
+  the code each band yields, with a final code for everything above the top threshold.
+- **Debounce node.** Holds its output steady until the input has stayed at a new value for a time you
+  choose (default 50 ms), filtering out contact bounce and noise. An optional output flags the single
+  scan on which the value actually changed.
+- **USB serial console on RP2040 boards.** The Raspberry Pi Pico and Nano RP2040 Connect now expose
+  their USB serial (CDC) port as its own `usb` bus, separate from the GP0/GP1 hardware UART
+  (`uart0`). Bind a console to `usb` to see output on the board's USB COM port; both buses are listed
+  for the target.
+
+### Changed
+
+- **Tasks are managed from the properties panel.** Add, rename, and delete tasks in the Tasks section
+  of the properties panel. The row of task tabs still switches between task editors; the old "+ Task"
+  button on that strip has been removed.
+
+### Fixed
+
+- RP2040 serial output now goes where the bus says it does. Previously a console on the "GP0/GP1" bus
+  actually emitted to the USB port while UART peripherals used the real GP0/GP1 pins. Each bus now
+  maps to a distinct, honest interface: `usb` → USB serial, `uart0` → GP0/GP1. Projects that bound a
+  Pico console to `uart0` for USB output should rebind it to `usb`.
+- USB serial console output on RP2040 now appears reliably. The output could previously stay stuck
+  and never flush to the USB port; it now drains correctly once a host is connected.
+
 ## [1.1.0] - 2026-11-10
 
 ### Added
