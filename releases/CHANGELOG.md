@@ -10,6 +10,23 @@ All notable changes to SMFlow are recorded here. The format follows
 ### Changed
 ### Fixed
 
+## [1.3.0] - 2026-11-17
+
+### Added
+
+- **Value Map node.** Checks one input value against a list of values you configure and turns on a
+  separate output for each value it matches, with an extra output for anything that matches none of
+  them. Useful for turning a single mode or state number into individual on/off signals.
+
+### Changed
+
+- **Resizable comment nodes.** Drag a comment's edge or corner to make it any size you like; the size
+  is saved with your project.
+
+### Fixed
+
+- Fixed a crash that could occur when you clicked a node right after closing the simulator window.
+
 ## [1.2.0] - 2026-11-12
 
 ### Added
